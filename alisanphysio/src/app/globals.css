@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   AlisanPhysio design tokens — single source of truth.
+   Warm, calm, premium: soft grey-blue canvas, floating white surfaces,
+   an elegant deep-wine brand accent. (Dark mode intentionally deferred.)
+   ========================================================================== */
+:root {
+  /* Canvas & surfaces */
+  --background: #ffffff; /* clean white canvas */
+  --surface: #f4f8f5; /* cards/header — a whisper of brand green so they
+                         read as distinct layers on white */
+
+  /* Brand — deep forest / pine green (confident, professional, never neon) */
+  --brand: #14532d;
+  --brand-hover: #0f3d21;
+  --brand-bright: #166534; /* lifted green for small text accents (links, numbers) */
+  --brand-tint: #e7f0ea; /* soft green wash for notes box / current badge */
+
+  /* Text */
+  --text: #1e293b; /* headings — dark slate, never pure black */
+  --text-muted: #64748b; /* secondary copy */
+  --text-subtle: #94a3b8; /* date labels, quietest text */
+
+  /* Semantic / structural */
+  --border: #e3e8ef; /* hairline */
+  --pill: #eef2f6; /* soft neutral pill background */
+  --success: #3f7d6e; /* calm harmonizing green */
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-bright: var(--brand-bright);
+  --color-brand-tint: var(--brand-tint);
+
+  --color-foreground: var(--text);
+  --color-muted-foreground: var(--text-muted);
+  --color-subtle-foreground: var(--text-subtle);
+
+  --color-border: var(--border);
+  --color-pill: var(--pill);
+  --color-success: var(--success);
+
+  /* Inter for body/UI, Archivo for bold display headings. */
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-archivo);
+
+  /* Layered shadows with a hairline green-tinted ring so surfaces have a
+     crisp edge against the white canvas. */
+  --shadow-soft: 0 0 0 1px rgb(20 83 45 / 0.07),
+    0 1px 2px 0 rgb(20 83 45 / 0.04), 0 10px 30px -14px rgb(20 83 45 / 0.14);
+  --shadow-lift: 0 0 0 1px rgb(20 83 45 / 0.1),
+    0 2px 6px 0 rgb(20 83 45 / 0.06), 0 20px 48px -18px rgb(20 83 45 / 0.22);
+}
+
+body {
+  background: var(--background);
+  color: var(--text);
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-toast-in {
+  animation: toast-in 0.2s ease-out;
+}
