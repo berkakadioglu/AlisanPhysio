@@ -50,7 +50,7 @@ export default function LibraryManager({
         <button
           type="button"
           onClick={() => setEditing("new")}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:bg-brand-hover"
+          className="inline-flex items-center gap-1.5 rounded-xl bg-brand-solid px-4 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:bg-brand-solid-hover"
         >
           <span aria-hidden className="text-base leading-none">
             +
@@ -141,7 +141,7 @@ function PreviewModal({
   const videoId = parseYouTubeId(item.youtube_url);
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-scrim p-4"
       onClick={onClose}
     >
       <div
@@ -235,7 +235,7 @@ function ExerciseModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/30 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-scrim p-4"
       onClick={onClose}
     >
       <div
@@ -303,7 +303,7 @@ function ExerciseModal({
           {error && (
             <p
               role="alert"
-              className="rounded-lg bg-rose-50 px-3.5 py-2.5 text-sm text-rose-700"
+              className="rounded-lg bg-danger-tint px-3.5 py-2.5 text-sm text-danger"
             >
               {error}
             </p>
@@ -316,7 +316,7 @@ function ExerciseModal({
               type="button"
               onClick={remove}
               disabled={pending}
-              className="rounded-xl px-3 py-2.5 text-sm font-medium text-rose-600 transition hover:bg-rose-50 disabled:opacity-60"
+              className="rounded-xl px-3 py-2.5 text-sm font-medium text-danger transition hover:bg-danger-tint disabled:opacity-60"
             >
               {t("common.delete")}
             </button>
@@ -335,7 +335,7 @@ function ExerciseModal({
               type="button"
               onClick={save}
               disabled={pending}
-              className="rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-xl bg-brand-solid px-4 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:bg-brand-solid-hover disabled:cursor-not-allowed disabled:opacity-60"
             >
               {pending ? t("common.saving") : t("common.save")}
             </button>

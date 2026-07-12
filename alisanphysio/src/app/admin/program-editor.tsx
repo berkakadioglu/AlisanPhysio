@@ -318,7 +318,7 @@ export default function ProgramEditor({
 
           {/* Part A: soft, non-blocking duplicate-in-day warning. */}
           {duplicate && (
-            <p className="flex items-center gap-1.5 px-0.5 text-xs font-medium text-amber-600">
+            <p className="flex items-center gap-1.5 px-0.5 text-xs font-medium text-warning">
               <span aria-hidden>⚠</span>
               {t("editor.alreadyInDay")}
             </p>
@@ -528,7 +528,7 @@ export default function ProgramEditor({
       {error && (
         <p
           role="alert"
-          className="mt-6 rounded-lg bg-rose-50 px-3.5 py-2.5 text-sm text-rose-700"
+          className="mt-6 rounded-lg bg-danger-tint px-3.5 py-2.5 text-sm text-danger"
         >
           {error}
         </p>
@@ -540,7 +540,7 @@ export default function ProgramEditor({
             type="button"
             onClick={onSave}
             disabled={saving}
-            className="rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-xl bg-brand-solid px-5 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:bg-brand-solid-hover disabled:cursor-not-allowed disabled:opacity-60"
           >
             {saving ? t("common.saving") : t("editor.saveProgram")}
           </button>
@@ -557,7 +557,7 @@ export default function ProgramEditor({
             type="button"
             onClick={onDelete}
             disabled={saving}
-            className="rounded-xl px-4 py-2.5 text-sm font-medium text-rose-600 transition hover:bg-rose-50 disabled:opacity-60"
+            className="rounded-xl px-4 py-2.5 text-sm font-medium text-danger transition hover:bg-danger-tint disabled:opacity-60"
           >
             {t("editor.deleteProgram")}
           </button>

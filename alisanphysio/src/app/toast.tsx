@@ -35,7 +35,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           <div
             key={t.id}
             role="status"
-            className="animate-toast-in pointer-events-auto flex items-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white shadow-lift"
+            className="animate-toast-in pointer-events-auto flex items-center gap-2 rounded-xl bg-brand-solid px-4 py-2.5 text-sm font-medium text-white shadow-lift"
           >
             <svg
               viewBox="0 0 24 24"

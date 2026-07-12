@@ -6,17 +6,37 @@ import { MEMBERSHIP_LABEL, type Membership } from "@/lib/membership";
  * (no hooks/handlers), so it renders in both server and client components.
  * Colors are muted and low-saturation to harmonize with the forest-green theme.
  */
-// Muted, low-saturation tiers that still hold their own on a white/green-tinted
-// card — each has a clearly visible border and a readable foreground. Platinum
-// especially needs a distinct cool border so it doesn't wash out on white.
+// Muted, low-saturation tiers that still hold their own on a light or dark
+// card — each has a clearly visible border and a readable foreground. Colors
+// resolve to CSS variables (see globals.css) so they re-theme in dark mode.
 const TIER: Record<
   Membership,
   { Icon: typeof Gem; bg: string; fg: string; border: string }
 > = {
-  platinum: { Icon: Gem, bg: "#e6ebf2", fg: "#334155", border: "#a9b6ca" },
-  gold: { Icon: Crown, bg: "#fbeecb", fg: "#7d5e12", border: "#dcc069" },
-  silver: { Icon: Medal, bg: "#eceef1", fg: "#4b5563", border: "#b6bdc7" },
-  bronze: { Icon: Shield, bg: "#f3e3d3", fg: "#7c451f", border: "#cfa478" },
+  platinum: {
+    Icon: Gem,
+    bg: "var(--mem-platinum-bg)",
+    fg: "var(--mem-platinum-fg)",
+    border: "var(--mem-platinum-border)",
+  },
+  gold: {
+    Icon: Crown,
+    bg: "var(--mem-gold-bg)",
+    fg: "var(--mem-gold-fg)",
+    border: "var(--mem-gold-border)",
+  },
+  silver: {
+    Icon: Medal,
+    bg: "var(--mem-silver-bg)",
+    fg: "var(--mem-silver-fg)",
+    border: "var(--mem-silver-border)",
+  },
+  bronze: {
+    Icon: Shield,
+    bg: "var(--mem-bronze-bg)",
+    fg: "var(--mem-bronze-fg)",
+    border: "var(--mem-bronze-border)",
+  },
 };
 
 export default function MembershipBadge({

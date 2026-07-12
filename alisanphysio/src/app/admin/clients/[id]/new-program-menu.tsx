@@ -31,7 +31,7 @@ export default function NewProgramMenu({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-1.5 rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:bg-brand-hover"
+        className="inline-flex items-center gap-1.5 rounded-xl bg-brand-solid px-4 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:bg-brand-solid-hover"
       >
         <span aria-hidden className="text-base leading-none">
           +
@@ -94,7 +94,7 @@ function CopyModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/30 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-scrim p-4"
       onClick={onClose}
     >
       <div
@@ -111,7 +111,7 @@ function CopyModal({
             <p className="text-sm text-subtle-foreground">{t("copy.empty")}</p>
             <Link
               href={base}
-              className="mt-3 inline-block rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:bg-brand-hover"
+              className="mt-3 inline-block rounded-xl bg-brand-solid px-4 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:bg-brand-solid-hover"
             >
               {t("copy.startInstead")}
             </Link>

@@ -47,7 +47,7 @@ export default function YouTubeEmbed({
               <svg
                 viewBox="0 0 24 24"
                 fill="currentColor"
-                className="ml-0.5 h-6 w-6 text-brand"
+                className="ml-0.5 h-6 w-6 text-brand-solid"
               >
                 <path d="M8 5v14l11-7z" />
               </svg>

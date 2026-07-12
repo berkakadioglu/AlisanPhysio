@@ -24,9 +24,9 @@ const inputClass =
 const labelClass = "block text-sm font-medium text-foreground";
 const cardClass = "rounded-2xl border border-border bg-surface/60 p-6 shadow-soft sm:p-7";
 const primaryBtn =
-  "rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60";
+  "rounded-xl bg-brand-solid px-4 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:bg-brand-solid-hover disabled:cursor-not-allowed disabled:opacity-60";
 const errorClass =
-  "rounded-lg bg-rose-50 px-3.5 py-2.5 text-sm text-rose-700";
+  "rounded-lg bg-danger-tint px-3.5 py-2.5 text-sm text-danger";
 
 export interface ProfileData {
   id: string;
@@ -604,7 +604,7 @@ function MeasurementsSection({
                         type="button"
                         onClick={() => remove(m.id)}
                         disabled={deletingId === m.id}
-                        className="rounded-lg px-2.5 py-1 text-xs font-medium text-rose-600 transition hover:bg-rose-50 disabled:opacity-50"
+                        className="rounded-lg px-2.5 py-1 text-xs font-medium text-danger transition hover:bg-danger-tint disabled:opacity-50"
                       >
                         {t("common.delete")}
                       </button>
@@ -645,7 +645,7 @@ function MetricTab({
       aria-pressed={active}
       className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
         active
-          ? "bg-brand text-white shadow-sm"
+          ? "bg-brand-solid text-white shadow-sm"
           : disabled
             ? "cursor-not-allowed text-subtle-foreground/60"
             : "text-muted-foreground hover:text-foreground"
@@ -665,12 +665,29 @@ function EmptyChart({ text }: { text: string }) {
 }
 
 // WHO BMI category → calm, muted palette that harmonizes with the theme
-// (blue / green / amber / soft red — informational, never alarming).
+// (blue / green / amber / soft red — informational, never alarming). Colors
+// resolve to CSS variables (see globals.css) so they re-theme in dark mode.
 const BMI_STYLE: Record<BmiCategory, { bg: string; fg: string; border: string }> = {
-  underweight: { bg: "#eaf1f7", fg: "#3b6390", border: "#cddced" },
-  normal: { bg: "#e8f1ea", fg: "#3f7d6e", border: "#cfe4d6" },
-  overweight: { bg: "#fdf4e3", fg: "#8a6a1e", border: "#eccf8f" },
-  obese: { bg: "#fbeceb", fg: "#a23b34", border: "#f0cdc9" },
+  underweight: {
+    bg: "var(--bmi-underweight-bg)",
+    fg: "var(--bmi-underweight-fg)",
+    border: "var(--bmi-underweight-border)",
+  },
+  normal: {
+    bg: "var(--bmi-normal-bg)",
+    fg: "var(--bmi-normal-fg)",
+    border: "var(--bmi-normal-border)",
+  },
+  overweight: {
+    bg: "var(--bmi-overweight-bg)",
+    fg: "var(--bmi-overweight-fg)",
+    border: "var(--bmi-overweight-border)",
+  },
+  obese: {
+    bg: "var(--bmi-obese-bg)",
+    fg: "var(--bmi-obese-fg)",
+    border: "var(--bmi-obese-border)",
+  },
 };
 
 function BmiStatus({
@@ -810,7 +827,7 @@ function ComplaintsSection({
                     type="button"
                     onClick={() => remove(c.id)}
                     disabled={deletingId === c.id}
-                    className="rounded-lg px-2.5 py-1 text-xs font-medium text-rose-600 transition hover:bg-rose-50 disabled:opacity-50"
+                    className="rounded-lg px-2.5 py-1 text-xs font-medium text-danger transition hover:bg-danger-tint disabled:opacity-50"
                   >
                     {t("common.delete")}
                   </button>

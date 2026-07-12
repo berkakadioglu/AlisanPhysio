@@ -22,7 +22,7 @@ export default function LanguageSelect({
           aria-pressed={l === value}
           className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
             l === value
-              ? "bg-brand text-white shadow-sm"
+              ? "bg-brand-solid text-white shadow-sm"
               : "text-muted-foreground hover:text-foreground"
           }`}
         >

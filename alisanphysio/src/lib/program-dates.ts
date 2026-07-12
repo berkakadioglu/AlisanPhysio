@@ -38,6 +38,12 @@ export function nextMondayISO(iso: string): string {
   return toISO(Date.UTC(y, m - 1, d) + 7 * DAY);
 }
 
+/** The Monday of the PREVIOUS completed week (this week's Monday minus 7 days). */
+export function prevMondayISO(now: Date = new Date()): string {
+  const [y, m, d] = ymd(thisMondayISO(now));
+  return toISO(Date.UTC(y, m - 1, d) - 7 * DAY);
+}
+
 /** A default title like "Week of Aug 4, 2026" for a given Monday. */
 export function weekTitleForISO(iso: string): string {
   const [y, m, d] = ymd(iso);

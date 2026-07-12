@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { formatDay, programsCount, type Lang } from "@/lib/i18n";
+import { formatDay, programsCount, reviewsCount, type Lang } from "@/lib/i18n";
 import type { Membership } from "@/lib/membership";
 import type { Role } from "@/lib/types";
 import { useI18n } from "@/app/i18n-provider";
@@ -18,6 +18,7 @@ export interface AdminUser {
   email: string;
   role: Role;
   programCount: number;
+  reviewCount: number;
   membership: Membership | null;
   membershipEndDate: string | null;
 }
@@ -62,7 +63,7 @@ export default function AdminUsersView({ users }: { users: AdminUser[] }) {
         <button
           type="button"
           onClick={() => setShowNew(true)}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:bg-brand-hover"
+          className="inline-flex items-center gap-1.5 rounded-xl bg-brand-solid px-4 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:bg-brand-solid-hover"
         >
           <span aria-hidden className="text-base leading-none">
             +
@@ -83,7 +84,7 @@ export default function AdminUsersView({ users }: { users: AdminUser[] }) {
               aria-pressed={active}
               className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-sm font-medium transition ${
                 active
-                  ? "bg-brand text-white shadow-sm"
+                  ? "bg-brand-solid text-white shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -142,6 +143,11 @@ export default function AdminUsersView({ users }: { users: AdminUser[] }) {
                       {formatDay(u.membershipEndDate, lang)}
                     </span>
                   )}
+                </span>
+              )}
+              {u.reviewCount > 0 && (
+                <span className="hidden flex-none rounded-full bg-brand-tint px-2.5 py-0.5 text-xs font-medium text-brand tabular-nums sm:inline">
+                  {reviewsCount(lang, u.reviewCount)}
                 </span>
               )}
               <span className="flex-none rounded-full bg-pill px-2.5 py-0.5 text-xs font-medium text-muted-foreground tabular-nums">
@@ -220,7 +226,7 @@ function NewClientModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/30 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-scrim p-4"
       onClick={onClose}
     >
       <div
@@ -284,7 +290,7 @@ function NewClientModal({
           {error && (
             <p
               role="alert"
-              className="rounded-lg bg-rose-50 px-3.5 py-2.5 text-sm text-rose-700"
+              className="rounded-lg bg-danger-tint px-3.5 py-2.5 text-sm text-danger"
             >
               {error}
             </p>
@@ -301,7 +307,7 @@ function NewClientModal({
             <button
               type="submit"
               disabled={pending}
-              className="rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-xl bg-brand-solid px-4 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:bg-brand-solid-hover disabled:cursor-not-allowed disabled:opacity-60"
             >
               {pending ? t("newClient.creating") : t("newClient.create")}
             </button>

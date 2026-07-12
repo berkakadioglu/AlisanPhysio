@@ -413,3 +413,30 @@ export async function assignRole(input: {
   revalidatePath(`/admin/clients/${input.userId}/data`);
   return { ok: true };
 }
+
+/**
+ * Staff manual notification — "your program is ready" etc. Inserted for the
+ * target user via the staff session (notifications_insert_staff RLS). Staff-gated.
+ */
+export async function sendNotification(input: {
+  userId: string;
+  title: string;
+  body: string;
+}): Promise<ActionResult> {
+  const { supabase } = await requireStaff();
+  const lang = await getLang();
+
+  const title = input.title.trim();
+  if (!title) return { ok: false, error: t(lang, "err.notifTitle") };
+
+  const { error } = await supabase.from("notifications").insert({
+    user_id: input.userId,
+    type: "manual",
+    title,
+    body: input.body.trim() || null,
+  });
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath(`/admin/clients/${input.userId}`);
+  return { ok: true };
+}

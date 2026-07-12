@@ -37,7 +37,7 @@ export default function RoleSelect({
             aria-pressed={active}
             className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
               active
-                ? "bg-brand text-white shadow-sm"
+                ? "bg-brand-solid text-white shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
             } ${disabled ? "cursor-not-allowed" : ""}`}
           >

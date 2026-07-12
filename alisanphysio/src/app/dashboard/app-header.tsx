@@ -3,6 +3,8 @@ import { BRAND_NAME } from "@/lib/constants";
 import { t } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n-server";
 import LanguageToggle from "@/app/language-toggle";
+import ThemeToggle from "@/app/theme-toggle";
+import NotificationBell from "@/components/notification-bell";
 import { signOut } from "./actions";
 
 /**
@@ -35,6 +37,8 @@ export default async function AppHeader({
           >
             {t(lang, "profile.link")}
           </Link>
+          <NotificationBell />
+          <ThemeToggle />
           <LanguageToggle />
           <form action={signOut}>
             <button

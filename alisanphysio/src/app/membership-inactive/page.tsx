@@ -5,6 +5,7 @@ import { BRAND_NAME } from "@/lib/constants";
 import { t } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n-server";
 import LanguageToggle from "@/app/language-toggle";
+import ThemeToggle from "@/app/theme-toggle";
 import { signOut } from "@/app/dashboard/actions";
 
 export const metadata: Metadata = {
@@ -33,6 +34,7 @@ export default async function MembershipInactivePage() {
             {BRAND_NAME}
           </span>
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             <LanguageToggle />
             <form action={signOut}>
               <button
@@ -73,7 +75,7 @@ export default async function MembershipInactivePage() {
           <form action={signOut} className="mt-7">
             <button
               type="submit"
-              className="rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:bg-brand-hover"
+              className="rounded-xl bg-brand-solid px-5 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:bg-brand-solid-hover"
             >
               {t(lang, "common.signOut")}
             </button>

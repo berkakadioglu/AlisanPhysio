@@ -93,7 +93,7 @@ export default function LoginForm() {
       {error && (
         <p
           role="alert"
-          className="rounded-lg bg-rose-50 px-3.5 py-2.5 text-sm text-rose-700"
+          className="rounded-lg bg-danger-tint px-3.5 py-2.5 text-sm text-danger"
         >
           {error}
         </p>
@@ -102,7 +102,7 @@ export default function LoginForm() {
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-xl bg-brand px-4 py-2.5 font-medium text-white shadow-soft transition hover:bg-brand-hover focus:ring-2 focus:ring-brand/30 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+        className="w-full rounded-xl bg-brand-solid px-4 py-2.5 font-medium text-white shadow-soft transition hover:bg-brand-solid-hover focus:ring-2 focus:ring-brand/30 focus:ring-offset-2 focus:ring-offset-surface disabled:cursor-not-allowed disabled:opacity-60"
       >
         {loading ? t("login.submitting") : t("login.submit")}
       </button>

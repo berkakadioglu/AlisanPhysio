@@ -70,7 +70,7 @@ function ResetModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/30 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-scrim p-4"
       onClick={onClose}
     >
       <div
@@ -115,7 +115,7 @@ function ResetModal({
           {error && (
             <p
               role="alert"
-              className="rounded-lg bg-rose-50 px-3.5 py-2.5 text-sm text-rose-700"
+              className="rounded-lg bg-danger-tint px-3.5 py-2.5 text-sm text-danger"
             >
               {error}
             </p>
@@ -132,7 +132,7 @@ function ResetModal({
             <button
               type="submit"
               disabled={pending}
-              className="rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-xl bg-brand-solid px-4 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:bg-brand-solid-hover disabled:cursor-not-allowed disabled:opacity-60"
             >
               {pending ? t("reset.updating") : t("reset.update")}
             </button>

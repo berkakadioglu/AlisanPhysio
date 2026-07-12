@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { BRAND_NAME } from "@/lib/constants";
 import { loadDashboardData, firstNameOf, dayTitlesOf } from "@/lib/dashboard-data";
+import { generateSystemNotifications } from "@/lib/notifications";
+import { createClient } from "@/lib/supabase/server";
+import { prevMondayISO } from "@/lib/program-dates";
 import { t } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n-server";
 import AppHeader from "./app-header";
@@ -13,8 +16,28 @@ export const metadata: Metadata = {
 
 export default async function DashboardPage() {
   const { profile, buckets } = await loadDashboardData();
+  // Refresh the user's system notifications on load (idempotent; no cron).
+  await generateSystemNotifications();
   const firstName = firstNameOf(profile);
   const lang = await getLang();
+
+  // Did the client already file last week's review? Only relevant when they
+  // actually had a program last week (otherwise there's nothing to review).
+  const reviewWeek = prevMondayISO();
+  const hadLastWeekProgram = buckets.past.some(
+    (p) => p.week_start_date === reviewWeek,
+  );
+  let reviewSubmitted = false;
+  if (profile?.role === "client" && hadLastWeekProgram) {
+    const supabase = await createClient();
+    const { data: review } = await supabase
+      .from("weekly_reviews")
+      .select("id")
+      .eq("user_id", profile.id)
+      .eq("week_start", reviewWeek)
+      .maybeSingle();
+    reviewSubmitted = !!review;
+  }
 
   return (
     <div className="min-h-screen">
@@ -31,6 +54,24 @@ export default async function DashboardPage() {
             ? t(lang, "dash.subtitleAdmin")
             : t(lang, "dash.subtitleClient")}
         </p>
+
+        {reviewSubmitted && (
+          <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-brand-tint px-3 py-1 text-sm font-medium text-brand">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-4 w-4"
+              aria-hidden
+            >
+              <path d="M20 6 9 17l-5-5" />
+            </svg>
+            {t(lang, "review.submitted")}
+          </p>
+        )}
 
         {/* This Week — the hero */}
         <section aria-labelledby="this-week" className="mt-8">

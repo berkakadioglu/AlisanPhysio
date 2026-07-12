@@ -224,6 +224,13 @@ const en: Dict = {
   "lang.en": "English",
   "lang.tr": "Türkçe",
 
+  // Theme toggle
+  "theme.toDark": "Switch to dark mode",
+  "theme.toLight": "Switch to light mode",
+
+  // Weekly-review indicators
+  "review.submitted": "Review submitted",
+
   // Toasts
   "toast.programSaved": "Program saved",
   "toast.programDeleted": "Program deleted",
@@ -356,6 +363,65 @@ const en: Dict = {
   "manage.deleteConfirm": "Delete permanently",
   "manage.deleting": "Deleting…",
 
+  // Notifications — bell + panel
+  "notif.aria": "Notifications",
+  "notif.title": "Notifications",
+  "notif.empty": "You're all caught up.",
+  "notif.markAllRead": "Mark all read",
+  "notif.justNow": "just now",
+  "notif.minutesAgo": "{n}m ago",
+  "notif.hoursAgo": "{n}h ago",
+  "notif.daysAgo": "{n}d ago",
+
+  // System notifications (generated on load)
+  "notif.missingInfo.title": "Add your height",
+  "notif.missingInfo.body":
+    "Please add your height so we can track your BMI.",
+  "notif.expiry.titleSoon": "Your membership ends soon",
+  "notif.expiry.titleEnded": "Your membership has ended",
+  "notif.expiry.body": "Ends {date} — contact Alişan to renew.",
+  "notif.review.title": "Your weekly review is ready",
+  "notif.review.body": "Tell Alişan how last week went.",
+
+  // Manual send (staff)
+  "manage.sendNotification": "Send notification",
+  "send.heading": "Send a notification",
+  "send.subtitle": "It shows up in {name}'s notification bell.",
+  "send.titleLabel": "Title",
+  "send.bodyLabel": "Message",
+  "send.bodyPlaceholder": "e.g. Your new program is ready 💪",
+  "send.submit": "Send",
+  "send.sending": "Sending…",
+  "toast.notificationSent": "Notification sent",
+
+  // Weekly review — form
+  "review.link": "Weekly review",
+  "review.heading": "Last week's review",
+  "review.subtitle": "Tell Alişan how {range} went.",
+  "review.daysAttended": "How many days did you train last week?",
+  "review.programsDone": "Which programs did you do?",
+  "review.hardExercises": "Which exercises were hard?",
+  "review.hardHint": "Check the ones you struggled with.",
+  "review.note": "Anything else for Alişan?",
+  "review.notePlaceholder": "Optional — pain, energy, questions…",
+  "review.submit": "Submit review",
+  "review.update": "Update review",
+  "review.none": "You had no program last week — nothing to review yet.",
+  "toast.reviewSubmitted": "Review submitted",
+  "err.reviewNoPrograms": "There's nothing to review for last week.",
+
+  // Weekly review — staff view
+  "review.staffHeading": "Weekly reviews",
+  "review.staffEmpty": "No weekly reviews submitted yet.",
+  "review.daysLabel": "Days trained",
+  "review.programsLabel": "Programs done",
+  "review.hardLabel": "Found hard",
+  "review.noteLabel": "Note",
+  "review.nonePicked": "None",
+
+  // View as user
+  "admin.viewAsUser": "View as user",
+
   // Whatsapp
   "wa.aria": "Chat on WhatsApp",
   "wa.title": "WhatsApp — coming soon",
@@ -382,6 +448,7 @@ const en: Dict = {
   "err.cantChangeOwnRole": "You can't change your own role.",
   "err.invalidRole": "Pick a valid role.",
   "err.adminOnly": "Only an admin can do that.",
+  "err.notifTitle": "Enter a title for the notification.",
 };
 
 const tr: Dict = {
@@ -588,6 +655,13 @@ const tr: Dict = {
   "lang.en": "English",
   "lang.tr": "Türkçe",
 
+  // Theme toggle
+  "theme.toDark": "Koyu moda geç",
+  "theme.toLight": "Açık moda geç",
+
+  // Weekly-review indicators
+  "review.submitted": "Değerlendirme gönderildi",
+
   // Toasts
   "toast.programSaved": "Program kaydedildi",
   "toast.programDeleted": "Program silindi",
@@ -720,6 +794,65 @@ const tr: Dict = {
   "manage.deleteConfirm": "Kalıcı olarak sil",
   "manage.deleting": "Siliniyor…",
 
+  // Notifications — bell + panel
+  "notif.aria": "Bildirimler",
+  "notif.title": "Bildirimler",
+  "notif.empty": "Her şey güncel.",
+  "notif.markAllRead": "Tümünü okundu işaretle",
+  "notif.justNow": "az önce",
+  "notif.minutesAgo": "{n} dk önce",
+  "notif.hoursAgo": "{n} sa önce",
+  "notif.daysAgo": "{n} gün önce",
+
+  // System notifications (generated on load)
+  "notif.missingInfo.title": "Boyunuzu ekleyin",
+  "notif.missingInfo.body":
+    "Vücut kitle indeksinizi (VKİ) takip edebilmemiz için lütfen boyunuzu ekleyin.",
+  "notif.expiry.titleSoon": "Üyeliğiniz yakında sona eriyor",
+  "notif.expiry.titleEnded": "Üyeliğiniz sona erdi",
+  "notif.expiry.body": "{date} tarihinde bitiyor — yenilemek için Alişan ile iletişime geçin.",
+  "notif.review.title": "Haftalık değerlendirmeniz hazır",
+  "notif.review.body": "Alişan'a geçen haftanın nasıl geçtiğini anlatın.",
+
+  // Manual send (staff)
+  "manage.sendNotification": "Bildirim gönder",
+  "send.heading": "Bildirim gönder",
+  "send.subtitle": "{name} adlı kullanıcının bildirim zilinde görünür.",
+  "send.titleLabel": "Başlık",
+  "send.bodyLabel": "Mesaj",
+  "send.bodyPlaceholder": "örn. Yeni programınız hazır 💪",
+  "send.submit": "Gönder",
+  "send.sending": "Gönderiliyor…",
+  "toast.notificationSent": "Bildirim gönderildi",
+
+  // Weekly review — form
+  "review.link": "Haftalık değerlendirme",
+  "review.heading": "Geçen haftanın değerlendirmesi",
+  "review.subtitle": "Alişan'a {range} haftasının nasıl geçtiğini anlatın.",
+  "review.daysAttended": "Geçen hafta kaç gün antrenman yaptınız?",
+  "review.programsDone": "Hangi programları yaptınız?",
+  "review.hardExercises": "Hangi egzersizler zorladı?",
+  "review.hardHint": "Zorlandıklarınızı işaretleyin.",
+  "review.note": "Alişan'a eklemek istediğiniz bir şey var mı?",
+  "review.notePlaceholder": "İsteğe bağlı — ağrı, enerji, sorular…",
+  "review.submit": "Değerlendirmeyi gönder",
+  "review.update": "Değerlendirmeyi güncelle",
+  "review.none": "Geçen hafta programınız yoktu — henüz değerlendirilecek bir şey yok.",
+  "toast.reviewSubmitted": "Değerlendirme gönderildi",
+  "err.reviewNoPrograms": "Geçen hafta için değerlendirilecek bir şey yok.",
+
+  // Weekly review — staff view
+  "review.staffHeading": "Haftalık değerlendirmeler",
+  "review.staffEmpty": "Henüz haftalık değerlendirme gönderilmedi.",
+  "review.daysLabel": "Antrenman günü",
+  "review.programsLabel": "Yapılan programlar",
+  "review.hardLabel": "Zorlayanlar",
+  "review.noteLabel": "Not",
+  "review.nonePicked": "Yok",
+
+  // View as user
+  "admin.viewAsUser": "Kullanıcı gibi görüntüle",
+
   // Whatsapp
   "wa.aria": "WhatsApp'tan yaz",
   "wa.title": "WhatsApp — yakında",
@@ -747,6 +880,7 @@ const tr: Dict = {
   "err.cantChangeOwnRole": "Kendi rolünüzü değiştiremezsiniz.",
   "err.invalidRole": "Geçerli bir rol seçin.",
   "err.adminOnly": "Bunu yalnızca bir yönetici yapabilir.",
+  "err.notifTitle": "Bildirim için bir başlık girin.",
 };
 
 const MESSAGES: Record<Lang, Dict> = { en, tr };
@@ -788,6 +922,11 @@ export function programsCount(lang: Lang, n: number): string {
   return lang === "tr"
     ? `${n} program`
     : `${n} ${n === 1 ? "program" : "programs"}`;
+}
+export function reviewsCount(lang: Lang, n: number): string {
+  return lang === "tr"
+    ? `${n} değerlendirme`
+    : `${n} ${n === 1 ? "review" : "reviews"}`;
 }
 export function clientsCount(lang: Lang, n: number): string {
   return lang === "tr"

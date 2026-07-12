@@ -90,3 +90,45 @@ export interface ExerciseLibrary {
   default_instructions: string | null;
   created_at: string;
 }
+
+export type NotificationType =
+  | "membership_expiry"
+  | "missing_info"
+  | "weekly_review"
+  | "manual";
+
+/** An in-app notification. A user only ever sees their own. */
+export interface Notification {
+  id: string;
+  user_id: string;
+  type: NotificationType;
+  title: string;
+  body: string | null;
+  /** Optional in-app route to open when clicked. */
+  link: string | null;
+  read: boolean;
+  created_at: string;
+}
+
+/** Snapshot of a program / exercise stored in a review (survives later edits). */
+export interface ReviewProgramRef {
+  id: string;
+  title: string;
+}
+export interface ReviewExerciseRef {
+  id: string;
+  name: string;
+}
+
+/** A client's self-reported review of one completed week. */
+export interface WeeklyReview {
+  id: string;
+  user_id: string;
+  /** ISO date (YYYY-MM-DD) — the Monday of the reviewed week. */
+  week_start: string;
+  days_attended: number | null;
+  programs_done: ReviewProgramRef[];
+  hard_exercises: ReviewExerciseRef[];
+  note: string | null;
+  created_at: string;
+}

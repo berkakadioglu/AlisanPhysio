@@ -3,6 +3,8 @@ import { Archivo, Inter } from "next/font/google";
 import "./globals.css";
 import { BRAND_NAME, BRAND_TAGLINE } from "@/lib/constants";
 import { getLang } from "@/lib/i18n-server";
+import { getTheme } from "@/lib/theme-server";
+import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import { I18nProvider } from "./i18n-provider";
 import { ToastProvider } from "./toast";
 
@@ -34,11 +36,19 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const lang = await getLang();
+  const theme = await getTheme();
   return (
     <html
       lang={lang}
-      className={`${inter.variable} ${archivo.variable} h-full antialiased`}
+      className={`${inter.variable} ${archivo.variable} h-full antialiased${
+        theme === "dark" ? " dark" : ""
+      }`}
+      suppressHydrationWarning
     >
+      <head>
+        {/* Set the theme class before first paint to avoid a flash. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className="min-h-full flex flex-col font-sans">
         <I18nProvider lang={lang}>
           <ToastProvider>{children}</ToastProvider>

@@ -1,9 +1,18 @@
 @import "tailwindcss";
 
+/* Dark mode is driven by a `.dark` class on <html> (set pre-paint by the inline
+   script in the root layout). Tell Tailwind's `dark:` variant to key off it. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ==========================================================================
    AlisanPhysio design tokens — single source of truth.
    Warm, calm, premium: soft grey-blue canvas, floating white surfaces,
-   an elegant deep-wine brand accent. (Dark mode intentionally deferred.)
+   an elegant deep forest-green brand accent.
+
+   Every color the app renders resolves to one of these tokens, so the whole
+   product re-themes from the two blocks below. `:root` is the light theme;
+   `.dark` overrides the same tokens for a deep-charcoal, forest-green dark
+   theme. Nothing should hardcode a color outside this file.
    ========================================================================== */
 :root {
   /* Canvas & surfaces */
@@ -11,11 +20,18 @@
   --surface: #f4f8f5; /* cards/header — a whisper of brand green so they
                          read as distinct layers on white */
 
-  /* Brand — deep forest / pine green (confident, professional, never neon) */
+  /* Brand — deep forest / pine green (accent: text, links, borders, rings).
+     Kept as one accent color that reads well on the canvas. */
   --brand: #14532d;
-  --brand-hover: #0f3d21;
+  --brand-hover: #0f3d21; /* hover for accent text/links */
   --brand-bright: #166534; /* lifted green for small text accents (links, numbers) */
   --brand-tint: #e7f0ea; /* soft green wash for notes box / current badge */
+
+  /* Brand — solid fill that carries WHITE text (buttons, active tabs, badges).
+     Split from --brand so dark mode can lift the accent for legibility while
+     keeping a fill dark enough for white text. */
+  --brand-solid: #14532d;
+  --brand-solid-hover: #0f3d21;
 
   /* Text */
   --text: #1e293b; /* headings — dark slate, never pure black */
@@ -26,6 +42,129 @@
   --border: #e3e8ef; /* hairline */
   --pill: #eef2f6; /* soft neutral pill background */
   --success: #3f7d6e; /* calm harmonizing green */
+
+  /* Danger / destructive (error boxes, delete zones) */
+  --danger: #b91c1c; /* danger text */
+  --danger-tint: #fef2f2; /* danger box / hover background */
+  --danger-tint-hover: #fee2e2; /* deeper danger hover */
+  --danger-border: #fecdd3; /* danger hairline */
+  --danger-solid: #e11d48; /* solid destructive button (white text) */
+  --danger-solid-hover: #be123c;
+
+  /* Warning (editor "unlinked media" hint) */
+  --warning: #b45309;
+
+  /* Elevations — layered shadows with a hairline green-tinted ring so surfaces
+     have a crisp edge against the canvas. Referenced by --shadow-* below. */
+  --elev-soft: 0 0 0 1px rgb(20 83 45 / 0.07),
+    0 1px 2px 0 rgb(20 83 45 / 0.04), 0 10px 30px -14px rgb(20 83 45 / 0.14);
+  --elev-lift: 0 0 0 1px rgb(20 83 45 / 0.1),
+    0 2px 6px 0 rgb(20 83 45 / 0.06), 0 20px 48px -18px rgb(20 83 45 / 0.22);
+
+  /* Modal scrim */
+  --scrim: rgb(15 23 42 / 0.3);
+
+  /* Membership badge tiers (muted, low-saturation) */
+  --mem-platinum-bg: #e6ebf2;
+  --mem-platinum-fg: #334155;
+  --mem-platinum-border: #a9b6ca;
+  --mem-gold-bg: #fbeecb;
+  --mem-gold-fg: #7d5e12;
+  --mem-gold-border: #dcc069;
+  --mem-silver-bg: #eceef1;
+  --mem-silver-fg: #4b5563;
+  --mem-silver-border: #b6bdc7;
+  --mem-bronze-bg: #f3e3d3;
+  --mem-bronze-fg: #7c451f;
+  --mem-bronze-border: #cfa478;
+
+  /* BMI category badge (WHO) — calm, informational */
+  --bmi-underweight-bg: #eaf1f7;
+  --bmi-underweight-fg: #3b6390;
+  --bmi-underweight-border: #cddced;
+  --bmi-normal-bg: #e8f1ea;
+  --bmi-normal-fg: #3f7d6e;
+  --bmi-normal-border: #cfe4d6;
+  --bmi-overweight-bg: #fdf4e3;
+  --bmi-overweight-fg: #8a6a1e;
+  --bmi-overweight-border: #eccf8f;
+  --bmi-obese-bg: #fbeceb;
+  --bmi-obese-fg: #a23b34;
+  --bmi-obese-border: #f0cdc9;
+}
+
+.dark {
+  /* Canvas & surfaces — deep charcoal with a faint green cast; cards lifted */
+  --background: #0e1512;
+  --surface: #18221e;
+
+  /* Brand accent — lifted green so text/links/borders stay legible & premium */
+  --brand: #56c98a;
+  --brand-hover: #74d9a1;
+  --brand-bright: #63d195;
+  --brand-tint: #17281f; /* dark green wash; light-green text reads on it */
+
+  /* Brand solid — deep emerald fill that still carries white text */
+  --brand-solid: #1d7d46;
+  --brand-solid-hover: #23924f;
+
+  /* Text — off-white → muted slate */
+  --text: #e6edea;
+  --text-muted: #9db0a9;
+  --text-subtle: #6f817b;
+
+  /* Structural */
+  --border: #26332c;
+  --pill: #202b26;
+  --success: #5fae9a;
+
+  /* Danger — legible on dark; solid stays saturated with white text */
+  --danger: #f0a6a0;
+  --danger-tint: #2a1618;
+  --danger-tint-hover: #351a1c;
+  --danger-border: #562a2c;
+  --danger-solid: #c14a44;
+  --danger-solid-hover: #cf5b54;
+
+  /* Warning */
+  --warning: #e0b45f;
+
+  /* Elevations — deeper, black-based on dark (green tint would muddy) */
+  --elev-soft: 0 0 0 1px rgb(0 0 0 / 0.5),
+    0 1px 2px 0 rgb(0 0 0 / 0.4), 0 10px 30px -14px rgb(0 0 0 / 0.7);
+  --elev-lift: 0 0 0 1px rgb(0 0 0 / 0.55),
+    0 2px 6px 0 rgb(0 0 0 / 0.45), 0 24px 50px -18px rgb(0 0 0 / 0.85);
+
+  /* Modal scrim — darker so it reads over a dark canvas */
+  --scrim: rgb(0 0 0 / 0.6);
+
+  /* Membership badge tiers — dark surfaces, light foregrounds */
+  --mem-platinum-bg: #232a33;
+  --mem-platinum-fg: #c3ccd9;
+  --mem-platinum-border: #3c4658;
+  --mem-gold-bg: #332a15;
+  --mem-gold-fg: #e5c877;
+  --mem-gold-border: #5c4d22;
+  --mem-silver-bg: #262a2f;
+  --mem-silver-fg: #c4cbd4;
+  --mem-silver-border: #3d444d;
+  --mem-bronze-bg: #33261a;
+  --mem-bronze-fg: #d8a878;
+  --mem-bronze-border: #574029;
+
+  /* BMI category badge — dark bg, light fg (badge inverts fg/bg internally) */
+  --bmi-underweight-bg: #16242f;
+  --bmi-underweight-fg: #7fb0da;
+  --bmi-underweight-border: #274157;
+  --bmi-normal-bg: #14251f;
+  --bmi-normal-fg: #6cc0a9;
+  --bmi-normal-border: #244034;
+  --bmi-overweight-bg: #2b2413;
+  --bmi-overweight-fg: #d9b45e;
+  --bmi-overweight-border: #4a3d1d;
+  --bmi-obese-bg: #2c1817;
+  --bmi-obese-fg: #e8918a;
+  --bmi-obese-border: #4d2724;
 }
 
 @theme inline {
@@ -36,6 +175,8 @@
   --color-brand-hover: var(--brand-hover);
   --color-brand-bright: var(--brand-bright);
   --color-brand-tint: var(--brand-tint);
+  --color-brand-solid: var(--brand-solid);
+  --color-brand-solid-hover: var(--brand-solid-hover);
 
   --color-foreground: var(--text);
   --color-muted-foreground: var(--text-muted);
@@ -45,16 +186,23 @@
   --color-pill: var(--pill);
   --color-success: var(--success);
 
+  --color-danger: var(--danger);
+  --color-danger-tint: var(--danger-tint);
+  --color-danger-tint-hover: var(--danger-tint-hover);
+  --color-danger-border: var(--danger-border);
+  --color-danger-solid: var(--danger-solid);
+  --color-danger-solid-hover: var(--danger-solid-hover);
+
+  --color-warning: var(--warning);
+  --color-scrim: var(--scrim);
+
   /* Inter for body/UI, Archivo for bold display headings. */
   --font-sans: var(--font-inter);
   --font-display: var(--font-archivo);
 
-  /* Layered shadows with a hairline green-tinted ring so surfaces have a
-     crisp edge against the white canvas. */
-  --shadow-soft: 0 0 0 1px rgb(20 83 45 / 0.07),
-    0 1px 2px 0 rgb(20 83 45 / 0.04), 0 10px 30px -14px rgb(20 83 45 / 0.14);
-  --shadow-lift: 0 0 0 1px rgb(20 83 45 / 0.1),
-    0 2px 6px 0 rgb(20 83 45 / 0.06), 0 20px 48px -18px rgb(20 83 45 / 0.22);
+  /* Elevations resolve to the themeable --elev-* variables. */
+  --shadow-soft: var(--elev-soft);
+  --shadow-lift: var(--elev-lift);
 }
 
 body {

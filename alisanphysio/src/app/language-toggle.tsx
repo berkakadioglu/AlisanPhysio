@@ -26,7 +26,7 @@ export default function LanguageToggle() {
           aria-pressed={l === lang}
           className={`rounded-full px-2.5 py-1 uppercase tracking-wide transition ${
             l === lang
-              ? "bg-brand text-white shadow-sm"
+              ? "bg-brand-solid text-white shadow-sm"
               : "text-muted-foreground hover:text-foreground"
           }`}
         >

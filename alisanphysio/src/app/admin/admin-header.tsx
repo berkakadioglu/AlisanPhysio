@@ -4,6 +4,8 @@ import { t } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n-server";
 import { signOut } from "@/app/dashboard/actions";
 import LanguageToggle from "@/app/language-toggle";
+import ThemeToggle from "@/app/theme-toggle";
+import NotificationBell from "@/components/notification-bell";
 import RefreshButton from "./refresh-button";
 
 /**
@@ -45,6 +47,8 @@ export default async function AdminHeader({
         </div>
 
         <div className="flex items-center gap-1.5">
+          <NotificationBell />
+          <ThemeToggle />
           <LanguageToggle />
           <RefreshButton />
           <form action={signOut}>

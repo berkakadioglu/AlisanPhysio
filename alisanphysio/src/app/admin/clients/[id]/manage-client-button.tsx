@@ -170,7 +170,7 @@ function ManageModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/30 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-scrim p-4"
       onClick={onClose}
     >
       <div
@@ -275,7 +275,7 @@ function ManageModal({
           {error && (
             <p
               role="alert"
-              className="rounded-lg bg-rose-50 px-3.5 py-2.5 text-sm text-rose-700"
+              className="rounded-lg bg-danger-tint px-3.5 py-2.5 text-sm text-danger"
             >
               {error}
             </p>
@@ -292,7 +292,7 @@ function ManageModal({
             <button
               type="submit"
               disabled={pending}
-              className="rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-xl bg-brand-solid px-4 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:bg-brand-solid-hover disabled:cursor-not-allowed disabled:opacity-60"
             >
               {pending ? t("common.saving") : t("manage.save")}
             </button>
@@ -307,30 +307,30 @@ function ManageModal({
             <button
               type="button"
               onClick={() => setConfirming(true)}
-              className="rounded-xl border border-rose-300 px-4 py-2.5 text-sm font-medium text-rose-600 transition hover:bg-rose-50"
+              className="rounded-xl border border-danger-border px-4 py-2.5 text-sm font-medium text-danger transition hover:bg-danger-tint"
             >
               {t("manage.deleteClient")}
             </button>
           ) : (
-            <div className="rounded-xl border border-rose-200 bg-rose-50 p-4">
-              <p className="font-display text-sm font-bold text-rose-800">
+            <div className="rounded-xl border border-danger-border bg-danger-tint p-4">
+              <p className="font-display text-sm font-bold text-danger">
                 {t("manage.deleteHeading")}
               </p>
-              <p className="mt-1.5 text-sm text-rose-700">
+              <p className="mt-1.5 text-sm text-danger">
                 {t("manage.deleteWarning")}
               </p>
-              <label className="mt-3 flex items-start gap-2 text-sm text-rose-800">
+              <label className="mt-3 flex items-start gap-2 text-sm text-danger">
                 <input
                   type="checkbox"
                   checked={ack}
                   onChange={(e) => setAck(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 accent-rose-600"
+                  className="mt-0.5 h-4 w-4 accent-[var(--danger-solid)]"
                 />
                 <span>{t("manage.deleteConfirmCheck")}</span>
               </label>
 
               {deleteError && (
-                <p role="alert" className="mt-2 text-sm font-medium text-rose-700">
+                <p role="alert" className="mt-2 text-sm font-medium text-danger">
                   {deleteError}
                 </p>
               )}
@@ -343,7 +343,7 @@ function ManageModal({
                     setAck(false);
                     setDeleteError(null);
                   }}
-                  className="rounded-xl px-4 py-2.5 text-sm font-medium text-rose-700 transition hover:bg-rose-100"
+                  className="rounded-xl px-4 py-2.5 text-sm font-medium text-danger transition hover:bg-danger-tint-hover"
                 >
                   {t("common.cancel")}
                 </button>
@@ -351,7 +351,7 @@ function ManageModal({
                   type="button"
                   onClick={doDelete}
                   disabled={!ack || deleting}
-                  className="rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-xl bg-danger-solid px-4 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:bg-danger-solid-hover disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {deleting ? t("manage.deleting") : t("manage.deleteConfirm")}
                 </button>

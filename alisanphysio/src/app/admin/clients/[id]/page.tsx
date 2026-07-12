@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { requireStaff } from "@/lib/admin-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { BRAND_NAME } from "@/lib/constants";
-import type { Profile, Program } from "@/lib/types";
+import type { Profile, Program, WeeklyReview } from "@/lib/types";
 import { bucketForWeekStart, type Bucket } from "@/lib/week";
 import { formatDay, isLang, t, type Lang } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n-server";
@@ -14,6 +14,8 @@ import ProgramCard from "@/app/dashboard/program-card";
 import NewProgramMenu from "./new-program-menu";
 import ResetPasswordButton from "./reset-password-button";
 import ManageClientButton from "./manage-client-button";
+import SendNotificationButton from "./send-notification-button";
+import WeeklyReviewsList from "./weekly-reviews-list";
 
 export const metadata: Metadata = {
   title: `Client · ${BRAND_NAME}`,
@@ -79,6 +81,14 @@ export default async function AdminClientDetailPage({
     .eq("client_id", id)
     .order("week_start_date", { ascending: false })
     .returns<ProgramWithCount[]>();
+
+  // This user's submitted weekly reviews (staff read via RLS).
+  const { data: reviews } = await supabase
+    .from("weekly_reviews")
+    .select("id, user_id, week_start, days_attended, programs_done, hard_exercises, note, created_at")
+    .eq("user_id", id)
+    .order("week_start", { ascending: false })
+    .returns<WeeklyReview[]>();
 
   const rows = programs ?? [];
   const buckets: Record<Bucket, ProgramWithCount[]> = {
@@ -161,6 +171,7 @@ export default async function AdminClientDetailPage({
               defaultOpen={manage === "1"}
             />
             <ResetPasswordButton clientId={id} />
+            <SendNotificationButton userId={id} userName={displayName} />
             <NewProgramMenu clientId={id} programs={programSummaries} />
           </div>
         </div>
@@ -183,17 +194,26 @@ export default async function AdminClientDetailPage({
               {buckets[key].length > 0 ? (
                 <div className="space-y-4">
                   {buckets[key].map((program) => (
-                    <ProgramCard
-                      key={program.id}
-                      id={program.id}
-                      title={program.title}
-                      weekStartDate={program.week_start_date}
-                      notes={program.notes}
-                      exerciseCount={program.exercises[0]?.count ?? 0}
-                      dayTitles={dayTitlesOf(program)}
-                      accent={key === "current"}
-                      href={`/admin/clients/${id}/programs/${program.id}/edit`}
-                    />
+                    <div key={program.id} className="space-y-1.5">
+                      <ProgramCard
+                        id={program.id}
+                        title={program.title}
+                        weekStartDate={program.week_start_date}
+                        notes={program.notes}
+                        exerciseCount={program.exercises[0]?.count ?? 0}
+                        dayTitles={dayTitlesOf(program)}
+                        accent={key === "current"}
+                        href={`/admin/clients/${id}/programs/${program.id}/edit`}
+                      />
+                      <div className="px-1 text-right">
+                        <Link
+                          href={`/dashboard/${program.id}`}
+                          className="text-xs font-medium text-muted-foreground transition hover:text-brand"
+                        >
+                          {t(lang, "admin.viewAsUser")} <span aria-hidden>↗</span>
+                        </Link>
+                      </div>
+                    </div>
                   ))}
                 </div>
               ) : (
@@ -203,6 +223,22 @@ export default async function AdminClientDetailPage({
               )}
             </section>
           ))}
+
+          {/* Weekly reviews the user submitted (read-only for staff). */}
+          <section aria-labelledby="sec-reviews">
+            <div className="mb-4 flex items-center gap-2.5 px-1">
+              <h2
+                id="sec-reviews"
+                className="text-xs font-semibold uppercase tracking-widest text-muted-foreground"
+              >
+                {t(lang, "review.staffHeading")}
+              </h2>
+              <span className="rounded-full bg-pill px-2 py-0.5 text-xs font-medium text-muted-foreground tabular-nums">
+                {reviews?.length ?? 0}
+              </span>
+            </div>
+            <WeeklyReviewsList reviews={reviews ?? []} lang={lang} />
+          </section>
         </div>
       </main>
     </div>
