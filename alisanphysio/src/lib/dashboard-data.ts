@@ -45,11 +45,15 @@ export async function loadDashboardData(): Promise<DashboardData> {
     .eq("id", user.id)
     .single<Profile>();
 
+  // Scope to the signed-in user's OWN programs. Staff (admin/manager) can read
+  // every program via RLS, so the client-facing dashboard MUST filter explicitly
+  // — otherwise a staff member's own dashboard would show everyone's programs.
   const { data: programs } = await supabase
     .from("programs")
     .select(
       "id, client_id, title, week_start_date, notes, created_at, exercises(count), program_days(title, order_index)",
     )
+    .eq("client_id", user.id)
     .order("week_start_date", { ascending: false })
     .returns<ProgramWithCount[]>();
 

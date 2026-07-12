@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { requireAdmin } from "@/lib/admin-auth";
+import { requireStaff } from "@/lib/admin-auth";
 import { BRAND_NAME } from "@/lib/constants";
 import type { Exercise, ExerciseLibrary, Program, ProgramDay } from "@/lib/types";
 import AdminHeader from "@/app/admin/admin-header";
@@ -19,7 +19,7 @@ export default async function EditProgramPage({
   params: Promise<{ id: string; programId: string }>;
 }) {
   const { id, programId } = await params;
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireStaff();
 
   const { data: program } = await supabase
     .from("programs")

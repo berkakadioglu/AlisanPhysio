@@ -4,11 +4,13 @@ import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import type { Lang } from "@/lib/i18n";
 import type { Membership } from "@/lib/membership";
+import type { Role } from "@/lib/types";
 import { useI18n } from "@/app/i18n-provider";
 import { useToast } from "@/app/toast";
 import LanguageSelect from "@/app/admin/language-select";
 import MembershipSelect from "@/app/admin/membership-select";
-import { deleteClient, updateClient } from "@/app/admin/actions";
+import RoleSelect from "@/app/admin/role-select";
+import { assignRole, deleteClient, updateClient } from "@/app/admin/actions";
 
 const inputClass =
   "w-full rounded-xl border border-border bg-surface px-3.5 py-2.5 text-sm text-foreground shadow-sm outline-none transition focus:border-brand/40 focus:ring-2 focus:ring-brand/15";
@@ -21,6 +23,9 @@ export default function ManageClientButton({
   height,
   membership,
   membershipEndDate,
+  role,
+  isAdmin,
+  isSelf,
   defaultOpen = false,
 }: {
   clientId: string;
@@ -30,6 +35,9 @@ export default function ManageClientButton({
   height: number | null;
   membership: Membership | null;
   membershipEndDate: string | null;
+  role: Role;
+  isAdmin: boolean;
+  isSelf: boolean;
   defaultOpen?: boolean;
 }) {
   const { t } = useI18n();
@@ -60,6 +68,9 @@ export default function ManageClientButton({
           initialHeight={height != null ? String(height) : ""}
           initialMembership={membership}
           initialEndDate={membershipEndDate ?? ""}
+          initialRole={role}
+          isAdmin={isAdmin}
+          isSelf={isSelf}
           onClose={close}
         />
       )}
@@ -75,6 +86,9 @@ function ManageModal({
   initialHeight,
   initialMembership,
   initialEndDate,
+  initialRole,
+  isAdmin,
+  isSelf,
   onClose,
 }: {
   clientId: string;
@@ -84,6 +98,9 @@ function ManageModal({
   initialHeight: string;
   initialMembership: Membership | null;
   initialEndDate: string;
+  initialRole: Role;
+  isAdmin: boolean;
+  isSelf: boolean;
   onClose: () => void;
 }) {
   const { t } = useI18n();
@@ -95,6 +112,7 @@ function ManageModal({
   const [height, setHeight] = useState(initialHeight);
   const [membership, setMembership] = useState<Membership | null>(initialMembership);
   const [endDate, setEndDate] = useState(initialEndDate);
+  const [role, setRole] = useState<Role>(initialRole);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -117,14 +135,23 @@ function ManageModal({
       membership,
       membershipEndDate: endDate,
     });
-    if (res.ok) {
-      toast(t("toast.clientUpdated"));
-      router.refresh();
-      onClose();
-    } else {
+    if (!res.ok) {
       setError(res.error);
       setPending(false);
+      return;
     }
+    // Role changes go through the admin-only action (separate from staff fields).
+    if (isAdmin && !isSelf && role !== initialRole) {
+      const roleRes = await assignRole({ userId: clientId, role });
+      if (!roleRes.ok) {
+        setError(roleRes.error);
+        setPending(false);
+        return;
+      }
+    }
+    toast(t("toast.clientUpdated"));
+    router.refresh();
+    onClose();
   }
 
   async function doDelete() {
@@ -209,6 +236,19 @@ function ManageModal({
             </label>
             <LanguageSelect value={language} onChange={setLanguage} />
           </div>
+          {isAdmin && (
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium text-foreground">
+                {t("manage.role")}
+              </label>
+              <RoleSelect value={role} onChange={setRole} disabled={isSelf} />
+              {isSelf && (
+                <p className="text-xs text-subtle-foreground">
+                  {t("err.cantChangeOwnRole")}
+                </p>
+              )}
+            </div>
+          )}
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-foreground">
               {t("membership.label")}
@@ -259,7 +299,9 @@ function ManageModal({
           </div>
         </form>
 
-        {/* Danger zone — permanent delete, behind an explicit confirm. */}
+        {/* Danger zone — permanent delete, behind an explicit confirm.
+            ADMIN ONLY: managers never see this (and deleteClient is requireAdmin). */}
+        {isAdmin && (
         <div className="mt-6 border-t border-border pt-5">
           {!confirming ? (
             <button
@@ -317,6 +359,7 @@ function ManageModal({
             </div>
           )}
         </div>
+        )}
       </div>
     </div>
   );

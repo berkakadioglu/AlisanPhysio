@@ -29,9 +29,12 @@ export default async function ProfilePage() {
     .eq("id", user.id)
     .single<ProfileData>();
 
+  // Scope to the signed-in user's OWN rows. Staff can read all measurements/
+  // complaints via RLS, so the self-service profile MUST filter by user id.
   const { data: measurements } = await supabase
     .from("measurements")
     .select("id, client_id, measured_on, weight_kg, waist_cm, hip_cm, arm_cm, chest_cm, created_at")
+    .eq("client_id", user.id)
     .order("measured_on", { ascending: false })
     .order("created_at", { ascending: false })
     .returns<Measurement[]>();
@@ -39,6 +42,7 @@ export default async function ProfilePage() {
   const { data: complaints } = await supabase
     .from("complaints")
     .select("id, client_id, body, created_at")
+    .eq("client_id", user.id)
     .order("created_at", { ascending: false })
     .returns<Complaint[]>();
 

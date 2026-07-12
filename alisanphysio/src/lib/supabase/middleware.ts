@@ -81,10 +81,11 @@ export async function updateSession(request: NextRequest) {
       }>();
 
     const role = profile?.role;
+    const isStaff = role === "admin" || role === "manager";
 
-    // Admin area: only role='admin' may enter. UX redirect; every /admin page
-    // and action ALSO re-checks server-side (defense in depth).
-    if (pathname.startsWith("/admin") && role !== "admin") {
+    // Admin area: staff (admin OR manager) may enter. UX redirect; every /admin
+    // page and action ALSO re-checks server-side (defense in depth).
+    if (pathname.startsWith("/admin") && !isStaff) {
       return redirectTo("/dashboard");
     }
 

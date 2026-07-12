@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireAdmin } from "@/lib/admin-auth";
+import { requireStaff } from "@/lib/admin-auth";
 import { normalizeYouTubeUrl } from "@/lib/youtube";
 import { t, type Lang } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n-server";
@@ -35,7 +35,7 @@ export async function createLibraryExercise(input: {
   youtubeUrl: string;
   defaultInstructions: string;
 }): Promise<Result> {
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireStaff();
   const lang = await getLang();
   const parsed = validate(input, lang);
   if (typeof parsed === "string") return { ok: false, error: parsed };
@@ -57,7 +57,7 @@ export async function updateLibraryExercise(input: {
   youtubeUrl: string;
   defaultInstructions: string;
 }): Promise<Result> {
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireStaff();
   const lang = await getLang();
   const parsed = validate(input, lang);
   if (typeof parsed === "string") return { ok: false, error: parsed };
@@ -74,7 +74,7 @@ export async function updateLibraryExercise(input: {
 export async function deleteLibraryExercise(input: {
   id: string;
 }): Promise<Result> {
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireStaff();
   // exercises.library_id is ON DELETE SET NULL, so past programs keep their name.
   const { error } = await supabase
     .from("exercise_library")

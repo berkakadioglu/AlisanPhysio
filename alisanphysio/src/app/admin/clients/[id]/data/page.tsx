@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requireAdmin } from "@/lib/admin-auth";
+import { requireStaff } from "@/lib/admin-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { BRAND_NAME } from "@/lib/constants";
 import { t } from "@/lib/i18n";
@@ -20,7 +20,7 @@ export default async function AdminClientDataPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireStaff();
   const lang = await getLang();
 
   // Admin reads the client's rows via the admin SELECT RLS policies.

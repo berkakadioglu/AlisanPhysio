@@ -1,11 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireAdmin } from "@/lib/admin-auth";
+import { requireAdmin, requireStaff } from "@/lib/admin-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isLang, t, type Lang } from "@/lib/i18n";
 import { isMembership, type Membership } from "@/lib/membership";
 import { getLang } from "@/lib/i18n-server";
+import type { Role } from "@/lib/types";
+
+const ROLES: Role[] = ["admin", "manager", "client"];
 
 interface ExerciseInput {
   name: string;
@@ -47,7 +50,7 @@ export async function createClientAccount(input: {
   password: string;
   language?: string;
 }): Promise<ActionResult> {
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireStaff();
   const lang = await getLang();
 
   const fullName = input.fullName.trim();
@@ -96,7 +99,7 @@ export async function createClientAccount(input: {
 export async function saveProgram(
   input: SaveProgramInput,
 ): Promise<ActionResult<{ programId: string }>> {
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireStaff();
   const lang = await getLang();
 
   const title = input.title.trim();
@@ -222,7 +225,7 @@ export async function deleteProgram(input: {
   programId: string;
   clientId: string;
 }): Promise<ActionResult> {
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireStaff();
 
   const { error } = await supabase
     .from("programs")
@@ -243,7 +246,7 @@ export async function resetClientPassword(input: {
   clientId: string;
   password: string;
 }): Promise<ActionResult> {
-  await requireAdmin();
+  await requireStaff();
   const lang = await getLang();
 
   if (input.password.length < 8) {
@@ -277,7 +280,7 @@ export async function updateClient(input: {
   membership?: string | null;
   membershipEndDate?: string | null;
 }): Promise<ActionResult> {
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireStaff();
   const lang = await getLang();
 
   const fullName = input.fullName.trim();
@@ -376,5 +379,37 @@ export async function deleteClient(input: {
   if (error) return { ok: false, error: error.message };
 
   revalidatePath("/admin");
+  return { ok: true };
+}
+
+/**
+ * Assign a role (admin / manager / client) to a user. ADMIN ONLY — the one
+ * thing a manager must never do. Enforced here by requireAdmin AND at the DB
+ * level by the profiles guard trigger (only is_admin() may change role).
+ * Refuses to change the caller's OWN role, to avoid an accidental self-lockout.
+ */
+export async function assignRole(input: {
+  userId: string;
+  role: string;
+}): Promise<ActionResult> {
+  const { supabase, userId } = await requireAdmin();
+  const lang = await getLang();
+
+  if (!ROLES.includes(input.role as Role)) {
+    return { ok: false, error: t(lang, "err.invalidRole") };
+  }
+  if (input.userId === userId) {
+    return { ok: false, error: t(lang, "err.cantChangeOwnRole") };
+  }
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ role: input.role })
+    .eq("id", input.userId);
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/admin");
+  revalidatePath(`/admin/clients/${input.userId}`);
+  revalidatePath(`/admin/clients/${input.userId}/data`);
   return { ok: true };
 }

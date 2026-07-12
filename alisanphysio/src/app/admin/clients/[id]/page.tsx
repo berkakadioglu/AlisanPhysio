@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requireAdmin } from "@/lib/admin-auth";
+import { requireStaff } from "@/lib/admin-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { BRAND_NAME } from "@/lib/constants";
 import type { Profile, Program } from "@/lib/types";
@@ -45,7 +45,8 @@ export default async function AdminClientDetailPage({
 }) {
   const { id } = await params;
   const { manage } = await searchParams;
-  const { supabase } = await requireAdmin();
+  const { supabase, profile: viewer } = await requireStaff();
+  const isAdmin = viewer.role === "admin";
   const lang = await getLang();
 
   const { data: client } = await supabase
@@ -116,17 +117,23 @@ export default async function AdminClientDetailPage({
               <h1 className="font-display text-3xl font-extrabold leading-tight tracking-tight text-foreground">
                 {displayName}
               </h1>
-              {client.membership && (
-                <span className="inline-flex items-center gap-2">
-                  <MembershipBadge membership={client.membership} />
-                  <span className="text-xs text-subtle-foreground">
-                    {client.membership_end_date
-                      ? t(lang, "membership.until", {
-                          date: formatDay(client.membership_end_date, lang),
-                        })
-                      : t(lang, "membership.noExpiry")}
-                  </span>
+              {client.role !== "client" ? (
+                <span className="rounded-full border border-brand/30 bg-brand-tint px-2.5 py-0.5 text-xs font-semibold text-brand">
+                  {t(lang, `role.${client.role}`)}
                 </span>
+              ) : (
+                client.membership && (
+                  <span className="inline-flex items-center gap-2">
+                    <MembershipBadge membership={client.membership} />
+                    <span className="text-xs text-subtle-foreground">
+                      {client.membership_end_date
+                        ? t(lang, "membership.until", {
+                            date: formatDay(client.membership_end_date, lang),
+                          })
+                        : t(lang, "membership.noExpiry")}
+                    </span>
+                  </span>
+                )
               )}
             </div>
             {client.full_name?.trim() && email && (
@@ -148,6 +155,9 @@ export default async function AdminClientDetailPage({
               height={client.height_cm}
               membership={client.membership}
               membershipEndDate={client.membership_end_date}
+              role={client.role}
+              isAdmin={isAdmin}
+              isSelf={viewer.id === id}
               defaultOpen={manage === "1"}
             />
             <ResetPasswordButton clientId={id} />

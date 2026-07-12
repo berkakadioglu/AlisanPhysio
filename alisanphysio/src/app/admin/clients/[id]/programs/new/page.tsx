@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { requireAdmin } from "@/lib/admin-auth";
+import { requireStaff } from "@/lib/admin-auth";
 import { BRAND_NAME } from "@/lib/constants";
 import type { ExerciseLibrary, Program, ProgramDay } from "@/lib/types";
 import { defaultNewWeek, nextMondayISO, thisMondayISO } from "@/lib/program-dates";
@@ -27,7 +27,7 @@ export default async function NewProgramPage({
 }) {
   const { id } = await params;
   const { copyFrom } = await searchParams;
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireStaff();
   const lang = await getLang();
 
   const [{ data: library }, { data: usedRows }] = await Promise.all([

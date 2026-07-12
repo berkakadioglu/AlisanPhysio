@@ -89,6 +89,20 @@ const en: Dict = {
   "admin.noClients": "No clients yet. Add your first one.",
   "admin.noClientMatches": "No clients match your search.",
 
+  // Admin — users list (3 tabs)
+  "admin.usersHeading": "Users",
+  "admin.tabAdmins": "Admins",
+  "admin.tabManagers": "Managers",
+  "admin.tabClients": "Clients",
+  "admin.searchUsers": "Search by name or email…",
+  "admin.noneInGroup": "No one in this group yet.",
+  "admin.noUserMatches": "No matches for your search.",
+
+  // Roles
+  "role.admin": "Admin",
+  "role.manager": "Manager",
+  "role.client": "Client",
+
   // Admin — client detail
   "admin.allClients": "All clients",
   "admin.manage": "Manage",
@@ -216,6 +230,7 @@ const en: Dict = {
   "toast.clientCreated": "Client created",
   "toast.clientUpdated": "Client updated",
   "toast.clientDeleted": "Client deleted",
+  "toast.roleUpdated": "Role updated",
   "toast.passwordUpdated": "Password updated",
   "toast.exerciseAdded": "Exercise added",
   "toast.exerciseSaved": "Exercise saved",
@@ -328,6 +343,10 @@ const en: Dict = {
   "inactive.body":
     "Alişan hasn't set an active membership for you. Please contact him to get started.",
 
+  // Role (admin-only)
+  "manage.role": "Role",
+  "manage.roleHint": "Only an admin can change roles.",
+
   // Delete client (admin, destructive)
   "manage.deleteClient": "Delete client",
   "manage.deleteHeading": "Delete this client?",
@@ -360,6 +379,9 @@ const en: Dict = {
   "err.weightRequired": "Please enter a weight for this measurement.",
   "err.endDate": "Pick a valid membership end date.",
   "err.notAClient": "This account can't be deleted here.",
+  "err.cantChangeOwnRole": "You can't change your own role.",
+  "err.invalidRole": "Pick a valid role.",
+  "err.adminOnly": "Only an admin can do that.",
 };
 
 const tr: Dict = {
@@ -429,6 +451,20 @@ const tr: Dict = {
   "admin.addName": "Ad ekle",
   "admin.noClients": "Henüz danışan yok. İlk danışanınızı ekleyin.",
   "admin.noClientMatches": "Aramanızla eşleşen danışan yok.",
+
+  // Admin — users list (3 tabs)
+  "admin.usersHeading": "Kullanıcılar",
+  "admin.tabAdmins": "Yöneticiler",
+  "admin.tabManagers": "Sorumlular",
+  "admin.tabClients": "Danışanlar",
+  "admin.searchUsers": "Ad veya e-postaya göre ara…",
+  "admin.noneInGroup": "Bu grupta henüz kimse yok.",
+  "admin.noUserMatches": "Aramanızla eşleşen sonuç yok.",
+
+  // Roles
+  "role.admin": "Yönetici",
+  "role.manager": "Sorumlu",
+  "role.client": "Danışan",
 
   // Admin — client detail
   "admin.allClients": "Tüm danışanlar",
@@ -558,6 +594,7 @@ const tr: Dict = {
   "toast.clientCreated": "Danışan oluşturuldu",
   "toast.clientUpdated": "Danışan güncellendi",
   "toast.clientDeleted": "Danışan silindi",
+  "toast.roleUpdated": "Rol güncellendi",
   "toast.passwordUpdated": "Şifre güncellendi",
   "toast.exerciseAdded": "Egzersiz eklendi",
   "toast.exerciseSaved": "Egzersiz kaydedildi",
@@ -670,6 +707,10 @@ const tr: Dict = {
   "inactive.body":
     "Alişan sizin için aktif bir üyelik tanımlamadı. Başlamak için lütfen onunla iletişime geçin.",
 
+  // Role (admin-only)
+  "manage.role": "Rol",
+  "manage.roleHint": "Rolleri yalnızca bir yönetici değiştirebilir.",
+
   // Delete client (admin, destructive)
   "manage.deleteClient": "Danışanı sil",
   "manage.deleteHeading": "Bu danışan silinsin mi?",
@@ -703,6 +744,9 @@ const tr: Dict = {
   "err.weightRequired": "Bu ölçüm için lütfen bir kilo girin.",
   "err.endDate": "Geçerli bir üyelik bitiş tarihi seçin.",
   "err.notAClient": "Bu hesap buradan silinemez.",
+  "err.cantChangeOwnRole": "Kendi rolünüzü değiştiremezsiniz.",
+  "err.invalidRole": "Geçerli bir rol seçin.",
+  "err.adminOnly": "Bunu yalnızca bir yönetici yapabilir.",
 };
 
 const MESSAGES: Record<Lang, Dict> = { en, tr };

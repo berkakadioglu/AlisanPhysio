@@ -6,7 +6,7 @@
 
 import type { Membership } from "@/lib/membership";
 
-export type Role = "admin" | "client";
+export type Role = "admin" | "manager" | "client";
 
 export interface Profile {
   id: string;

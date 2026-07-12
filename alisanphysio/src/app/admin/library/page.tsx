@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { requireAdmin } from "@/lib/admin-auth";
+import { requireStaff } from "@/lib/admin-auth";
 import { BRAND_NAME } from "@/lib/constants";
 import type { ExerciseLibrary } from "@/lib/types";
 import AdminHeader from "@/app/admin/admin-header";
@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default async function LibraryPage() {
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireStaff();
 
   const { data: items } = await supabase
     .from("exercise_library")
