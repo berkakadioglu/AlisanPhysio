@@ -2,10 +2,35 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bell } from "lucide-react";
+import { Bell, Megaphone, MessageSquareText, Ruler } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { Notification } from "@/lib/types";
 import { useI18n } from "@/app/i18n-provider";
+
+/**
+ * Map a stored notification `type` to one of three display categories, each
+ * with its own label, icon and color chip in the panel:
+ *   - Measurement request (missing_info / height + measurement nudge)
+ *   - Feedback request (weekly_review nudge)
+ *   - Other (manual sends + any other system notice, e.g. membership expiry)
+ */
+function categoryOf(type: string): {
+  labelKey: string;
+  Icon: typeof Bell;
+  chip: string;
+} {
+  if (type === "missing_info")
+    return { labelKey: "notif.cat.measurement", Icon: Ruler, chip: "bg-brand-tint text-brand" };
+  if (type === "weekly_review")
+    return {
+      labelKey: "notif.cat.feedback",
+      Icon: MessageSquareText,
+      // Arbitrary-value refs to the CSS vars (both defined per-theme in
+      // globals.css) — robust regardless of Tailwind theme-color registration.
+      chip: "bg-[var(--warning-tint)] text-[var(--warning)]",
+    };
+  return { labelKey: "notif.cat.other", Icon: Megaphone, chip: "bg-pill text-muted-foreground" };
+}
 
 export default function NotificationBell() {
   const { t } = useI18n();
@@ -134,6 +159,17 @@ export default function NotificationBell() {
                       }`}
                     />
                     <span className="min-w-0 flex-1">
+                      {(() => {
+                        const { labelKey, Icon, chip } = categoryOf(n.type);
+                        return (
+                          <span
+                            className={`mb-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${chip}`}
+                          >
+                            <Icon className="h-3 w-3" strokeWidth={2.25} aria-hidden />
+                            {t(labelKey)}
+                          </span>
+                        );
+                      })()}
                       <span className="block text-sm font-semibold text-foreground">
                         {n.title}
                       </span>

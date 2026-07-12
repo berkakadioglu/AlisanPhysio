@@ -51,8 +51,9 @@
   --danger-solid: #e11d48; /* solid destructive button (white text) */
   --danger-solid-hover: #be123c;
 
-  /* Warning (editor "unlinked media" hint) */
+  /* Warning (editor "unlinked media" hint; feedback-notification chip) */
   --warning: #b45309;
+  --warning-tint: #fdf4e3;
 
   /* Elevations — layered shadows with a hairline green-tinted ring so surfaces
      have a crisp edge against the canvas. Referenced by --shadow-* below. */
@@ -128,6 +129,7 @@
 
   /* Warning */
   --warning: #e0b45f;
+  --warning-tint: #2b2413;
 
   /* Elevations — deeper, black-based on dark (green tint would muddy) */
   --elev-soft: 0 0 0 1px rgb(0 0 0 / 0.5),

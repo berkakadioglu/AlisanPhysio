@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Archivo, Inter } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { BRAND_NAME, BRAND_TAGLINE } from "@/lib/constants";
 import { getLang } from "@/lib/i18n-server";
@@ -45,11 +46,13 @@ export default async function RootLayout({
       }`}
       suppressHydrationWarning
     >
-      <head>
-        {/* Set the theme class before first paint to avoid a flash. */}
-        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
-      </head>
       <body className="min-h-full flex flex-col font-sans">
+        {/* Set the theme class before first paint (no FOUC). beforeInteractive
+            inline scripts are hoisted into <head> and run before hydration —
+            the Next 16 App Router way, without the "script in React tree" warning. */}
+        <Script id="theme-init" strategy="beforeInteractive">
+          {THEME_INIT_SCRIPT}
+        </Script>
         <I18nProvider lang={lang}>
           <ToastProvider>{children}</ToastProvider>
         </I18nProvider>

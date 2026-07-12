@@ -5,10 +5,12 @@ import { createClient } from "@/lib/supabase/server";
 import { BRAND_NAME } from "@/lib/constants";
 import type { Exercise, Program, ProgramDay } from "@/lib/types";
 import { bucketForWeekStart, type Bucket } from "@/lib/week";
+import { isReviewableWeek } from "@/lib/reviews";
 import { formatWeekRange, t, type Lang } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n-server";
 import { parseYouTubeId } from "@/lib/youtube";
 import AppHeader from "../app-header";
+import ReviewAction from "../review-action";
 import YouTubeEmbed from "@/components/youtube-embed";
 
 /** Exercise plus the embedded library video (if it's linked to one). */
@@ -141,6 +143,19 @@ export default async function ProgramDetailPage({
   const items = exercises ?? [];
   const dayList = dayRows ?? [];
 
+  // Inline review affordance: current/past weeks are reviewable, future aren't.
+  const reviewable = isReviewableWeek(program.week_start_date);
+  let reviewed = false;
+  if (reviewable) {
+    const { data: rev } = await supabase
+      .from("weekly_reviews")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("week_start", program.week_start_date)
+      .maybeSingle();
+    reviewed = !!rev;
+  }
+
   // Flat when there are no days, or a single untitled day. Grouped otherwise.
   const grouped =
     dayList.length > 1 || dayList.some((d) => (d.title ?? "").trim() !== "");
@@ -196,6 +211,17 @@ export default async function ProgramDetailPage({
             <p className="mt-1.5 text-sm leading-relaxed text-foreground/80">
               {program.notes}
             </p>
+          </div>
+        )}
+
+        {reviewable && items.length > 0 && (
+          <div className="mt-8">
+            <ReviewAction
+              weekStart={program.week_start_date}
+              reviewed={reviewed}
+              lang={lang}
+              block
+            />
           </div>
         )}
 

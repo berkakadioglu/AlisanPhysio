@@ -3,12 +3,12 @@ import Link from "next/link";
 import { BRAND_NAME } from "@/lib/constants";
 import { loadDashboardData, firstNameOf, dayTitlesOf } from "@/lib/dashboard-data";
 import { generateSystemNotifications } from "@/lib/notifications";
-import { createClient } from "@/lib/supabase/server";
-import { prevMondayISO } from "@/lib/program-dates";
+import { reviewedWeekSet } from "@/lib/reviews";
 import { t } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n-server";
 import AppHeader from "./app-header";
 import ProgramCard from "./program-card";
+import ReviewAction from "./review-action";
 
 export const metadata: Metadata = {
   title: `Dashboard · ${BRAND_NAME}`,
@@ -21,23 +21,9 @@ export default async function DashboardPage() {
   const firstName = firstNameOf(profile);
   const lang = await getLang();
 
-  // Did the client already file last week's review? Only relevant when they
-  // actually had a program last week (otherwise there's nothing to review).
-  const reviewWeek = prevMondayISO();
-  const hadLastWeekProgram = buckets.past.some(
-    (p) => p.week_start_date === reviewWeek,
-  );
-  let reviewSubmitted = false;
-  if (profile?.role === "client" && hadLastWeekProgram) {
-    const supabase = await createClient();
-    const { data: review } = await supabase
-      .from("weekly_reviews")
-      .select("id")
-      .eq("user_id", profile.id)
-      .eq("week_start", reviewWeek)
-      .maybeSingle();
-    reviewSubmitted = !!review;
-  }
+  // Which of the user's weeks already have a review → drives the inline
+  // "Add review" vs "Review submitted" state on each reviewable program card.
+  const reviewedWeeks = await reviewedWeekSet();
 
   return (
     <div className="min-h-screen">
@@ -55,24 +41,6 @@ export default async function DashboardPage() {
             : t(lang, "dash.subtitleClient")}
         </p>
 
-        {reviewSubmitted && (
-          <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-brand-tint px-3 py-1 text-sm font-medium text-brand">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-4 w-4"
-              aria-hidden
-            >
-              <path d="M20 6 9 17l-5-5" />
-            </svg>
-            {t(lang, "review.submitted")}
-          </p>
-        )}
-
         {/* This Week — the hero */}
         <section aria-labelledby="this-week" className="mt-8">
           <p
@@ -85,16 +53,24 @@ export default async function DashboardPage() {
           {buckets.current.length > 0 ? (
             <div className="space-y-4">
               {buckets.current.map((program) => (
-                <ProgramCard
-                  key={program.id}
-                  id={program.id}
-                  title={program.title}
-                  weekStartDate={program.week_start_date}
-                  notes={program.notes}
-                  exerciseCount={program.exercises[0]?.count ?? 0}
-                  dayTitles={dayTitlesOf(program)}
-                  hero
-                />
+                <div key={program.id} className="space-y-2">
+                  <ProgramCard
+                    id={program.id}
+                    title={program.title}
+                    weekStartDate={program.week_start_date}
+                    notes={program.notes}
+                    exerciseCount={program.exercises[0]?.count ?? 0}
+                    dayTitles={dayTitlesOf(program)}
+                    hero
+                  />
+                  <div className="px-1">
+                    <ReviewAction
+                      weekStart={program.week_start_date}
+                      reviewed={reviewedWeeks.has(program.week_start_date)}
+                      lang={lang}
+                    />
+                  </div>
+                </div>
               ))}
             </div>
           ) : (

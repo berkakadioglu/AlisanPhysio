@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { BRAND_NAME } from "@/lib/constants";
 import { loadDashboardData } from "@/lib/dashboard-data";
+import { reviewedWeekSet } from "@/lib/reviews";
 import { t } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n-server";
 import AppHeader from "../app-header";
@@ -14,6 +15,7 @@ export const metadata: Metadata = {
 export default async function PastProgramsPage() {
   const { buckets } = await loadDashboardData();
   const lang = await getLang();
+  const reviewedWeeks = await reviewedWeekSet();
 
   return (
     <div className="min-h-screen">
@@ -35,7 +37,11 @@ export default async function PastProgramsPage() {
         </p>
 
         <div className="mt-8">
-          <ProgramList programs={buckets.past} empty={t(lang, "list.emptyPast")} />
+          <ProgramList
+            programs={buckets.past}
+            empty={t(lang, "list.emptyPast")}
+            review={{ lang, reviewedWeeks }}
+          />
         </div>
       </main>
     </div>

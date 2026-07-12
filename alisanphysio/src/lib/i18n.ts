@@ -228,8 +228,18 @@ const en: Dict = {
   "theme.toDark": "Switch to dark mode",
   "theme.toLight": "Switch to light mode",
 
-  // Weekly-review indicators
+  // Staff nav — personal program view
+  "nav.personalExercises": "Personal Exercises",
+  "nav.adminPanel": "Admin",
+
+  // Weekly-review indicators + inline add-review
   "review.submitted": "Review submitted",
+  "review.add": "Add review",
+
+  // Notification categories (bell panel)
+  "notif.cat.measurement": "Measurement request",
+  "notif.cat.feedback": "Feedback request",
+  "notif.cat.other": "Other",
 
   // Toasts
   "toast.programSaved": "Program saved",
@@ -659,8 +669,18 @@ const tr: Dict = {
   "theme.toDark": "Koyu moda geç",
   "theme.toLight": "Açık moda geç",
 
-  // Weekly-review indicators
+  // Staff nav — personal program view
+  "nav.personalExercises": "Kişisel Antrenman",
+  "nav.adminPanel": "Yönetim",
+
+  // Weekly-review indicators + inline add-review
   "review.submitted": "Değerlendirme gönderildi",
+  "review.add": "Değerlendirme ekle",
+
+  // Notification categories (bell panel)
+  "notif.cat.measurement": "Ölçüm talebi",
+  "notif.cat.feedback": "Değerlendirme talebi",
+  "notif.cat.other": "Diğer",
 
   // Toasts
   "toast.programSaved": "Program kaydedildi",
@@ -900,13 +920,23 @@ export function t(
   return s;
 }
 
+/**
+ * Deterministic short month names. Dates are formatted from explicit parts with
+ * these — NOT via toLocaleDateString/Intl.formatRange — because the environment's
+ * ICU output (separator character, spacing, non-breaking spaces) differs between
+ * Node and the browser and produces server/client hydration mismatches. These
+ * strings match the ICU "short" month names for each locale.
+ */
+const MONTHS_SHORT: Record<Lang, readonly string[]> = {
+  en: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+  tr: ["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"],
+};
+
 /** A plain localized calendar date, e.g. "Aug 31, 2026" / "31 Ağu 2026". */
 export function formatDay(iso: string, lang: Lang): string {
-  const [y, m, d] = iso.split("-").map(Number);
-  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString(
-    lang === "tr" ? "tr-TR" : "en-US",
-    { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" },
-  );
+  const [y, m, d] = ymd(iso);
+  const mon = MONTHS_SHORT[lang][m - 1];
+  return lang === "tr" ? `${d} ${mon} ${y}` : `${mon} ${d}, ${y}`;
 }
 
 // ---- Localized count helpers (Turkish doesn't pluralize after numbers) ----
@@ -934,49 +964,57 @@ export function clientsCount(lang: Lang, n: number): string {
     : `${n} ${n === 1 ? "client" : "clients"}`;
 }
 
-// ---- Localized dates ----
-function locale(lang: Lang): string {
-  return lang === "tr" ? "tr-TR" : "en-US";
-}
+// ---- Localized dates (deterministic — see MONTHS_SHORT note above) ----
 function ymd(iso: string): [number, number, number] {
   const [y, m, d] = iso.split("-").map(Number);
   return [y, m, d];
 }
 
-/** Monday–Sunday range, e.g. "Jul 6 – 12, 2026" / "6–12 Tem 2026". */
-export function formatWeekRange(iso: string, lang: Lang): string {
+/** The Sunday (Monday + 6) that ends a program week, as [y, m, d] (UTC). */
+function weekEnd(iso: string): [number, number, number] {
   const [y, m, d] = ymd(iso);
-  const start = new Date(Date.UTC(y, m - 1, d));
-  const end = new Date(Date.UTC(y, m - 1, d + 6));
-  return new Intl.DateTimeFormat(locale(lang), {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    timeZone: "UTC",
-  }).formatRange(start, end);
+  const e = new Date(Date.UTC(y, m - 1, d + 6));
+  return [e.getUTCFullYear(), e.getUTCMonth() + 1, e.getUTCDate()];
+}
+
+/**
+ * Monday–Sunday range, deterministic + localized:
+ *   en: "Jul 6 – 12, 2026" / "Jun 29 – Jul 5, 2026" / "Dec 28, 2026 – Jan 3, 2027"
+ *   tr: "6 – 12 Tem 2026"  / "29 Haz – 5 Tem 2026"   / "28 Ara 2026 – 3 Oca 2027"
+ */
+export function formatWeekRange(iso: string, lang: Lang): string {
+  const [sy, sm, sd] = ymd(iso);
+  const [ey, em, ed] = weekEnd(iso);
+  const sMon = MONTHS_SHORT[lang][sm - 1];
+  const eMon = MONTHS_SHORT[lang][em - 1];
+
+  if (lang === "tr") {
+    if (sy !== ey) return `${sd} ${sMon} ${sy} – ${ed} ${eMon} ${ey}`;
+    if (sm !== em) return `${sd} ${sMon} – ${ed} ${eMon} ${sy}`;
+    return `${sd} – ${ed} ${sMon} ${sy}`;
+  }
+  if (sy !== ey) return `${sMon} ${sd}, ${sy} – ${eMon} ${ed}, ${ey}`;
+  if (sm !== em) return `${sMon} ${sd} – ${eMon} ${ed}, ${sy}`;
+  return `${sMon} ${sd} – ${ed}, ${sy}`;
 }
 
 /** A default program title: "Week of Jul 6, 2026" / "6 Tem 2026 Haftası". */
 export function weekTitle(iso: string, lang: Lang): string {
-  const [y, m, d] = ymd(iso);
-  const date = new Date(Date.UTC(y, m - 1, d)).toLocaleDateString(locale(lang), {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    timeZone: "UTC",
-  });
+  const date = formatDay(iso, lang);
   return lang === "tr" ? `${date} Haftası` : `Week of ${date}`;
 }
 
-/** Dropdown label: "Week of Jul 6, 2026 (Jul 6 – 12)". */
+/** Dropdown label: "Week of Jul 6, 2026 (Jul 6 – 12)" — range without the year. */
 export function weekLabel(iso: string, lang: Lang): string {
-  const [y, m, d] = ymd(iso);
-  const start = new Date(Date.UTC(y, m - 1, d));
-  const end = new Date(Date.UTC(y, m - 1, d + 6));
-  const range = new Intl.DateTimeFormat(locale(lang), {
-    month: "short",
-    day: "numeric",
-    timeZone: "UTC",
-  }).formatRange(start, end);
+  const [, sm, sd] = ymd(iso);
+  const [, em, ed] = weekEnd(iso);
+  const sMon = MONTHS_SHORT[lang][sm - 1];
+  const eMon = MONTHS_SHORT[lang][em - 1];
+  let range: string;
+  if (lang === "tr") {
+    range = sm !== em ? `${sd} ${sMon} – ${ed} ${eMon}` : `${sd} – ${ed} ${sMon}`;
+  } else {
+    range = sm !== em ? `${sMon} ${sd} – ${eMon} ${ed}` : `${sMon} ${sd} – ${ed}`;
+  }
   return `${weekTitle(iso, lang)} (${range})`;
 }

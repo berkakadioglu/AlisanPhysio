@@ -6,6 +6,7 @@ import { BRAND_NAME } from "@/lib/constants";
 import { formatWeekRange, t } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n-server";
 import { prevMondayISO } from "@/lib/program-dates";
+import { bucketForWeekStart } from "@/lib/week";
 import AppHeader from "../app-header";
 import ReviewForm, { type ReviewProgram } from "./review-form";
 
@@ -27,7 +28,13 @@ type ReviewRow = {
   note: string | null;
 };
 
-export default async function WeeklyReviewPage() {
+const WEEK_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+export default async function WeeklyReviewPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ week?: string }>;
+}) {
   const supabase = await createClient();
   const lang = await getLang();
 
@@ -36,7 +43,14 @@ export default async function WeeklyReviewPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const weekStart = prevMondayISO();
+  // Review a specific week via ?week=YYYY-MM-DD (the inline "Add review" button
+  // passes the program's week). Only the current week or a past week is
+  // reviewable — never a future one. Falls back to last week (the default nudge).
+  const { week } = await searchParams;
+  const weekStart =
+    week && WEEK_RE.test(week) && bucketForWeekStart(week) !== "upcoming"
+      ? week
+      : prevMondayISO();
 
   // Last week's programs for THIS user (own only — explicit filter; RLS would
   // let staff read all otherwise).
