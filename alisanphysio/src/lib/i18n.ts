@@ -189,6 +189,27 @@ const en: Dict = {
   "lib.editHeading": "Edit exercise",
   "lib.newHeading": "New exercise",
 
+  // Exercise categories
+  "cat.heading": "Categories",
+  "cat.all": "All",
+  "cat.add": "Add category",
+  "cat.namePlaceholder": "Category name",
+  "cat.create": "Add",
+  "cat.rename": "Rename",
+  "cat.renameHeading": "Rename category",
+  "cat.save": "Save",
+  "cat.delete": "Delete category",
+  "cat.confirmDelete":
+    "Delete the category “{name}”? The exercises stay — only the category and its tags are removed.",
+  "cat.defaultLocked": "Default categories can't be renamed or deleted.",
+  "cat.assignLabel": "Categories",
+  "cat.assignHint": "Tag this exercise with one or more categories.",
+  "cat.none": "Uncategorized",
+  "cat.emptyGrid": "No exercises in this category yet.",
+  "toast.categoryAdded": "Category added",
+  "toast.categoryUpdated": "Category updated",
+  "toast.categoryDeleted": "Category deleted",
+
   // Modals — new client
   "newClient.heading": "New client",
   "newClient.subtitle": "Creates a login they can use right away.",
@@ -231,6 +252,32 @@ const en: Dict = {
   // Staff nav — personal program view
   "nav.personalExercises": "Personal Exercises",
   "nav.adminPanel": "Admin",
+  "nav.templates": "Templates",
+
+  // Day templates
+  "tpl.heading": "Day templates",
+  "tpl.subtitle": "Reusable day blueprints — build once, drop into any program.",
+  "tpl.new": "New template",
+  "tpl.empty": "No templates yet. Create your first day blueprint.",
+  "tpl.newHeading": "New template",
+  "tpl.editHeading": "Edit template",
+  "tpl.backToList": "All templates",
+  "tpl.titleLabel": "Template title",
+  "tpl.titlePlaceholder": "e.g. Push Day, Leg Day, Knee Rehab",
+  "tpl.exercisesHeading": "Exercises",
+  "tpl.save": "Save template",
+  "tpl.delete": "Delete template",
+  "tpl.confirmDelete":
+    "Delete this template? This can't be undone. Programs already built from it are unaffected.",
+  "tpl.addFromTemplate": "Add from template",
+  "tpl.addDayFromTemplate": "Add day from template",
+  "tpl.overwriteWarn":
+    "This day already has exercises. Applying a template here would overwrite them — add it as a new day instead.",
+  "tpl.addAsNewDay": "Add as a new day",
+  "tpl.noTemplatesHint": "No templates yet —",
+  "tpl.createOne": "create one",
+  "toast.templateSaved": "Template saved",
+  "toast.templateDeleted": "Template deleted",
 
   // Weekly-review indicators + inline add-review
   "review.submitted": "Review submitted",
@@ -459,6 +506,86 @@ const en: Dict = {
   "err.invalidRole": "Pick a valid role.",
   "err.adminOnly": "Only an admin can do that.",
   "err.notifTitle": "Enter a title for the notification.",
+  "err.giveCategoryName": "Give the category a name.",
+  "err.categoryExists": "A category with that name already exists.",
+  "err.cantEditDefault": "Default categories can't be renamed or deleted.",
+  "err.giveTemplateTitle": "Give the template a title.",
+
+  // Admin nav — grouped ("Content" dropdown)
+  "nav.content": "Content",
+  "nav.exerciseLibrary": "Exercise Library",
+  "nav.foodLibrary": "Food Library",
+  "nav.dayTemplates": "Day Templates",
+
+  // Food library (admin)
+  "food.heading": "Food library",
+  "food.summary": "{n} foods",
+  "food.newFood": "New food",
+  "food.search": "Search foods…",
+  "food.empty": "The food library is empty. Add your first food.",
+  "food.noMatches": "No foods match your search.",
+  "food.name": "Name",
+  "food.defaultPortion": "Default portion",
+  "food.defaultPortionPlaceholder": "e.g. 1 cup, 150 g",
+  "food.note": "Note",
+  "food.notePlaceholder": "An optional note about this food.",
+  "food.noPortion": "No default portion",
+  "food.newHeading": "New food",
+  "food.editHeading": "Edit food",
+  "food.confirmDelete": "Delete “{name}” from the food library?",
+  "toast.foodAdded": "Food added",
+  "toast.foodSaved": "Food saved",
+  "toast.foodDeleted": "Food deleted",
+  "err.giveFoodName": "Give the food a name.",
+  "err.foodExists": "A food with that name already exists.",
+
+  // Food combobox
+  "foodCombo.search": "Search foods or type a new name…",
+  "foodCombo.addNew": "Add “{q}” as a new food",
+
+  // Nutrition plan editor (admin)
+  "nutri.editHeading": "Nutrition plan",
+  "nutri.editSubtitle": "Author {name}'s current nutrition plan.",
+  "nutri.notes": "General notes",
+  "nutri.notesPlaceholder": "Overall guidance — hydration, timing, anything…",
+  "nutri.meals": "Meals",
+  "nutri.mealLabel": "Meal {n}",
+  "nutri.mealTitle": "Meal name",
+  "nutri.mealTitlePlaceholder": "e.g. Breakfast, Lunch…",
+  "nutri.presetsLabel": "Quick pick",
+  "nutri.addMeal": "Add meal",
+  "nutri.addItem": "Add food",
+  "nutri.deleteMeal": "Delete meal",
+  "nutri.moveMealUp": "Move meal up",
+  "nutri.moveMealDown": "Move meal down",
+  "nutri.confirmDeleteMeal": "Delete this meal and its foods?",
+  "nutri.portion": "Portion",
+  "nutri.itemNote": "Note (optional)",
+  "nutri.saveToFoodLibrary": "Also save this to the food library",
+  "nutri.noMeals": "No meals yet — add one to start the plan.",
+  "nutri.save": "Save plan",
+  "nutri.deletePlan": "Delete plan",
+  "nutri.confirmDeletePlan":
+    "Delete this nutrition plan and everything in it? This cannot be undone.",
+  "nutri.managePlan": "Nutrition plan",
+  "nutri.mealPreset.breakfast": "Breakfast",
+  "nutri.mealPreset.lunch": "Lunch",
+  "nutri.mealPreset.dinner": "Dinner",
+  "nutri.mealPreset.snack": "Snack",
+  "toast.nutritionSaved": "Nutrition plan saved",
+  "toast.nutritionDeleted": "Nutrition plan deleted",
+
+  // Nutrition — client-facing
+  "nutriClient.card": "Nutrition",
+  "nutriClient.empty": "No nutrition plan yet",
+  "nutriClient.emptyHint": "Alişan will add one if it's part of your plan.",
+  "nutriClient.heading": "Nutrition",
+  "nutriClient.subtitle": "Your current nutrition plan.",
+  "nutriClient.emptyFull": "You don't have a nutrition plan yet.",
+  "nutriClient.emptyFullHint":
+    "Alişan will add one when it's part of your plan.",
+  "nutriClient.notesFrom": "Notes from Alişan",
+  "nutriClient.viewPlan": "View plan",
 };
 
 const tr: Dict = {
@@ -629,6 +756,28 @@ const tr: Dict = {
   "lib.editHeading": "Egzersizi düzenle",
   "lib.newHeading": "Yeni egzersiz",
 
+  // Exercise categories
+  "cat.heading": "Kategoriler",
+  "cat.all": "Tümü",
+  "cat.add": "Kategori ekle",
+  "cat.namePlaceholder": "Kategori adı",
+  "cat.create": "Ekle",
+  "cat.rename": "Yeniden adlandır",
+  "cat.renameHeading": "Kategoriyi yeniden adlandır",
+  "cat.save": "Kaydet",
+  "cat.delete": "Kategoriyi sil",
+  "cat.confirmDelete":
+    "“{name}” kategorisi silinsin mi? Egzersizler kalır — yalnızca kategori ve etiketleri kaldırılır.",
+  "cat.defaultLocked":
+    "Varsayılan kategoriler yeniden adlandırılamaz veya silinemez.",
+  "cat.assignLabel": "Kategoriler",
+  "cat.assignHint": "Bu egzersizi bir veya daha fazla kategoriyle etiketleyin.",
+  "cat.none": "Kategorisiz",
+  "cat.emptyGrid": "Bu kategoride henüz egzersiz yok.",
+  "toast.categoryAdded": "Kategori eklendi",
+  "toast.categoryUpdated": "Kategori güncellendi",
+  "toast.categoryDeleted": "Kategori silindi",
+
   // Modals — new client
   "newClient.heading": "Yeni danışan",
   "newClient.subtitle": "Hemen kullanabilecekleri bir giriş oluşturur.",
@@ -670,8 +819,35 @@ const tr: Dict = {
   "theme.toLight": "Açık moda geç",
 
   // Staff nav — personal program view
-  "nav.personalExercises": "Kişisel Antrenman",
+  "nav.personalExercises": "Kendi Programım",
   "nav.adminPanel": "Yönetim",
+  "nav.templates": "Taslaklar",
+
+  // Day templates
+  "tpl.heading": "Gün taslakları",
+  "tpl.subtitle":
+    "Yeniden kullanılabilir gün planları — bir kez oluştur, herhangi bir programa ekle.",
+  "tpl.new": "Yeni taslak",
+  "tpl.empty": "Henüz taslak yok. İlk gün planınızı oluşturun.",
+  "tpl.newHeading": "Yeni taslak",
+  "tpl.editHeading": "Taslağı düzenle",
+  "tpl.backToList": "Tüm taslaklar",
+  "tpl.titleLabel": "Taslak başlığı",
+  "tpl.titlePlaceholder": "örn. İtiş Günü, Bacak Günü, Diz Rehabilitasyonu",
+  "tpl.exercisesHeading": "Egzersizler",
+  "tpl.save": "Taslağı kaydet",
+  "tpl.delete": "Taslağı sil",
+  "tpl.confirmDelete":
+    "Bu taslak silinsin mi? Bu işlem geri alınamaz. Ondan oluşturulmuş programlar etkilenmez.",
+  "tpl.addFromTemplate": "Taslaktan ekle",
+  "tpl.addDayFromTemplate": "Taslaktan gün ekle",
+  "tpl.overwriteWarn":
+    "Bu günde zaten egzersizler var. Buraya taslak uygulamak onların üzerine yazar — bunun yerine yeni bir gün olarak ekleyin.",
+  "tpl.addAsNewDay": "Yeni gün olarak ekle",
+  "tpl.noTemplatesHint": "Henüz taslak yok —",
+  "tpl.createOne": "bir tane oluşturun",
+  "toast.templateSaved": "Taslak kaydedildi",
+  "toast.templateDeleted": "Taslak silindi",
 
   // Weekly-review indicators + inline add-review
   "review.submitted": "Değerlendirme gönderildi",
@@ -901,6 +1077,88 @@ const tr: Dict = {
   "err.invalidRole": "Geçerli bir rol seçin.",
   "err.adminOnly": "Bunu yalnızca bir yönetici yapabilir.",
   "err.notifTitle": "Bildirim için bir başlık girin.",
+  "err.giveCategoryName": "Kategoriye bir ad verin.",
+  "err.categoryExists": "Bu adda bir kategori zaten var.",
+  "err.cantEditDefault":
+    "Varsayılan kategoriler yeniden adlandırılamaz veya silinemez.",
+  "err.giveTemplateTitle": "Taslağa bir başlık verin.",
+
+  // Admin nav — grouped ("Content" dropdown)
+  "nav.content": "İçerik",
+  "nav.exerciseLibrary": "Egzersiz Kütüphanesi",
+  "nav.foodLibrary": "Besin Kütüphanesi",
+  "nav.dayTemplates": "Gün Taslakları",
+
+  // Food library (admin)
+  "food.heading": "Besin kütüphanesi",
+  "food.summary": "{n} besin",
+  "food.newFood": "Yeni besin",
+  "food.search": "Besin ara…",
+  "food.empty": "Besin kütüphanesi boş. İlk besininizi ekleyin.",
+  "food.noMatches": "Aramanızla eşleşen besin yok.",
+  "food.name": "Ad",
+  "food.defaultPortion": "Varsayılan porsiyon",
+  "food.defaultPortionPlaceholder": "örn. 1 su bardağı, 150 g",
+  "food.note": "Not",
+  "food.notePlaceholder": "Bu besin hakkında isteğe bağlı bir not.",
+  "food.noPortion": "Varsayılan porsiyon yok",
+  "food.newHeading": "Yeni besin",
+  "food.editHeading": "Besini düzenle",
+  "food.confirmDelete": "“{name}” besin kütüphanesinden silinsin mi?",
+  "toast.foodAdded": "Besin eklendi",
+  "toast.foodSaved": "Besin kaydedildi",
+  "toast.foodDeleted": "Besin silindi",
+  "err.giveFoodName": "Besine bir ad verin.",
+  "err.foodExists": "Bu adda bir besin zaten var.",
+
+  // Food combobox
+  "foodCombo.search": "Besin ara veya yeni bir ad yaz…",
+  "foodCombo.addNew": "“{q}” adını yeni besin olarak ekle",
+
+  // Nutrition plan editor (admin)
+  "nutri.editHeading": "Beslenme planı",
+  "nutri.editSubtitle": "{name} için güncel beslenme planını hazırlayın.",
+  "nutri.notes": "Genel notlar",
+  "nutri.notesPlaceholder":
+    "Genel öneriler — su tüketimi, zamanlama, aklınıza gelen her şey…",
+  "nutri.meals": "Öğünler",
+  "nutri.mealLabel": "{n}. Öğün",
+  "nutri.mealTitle": "Öğün adı",
+  "nutri.mealTitlePlaceholder": "örn. Kahvaltı, Öğle…",
+  "nutri.presetsLabel": "Hızlı seç",
+  "nutri.addMeal": "Öğün ekle",
+  "nutri.addItem": "Besin ekle",
+  "nutri.deleteMeal": "Öğünü sil",
+  "nutri.moveMealUp": "Öğünü yukarı taşı",
+  "nutri.moveMealDown": "Öğünü aşağı taşı",
+  "nutri.confirmDeleteMeal": "Bu öğün ve besinleri silinsin mi?",
+  "nutri.portion": "Porsiyon",
+  "nutri.itemNote": "Not (isteğe bağlı)",
+  "nutri.saveToFoodLibrary": "Bunu besin kütüphanesine de kaydet",
+  "nutri.noMeals": "Henüz öğün yok — plana başlamak için bir tane ekleyin.",
+  "nutri.save": "Planı kaydet",
+  "nutri.deletePlan": "Planı sil",
+  "nutri.confirmDeletePlan":
+    "Bu beslenme planı ve içindeki her şey silinsin mi? Bu işlem geri alınamaz.",
+  "nutri.managePlan": "Beslenme planı",
+  "nutri.mealPreset.breakfast": "Kahvaltı",
+  "nutri.mealPreset.lunch": "Öğle Yemeği",
+  "nutri.mealPreset.dinner": "Akşam Yemeği",
+  "nutri.mealPreset.snack": "Ara Öğün",
+  "toast.nutritionSaved": "Beslenme planı kaydedildi",
+  "toast.nutritionDeleted": "Beslenme planı silindi",
+
+  // Nutrition — client-facing
+  "nutriClient.card": "Beslenme",
+  "nutriClient.empty": "Henüz beslenme planı yok",
+  "nutriClient.emptyHint": "Planınızın parçasıysa Alişan bir tane ekleyecek.",
+  "nutriClient.heading": "Beslenme",
+  "nutriClient.subtitle": "Güncel beslenme planınız.",
+  "nutriClient.emptyFull": "Henüz bir beslenme planınız yok.",
+  "nutriClient.emptyFullHint":
+    "Planınızın parçası olduğunda Alişan bir tane ekleyecek.",
+  "nutriClient.notesFrom": "Alişan'dan notlar",
+  "nutriClient.viewPlan": "Planı gör",
 };
 
 const MESSAGES: Record<Lang, Dict> = { en, tr };
@@ -962,6 +1220,50 @@ export function clientsCount(lang: Lang, n: number): string {
   return lang === "tr"
     ? `${n} danışan`
     : `${n} ${n === 1 ? "client" : "clients"}`;
+}
+export function mealsCount(lang: Lang, n: number): string {
+  return lang === "tr" ? `${n} öğün` : `${n} ${n === 1 ? "meal" : "meals"}`;
+}
+
+/**
+ * Display names for the seeded default categories (is_default=true), keyed by
+ * the English name stored in the DB (see migration 0010). Custom categories
+ * Alişan adds are shown exactly as typed, so they don't appear here.
+ */
+const DEFAULT_CATEGORY_NAMES: Record<Lang, Record<string, string>> = {
+  en: {
+    Chest: "Chest",
+    Back: "Back",
+    Legs: "Legs",
+    Shoulders: "Shoulders",
+    Arms: "Arms",
+    Core: "Core",
+    "Full Body": "Full Body",
+    Mobility: "Mobility",
+    Rehab: "Rehab",
+  },
+  tr: {
+    Chest: "Göğüs",
+    Back: "Sırt",
+    Legs: "Bacak",
+    Shoulders: "Omuz",
+    Arms: "Kol",
+    Core: "Kor",
+    "Full Body": "Tüm Vücut",
+    Mobility: "Mobilite",
+    Rehab: "Rehabilitasyon",
+  },
+};
+
+/** A category's display name: translated for defaults, as-typed for custom. */
+export function categoryLabel(
+  lang: Lang,
+  category: { name: string; is_default: boolean },
+): string {
+  if (category.is_default) {
+    return DEFAULT_CATEGORY_NAMES[lang][category.name] ?? category.name;
+  }
+  return category.name;
 }
 
 // ---- Localized dates (deterministic — see MONTHS_SHORT note above) ----

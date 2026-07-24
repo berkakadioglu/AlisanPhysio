@@ -157,6 +157,12 @@ export default async function AdminClientDetailPage({
             >
               {t(lang, "admin.viewData")}
             </Link>
+            <Link
+              href={`/admin/clients/${id}/nutrition`}
+              className="rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-medium text-muted-foreground shadow-sm transition hover:border-brand/40 hover:text-brand"
+            >
+              {t(lang, "nutri.managePlan")}
+            </Link>
             <ManageClientButton
               clientId={id}
               fullName={client.full_name ?? ""}

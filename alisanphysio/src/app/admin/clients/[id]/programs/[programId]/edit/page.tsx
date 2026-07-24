@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requireStaff } from "@/lib/admin-auth";
 import { BRAND_NAME } from "@/lib/constants";
-import type { Exercise, ExerciseLibrary, Program, ProgramDay } from "@/lib/types";
+import type { Exercise, Program, ProgramDay } from "@/lib/types";
+import { loadLibrary } from "@/lib/categories";
+import { loadTemplatesForPicker } from "@/lib/templates";
 import AdminHeader from "@/app/admin/admin-header";
 import ProgramEditor, {
   type EditorDay,
@@ -34,7 +36,8 @@ export default async function EditProgramPage({
   const [
     { data: exercises },
     { data: dayRows },
-    { data: library },
+    { exercises: library, categories },
+    templates,
     { data: usedRows },
   ] = await Promise.all([
     supabase
@@ -49,11 +52,8 @@ export default async function EditProgramPage({
       .eq("program_id", programId)
       .order("order_index", { ascending: true })
       .returns<ProgramDay[]>(),
-    supabase
-      .from("exercise_library")
-      .select("id, name, youtube_url, default_instructions, created_at")
-      .order("name", { ascending: true })
-      .returns<ExerciseLibrary[]>(),
+    loadLibrary(supabase),
+    loadTemplatesForPicker(supabase),
     supabase
       .from("programs")
       .select("week_start_date")
@@ -97,7 +97,9 @@ export default async function EditProgramPage({
           clientId={id}
           programId={programId}
           initial={initial}
-          library={library ?? []}
+          library={library}
+          categories={categories}
+          templates={templates}
           usedWeeks={usedWeeks}
         />
       </main>

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import type { ExerciseLibrary } from "@/lib/types";
+import type { ExerciseCategory, LibraryExercise } from "@/lib/types";
+import { categoryLabel } from "@/lib/i18n";
 import { useI18n } from "@/app/i18n-provider";
 
 const inputClass =
@@ -10,41 +11,61 @@ const inputClass =
 /**
  * Searchable combobox over the exercise library. Typing filters the list AND
  * sets a free-text (custom) name; picking an item links the library entry.
- * Supports arrow-key navigation, Enter to select, Escape to close.
+ * Results are grouped by category (an exercise tagged with several categories
+ * appears under each). Supports arrow-key navigation, Enter to select, Escape.
  */
 export default function LibraryCombobox({
   items,
+  categories,
   value,
   linked,
   onPick,
   onType,
 }: {
-  items: ExerciseLibrary[];
+  items: LibraryExercise[];
+  /** Pre-sorted (defaults first, then custom) — from loadLibrary(). */
+  categories: ExerciseCategory[];
   value: string;
   /** true when the current name is linked to a library entry */
   linked: boolean;
-  onPick: (item: ExerciseLibrary) => void;
+  onPick: (item: LibraryExercise) => void;
   onType: (name: string) => void;
 }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
 
   const q = value.trim().toLowerCase();
   const matches = (
     q ? items.filter((i) => i.name.toLowerCase().includes(q)) : items
-  ).slice(0, 8);
+  ).slice(0, 40);
   const exact = items.some((i) => i.name.toLowerCase() === q);
   const showAddNew = q.length > 0 && !exact;
-  const optionCount = matches.length + (showAddNew ? 1 : 0);
+
+  // Group matches by category (in the pre-sorted category order), then an
+  // "Uncategorized" group. Flatten to `opts` so keyboard nav has a linear index.
+  const groups: { key: string; label: string; items: LibraryExercise[]; start: number }[] = [];
+  const opts: LibraryExercise[] = [];
+  for (const cat of categories) {
+    const its = matches.filter((m) => m.category_ids.includes(cat.id));
+    if (its.length === 0) continue;
+    groups.push({ key: cat.id, label: categoryLabel(lang, cat), items: its, start: opts.length });
+    opts.push(...its);
+  }
+  const uncategorized = matches.filter((m) => m.category_ids.length === 0);
+  if (uncategorized.length > 0) {
+    groups.push({ key: "__none", label: t("cat.none"), items: uncategorized, start: opts.length });
+    opts.push(...uncategorized);
+  }
+  const optionCount = opts.length + (showAddNew ? 1 : 0);
 
   function choose(idx: number) {
-    if (showAddNew && idx === matches.length) {
+    if (showAddNew && idx === opts.length) {
       onType(value); // keep the typed name as a custom exercise
       setOpen(false);
       return;
     }
-    const item = matches[idx];
+    const item = opts[idx];
     if (item) {
       onPick(item);
       setOpen(false);
@@ -101,54 +122,67 @@ export default function LibraryCombobox({
 
       {open && optionCount > 0 && (
         <ul className="absolute z-30 mt-1.5 w-full overflow-hidden rounded-xl border border-border bg-surface p-1.5 shadow-lift">
-          <li className="max-h-60 space-y-0.5 overflow-auto">
-            {matches.length === 0 && (
+          <div className="max-h-72 space-y-1 overflow-auto">
+            {opts.length === 0 && (
               <p className="px-3 py-2 text-sm text-subtle-foreground">
                 {t("combo.noMatches")}
               </p>
             )}
-            {matches.map((item, idx) => (
-              <button
-                key={item.id}
-                type="button"
-                onMouseEnter={() => setActive(idx)}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  choose(idx);
-                }}
-                className={`flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-left text-sm transition ${
-                  active === idx
-                    ? "bg-brand-tint text-brand"
-                    : "text-foreground hover:bg-pill"
-                }`}
-              >
-                <span className="truncate font-medium">{item.name}</span>
-                {item.youtube_url && (
-                  <span
-                    className={`flex flex-none items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                      active === idx
-                        ? "bg-brand/10 text-brand"
-                        : "bg-brand-tint text-brand"
-                    }`}
-                  >
-                    <span aria-hidden>▶</span> {t("combo.video")}
-                  </span>
-                )}
-              </button>
+
+            {groups.map((g) => (
+              <li key={g.key} className="list-none">
+                <p className="px-2.5 pb-0.5 pt-1.5 text-[10px] font-semibold uppercase tracking-wider text-subtle-foreground">
+                  {g.label}
+                </p>
+                <div className="space-y-0.5">
+                  {g.items.map((item, i) => {
+                    const idx = g.start + i;
+                    return (
+                      <button
+                        key={`${g.key}:${item.id}`}
+                        type="button"
+                        onMouseEnter={() => setActive(idx)}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          choose(idx);
+                        }}
+                        className={`flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm transition ${
+                          active === idx
+                            ? "bg-brand-tint text-brand"
+                            : "text-foreground hover:bg-pill"
+                        }`}
+                      >
+                        <span className="truncate font-medium">{item.name}</span>
+                        {item.youtube_url && (
+                          <span
+                            className={`flex flex-none items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                              active === idx
+                                ? "bg-brand/10 text-brand"
+                                : "bg-brand-tint text-brand"
+                            }`}
+                          >
+                            <span aria-hidden>▶</span> {t("combo.video")}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </li>
             ))}
-          </li>
+          </div>
 
           {showAddNew && (
-            <li className="mt-1.5 border-t border-border pt-1.5">
+            <li className="mt-1.5 list-none border-t border-border pt-1.5">
               <button
                 type="button"
-                onMouseEnter={() => setActive(matches.length)}
+                onMouseEnter={() => setActive(opts.length)}
                 onMouseDown={(e) => {
                   e.preventDefault();
-                  choose(matches.length);
+                  choose(opts.length);
                 }}
                 className={`flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition ${
-                  active === matches.length
+                  active === opts.length
                     ? "bg-brand-tint text-brand"
                     : "text-muted-foreground hover:bg-pill"
                 }`}

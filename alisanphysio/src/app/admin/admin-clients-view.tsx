@@ -23,7 +23,10 @@ export interface AdminUser {
   membershipEndDate: string | null;
 }
 
-const TABS: Role[] = ["admin", "manager", "client"];
+// Manager is intentionally hidden while that feature is postponed — only the
+// tabs actually in use are featured. The role/RLS still exist in the backend;
+// a stray manager row (there shouldn't be any) simply won't appear under a tab.
+const TABS: Role[] = ["client", "admin"];
 const TAB_LABEL: Record<Role, string> = {
   admin: "admin.tabAdmins",
   manager: "admin.tabManagers",

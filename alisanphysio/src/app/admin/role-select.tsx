@@ -3,10 +3,13 @@
 import type { Role } from "@/lib/types";
 import { useI18n } from "@/app/i18n-provider";
 
-const ROLES: Role[] = ["client", "manager", "admin"];
+// Manager is intentionally omitted from the UI while that feature is postponed.
+// The role still exists in the DB / RLS (is_staff() = admin|manager); it's just
+// not offered here, so admins can only assign Client or Admin for now.
+const ROLES: Role[] = ["client", "admin"];
 
 /**
- * Admin-only segmented role selector (Client / Manager / Admin). Mirrors the
+ * Admin-only segmented role selector (Client / Admin). Mirrors the
  * membership/language selectors' styling. Disabled when editing your own row
  * (prevents self-lockout — the server also rejects it).
  */

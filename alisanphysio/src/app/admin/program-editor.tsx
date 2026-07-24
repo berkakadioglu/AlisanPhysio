@@ -3,15 +3,24 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { ExerciseLibrary } from "@/lib/types";
+import type {
+  ExerciseCategory,
+  LibraryExercise,
+  TemplateWithExercises,
+} from "@/lib/types";
 import { listWeekMondays } from "@/lib/program-dates";
 import { weekLabel, weekTitle } from "@/lib/i18n";
-import { parseYouTubeId } from "@/lib/youtube";
 import { useI18n } from "@/app/i18n-provider";
 import { useToast } from "@/app/toast";
-import YouTubeEmbed from "@/components/youtube-embed";
 import { saveProgram, deleteProgram } from "./actions";
-import LibraryCombobox from "./library-combobox";
+import ExerciseRowsEditor, {
+  IconBtn,
+  blankRow,
+  newKey,
+  toRow,
+  type Row,
+} from "./exercise-rows-editor";
+import TemplatePickerMenu from "./template-picker";
 
 export interface EditorExercise {
   name: string;
@@ -34,50 +43,10 @@ export interface EditorInitial {
   days: EditorDay[];
 }
 
-interface Row {
-  key: string;
-  name: string;
-  sets: string;
-  reps: string;
-  instructions: string;
-  media_url: string;
-  library_id: string | null;
-  saveToLibrary: boolean;
-}
-
 interface DayRow {
   key: string;
   title: string;
   rows: Row[];
-}
-
-let keySeq = 0;
-const newKey = () => `k-${keySeq++}`;
-
-function toRow(e: EditorExercise): Row {
-  return {
-    key: newKey(),
-    name: e.name,
-    sets: e.sets == null ? "" : String(e.sets),
-    reps: e.reps ?? "",
-    instructions: e.instructions ?? "",
-    media_url: e.media_url ?? "",
-    library_id: e.library_id,
-    saveToLibrary: false,
-  };
-}
-
-function blankRow(): Row {
-  return {
-    key: newKey(),
-    name: "",
-    sets: "",
-    reps: "",
-    instructions: "",
-    media_url: "",
-    library_id: null,
-    saveToLibrary: false,
-  };
 }
 
 function blankDay(): DayRow {
@@ -101,12 +70,16 @@ export default function ProgramEditor({
   programId,
   initial,
   library,
+  categories = [],
+  templates = [],
   usedWeeks = [],
 }: {
   clientId: string;
   programId?: string;
   initial: EditorInitial;
-  library: ExerciseLibrary[];
+  library: LibraryExercise[];
+  categories?: ExerciseCategory[];
+  templates?: TemplateWithExercises[];
   usedWeeks?: string[];
 }) {
   const router = useRouter();
@@ -120,11 +93,11 @@ export default function ProgramEditor({
   const [days, setDays] = useState<DayRow[]>(toDays(initial.days));
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-
-  const libraryById = useMemo(
-    () => new Map(library.map((i) => [i.id, i])),
-    [library],
-  );
+  // In-day "apply template" tried on a day that already has exercises → we warn
+  // instead of overwriting, and offer to add it as a new day.
+  const [applyWarn, setApplyWarn] = useState<
+    { dayKey: string; tpl: TemplateWithExercises } | null
+  >(null);
 
   // Week dropdown options: a few weeks back to ~8 ahead, plus the current one
   // (in case we're editing an older program outside that window).
@@ -140,33 +113,45 @@ export default function ProgramEditor({
     setTitle(weekTitle(monday, lang));
   }
 
-  /** Part A: a row is a duplicate if the same library entry or name already
-   *  appears earlier in the SAME day (across days is fine). Non-blocking. */
-  function isDuplicateRow(day: DayRow, index: number): boolean {
-    const row = day.rows[index];
-    const key = row.library_id
-      ? `lib:${row.library_id}`
-      : row.name.trim()
-        ? `name:${row.name.trim().toLowerCase()}`
-        : null;
-    if (!key) return false;
-    for (let i = 0; i < index; i++) {
-      const other = day.rows[i];
-      const okey = other.library_id
-        ? `lib:${other.library_id}`
-        : other.name.trim()
-          ? `name:${other.name.trim().toLowerCase()}`
-          : null;
-      if (okey === key) return true;
-    }
-    return false;
-  }
-
-  // ---- day + row mutations ----
+  // ---- day mutations ----
   const patchDay = (dayKey: string, fn: (d: DayRow) => DayRow) =>
     setDays((ds) => ds.map((d) => (d.key === dayKey ? fn(d) : d)));
 
   const addDay = () => setDays((ds) => [...ds, blankDay()]);
+
+  /** "Add from template": append a NEW day that DEEP-COPIES the template's
+   *  title + exercises into fresh, fully-editable rows. Editing them here never
+   *  touches the original template (toRow builds new Row objects with new keys). */
+  const addDayFromTemplate = (tpl: TemplateWithExercises) =>
+    setDays((ds) => [
+      ...ds,
+      {
+        key: newKey(),
+        title: tpl.title,
+        rows: tpl.exercises.length
+          ? tpl.exercises.map(toRow)
+          : [blankRow()],
+      },
+    ]);
+
+  /** Apply a template to a SPECIFIC day (the in-day control). If the day is
+   *  empty, fill it — deep-copy the template's exercises and, when the day's
+   *  title is blank, adopt the template's title. If it already has exercises we
+   *  never overwrite: show a warning that offers to add it as a new day. */
+  const applyTemplateToDay = (dayKey: string, tpl: TemplateWithExercises) => {
+    const day = days.find((d) => d.key === dayKey);
+    const hasExercises = day?.rows.some((r) => r.name.trim() !== "");
+    if (hasExercises) {
+      setApplyWarn({ dayKey, tpl });
+      return;
+    }
+    setApplyWarn((w) => (w?.dayKey === dayKey ? null : w));
+    patchDay(dayKey, (d) => ({
+      ...d,
+      title: d.title.trim() === "" ? tpl.title : d.title,
+      rows: tpl.exercises.length ? tpl.exercises.map(toRow) : [blankRow()],
+    }));
+  };
   const removeDay = (dayKey: string) =>
     setDays((ds) => {
       const target = ds.find((d) => d.key === dayKey);
@@ -186,45 +171,6 @@ export default function ProgramEditor({
       if (j < 0 || j >= next.length) return ds;
       [next[index], next[j]] = [next[j], next[index]];
       return next;
-    });
-
-  const addRow = (dayKey: string) =>
-    patchDay(dayKey, (d) => ({ ...d, rows: [...d.rows, blankRow()] }));
-  const removeRow = (dayKey: string, rowKey: string) =>
-    patchDay(dayKey, (d) => ({
-      ...d,
-      rows: d.rows.length > 1 ? d.rows.filter((r) => r.key !== rowKey) : d.rows,
-    }));
-  const updateRow = (dayKey: string, rowKey: string, patch: Partial<Row>) =>
-    patchDay(dayKey, (d) => ({
-      ...d,
-      rows: d.rows.map((r) => (r.key === rowKey ? { ...r, ...patch } : r)),
-    }));
-  const pickLibrary = (dayKey: string, rowKey: string, item: ExerciseLibrary) =>
-    patchDay(dayKey, (d) => ({
-      ...d,
-      rows: d.rows.map((r) =>
-        r.key === rowKey
-          ? {
-              ...r,
-              name: item.name,
-              library_id: item.id,
-              saveToLibrary: false,
-              instructions:
-                r.instructions.trim() || item.default_instructions || "",
-            }
-          : r,
-      ),
-    }));
-  const typeName = (dayKey: string, rowKey: string, name: string) =>
-    updateRow(dayKey, rowKey, { name, library_id: null });
-  const moveRow = (dayKey: string, index: number, dir: -1 | 1) =>
-    patchDay(dayKey, (d) => {
-      const next = [...d.rows];
-      const j = index + dir;
-      if (j < 0 || j >= next.length) return d;
-      [next[index], next[j]] = [next[j], next[index]];
-      return { ...d, rows: next };
     });
 
   async function onSave() {
@@ -272,143 +218,6 @@ export default function ProgramEditor({
       setError(res.error);
       setSaving(false);
     }
-  }
-
-  // ---- render a single exercise row ----
-  function renderRow(day: DayRow, row: Row, i: number) {
-    const libItem = row.library_id ? libraryById.get(row.library_id) : undefined;
-    const videoId = parseYouTubeId(libItem?.youtube_url ?? row.media_url);
-    const duplicate = isDuplicateRow(day, i);
-
-    return (
-      <li key={row.key} className="rounded-2xl bg-surface p-4 shadow-soft sm:p-5">
-        <div className="flex items-center justify-between">
-          <span className="font-display text-sm font-bold text-muted-foreground">
-            {i + 1}
-          </span>
-          <div className="flex items-center gap-1">
-            <IconBtn label={t("editor.moveUp")} disabled={i === 0} onClick={() => moveRow(day.key, i, -1)}>
-              ↑
-            </IconBtn>
-            <IconBtn
-              label={t("editor.moveDown")}
-              disabled={i === day.rows.length - 1}
-              onClick={() => moveRow(day.key, i, 1)}
-            >
-              ↓
-            </IconBtn>
-            <IconBtn
-              label={t("editor.remove")}
-              disabled={day.rows.length === 1}
-              onClick={() => removeRow(day.key, row.key)}
-            >
-              ✕
-            </IconBtn>
-          </div>
-        </div>
-
-        <div className="mt-3 space-y-3">
-          <LibraryCombobox
-            items={library}
-            value={row.name}
-            linked={Boolean(row.library_id)}
-            onPick={(item) => pickLibrary(day.key, row.key, item)}
-            onType={(name) => typeName(day.key, row.key, name)}
-          />
-
-          {/* Part A: soft, non-blocking duplicate-in-day warning. */}
-          {duplicate && (
-            <p className="flex items-center gap-1.5 px-0.5 text-xs font-medium text-warning">
-              <span aria-hidden>⚠</span>
-              {t("editor.alreadyInDay")}
-            </p>
-          )}
-
-          {row.library_id ? (
-            <p className="px-0.5 text-xs text-subtle-foreground">
-              {t("editor.linkedNote")}
-            </p>
-          ) : (
-            row.name.trim() !== "" && (
-              <label className="flex cursor-pointer items-center gap-2 px-0.5 text-xs text-muted-foreground">
-                <input
-                  type="checkbox"
-                  checked={row.saveToLibrary}
-                  onChange={(e) =>
-                    updateRow(day.key, row.key, { saveToLibrary: e.target.checked })
-                  }
-                  className="h-3.5 w-3.5 rounded border-border text-brand focus:ring-brand/30"
-                />
-                {t("editor.saveToLibrary")}
-              </label>
-            )
-          )}
-
-          {/* Inline video preview so Alişan can confirm the movement. */}
-          {videoId && (
-            <div className="max-w-[260px] overflow-hidden rounded-xl">
-              <YouTubeEmbed id={videoId} title={row.name || "Preview"} />
-            </div>
-          )}
-
-          <div className="grid grid-cols-2 gap-3 sm:max-w-xs">
-            <input
-              inputMode="numeric"
-              value={row.sets}
-              onChange={(e) =>
-                updateRow(day.key, row.key, {
-                  sets: e.target.value.replace(/[^0-9]/g, ""),
-                })
-              }
-              className={inputClass}
-              placeholder={t("editor.sets")}
-            />
-            <input
-              value={row.reps}
-              onChange={(e) => updateRow(day.key, row.key, { reps: e.target.value })}
-              className={inputClass}
-              placeholder={t("editor.reps")}
-            />
-          </div>
-
-          <input
-            value={row.instructions}
-            onChange={(e) =>
-              updateRow(day.key, row.key, { instructions: e.target.value })
-            }
-            className={inputClass}
-            placeholder={t("editor.instructions")}
-          />
-
-          <input
-            value={row.media_url}
-            onChange={(e) => updateRow(day.key, row.key, { media_url: e.target.value })}
-            autoComplete="off"
-            className={inputClass}
-            placeholder={
-              row.library_id ? t("editor.videoOverride") : t("editor.mediaUrl")
-            }
-          />
-        </div>
-      </li>
-    );
-  }
-
-  function renderRows(day: DayRow) {
-    return (
-      <>
-        <ol className="space-y-3">
-          {day.rows.map((row, i) => renderRow(day, row, i))}
-        </ol>
-        <button
-          type="button"
-          onClick={() => addRow(day.key)}
-          className="mt-3 w-full rounded-2xl border border-dashed border-border bg-surface/50 px-4 py-3 text-sm font-medium text-muted-foreground transition hover:border-brand/40 hover:text-brand"
-        >
-          + {t("editor.addExercise")}
-        </button>
-      </>
-    );
   }
 
   return (
@@ -509,20 +318,78 @@ export default function ProgramEditor({
                 </IconBtn>
               )}
             </div>
-            {renderRows(day)}
+            <ExerciseRowsEditor
+              rows={day.rows}
+              onRowsChange={(next) =>
+                patchDay(day.key, (d) => ({ ...d, rows: next }))
+              }
+              library={library}
+              categories={categories}
+              templates={templates}
+              onApplyTemplate={(tpl) => applyTemplateToDay(day.key, tpl)}
+            />
+
+            {applyWarn?.dayKey === day.key && (
+              <div className="rounded-xl border border-warning/40 bg-[var(--warning-tint)] px-3.5 py-3">
+                <p className="flex items-start gap-1.5 text-sm text-warning">
+                  <span aria-hidden>⚠</span>
+                  <span>{t("tpl.overwriteWarn")}</span>
+                </p>
+                <div className="mt-2.5 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      addDayFromTemplate(applyWarn.tpl);
+                      setApplyWarn(null);
+                    }}
+                    className="rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-medium text-foreground transition hover:border-brand/40 hover:text-brand"
+                  >
+                    + {t("tpl.addAsNewDay")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setApplyWarn(null)}
+                    className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-pill hover:text-foreground"
+                  >
+                    {t("common.cancel")}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         ))}
 
-        <button
-          type="button"
-          onClick={addDay}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-medium text-muted-foreground shadow-sm transition hover:border-brand/40 hover:text-brand"
-        >
-          <span aria-hidden className="text-base leading-none">
-            +
-          </span>{" "}
-          {t("editor.addDay")}
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={addDay}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-medium text-muted-foreground shadow-sm transition hover:border-brand/40 hover:text-brand"
+          >
+            <span aria-hidden className="text-base leading-none">
+              +
+            </span>{" "}
+            {t("editor.addDay")}
+          </button>
+
+          {templates.length > 0 ? (
+            <TemplatePickerMenu
+              templates={templates}
+              onPick={addDayFromTemplate}
+              label={t("tpl.addDayFromTemplate")}
+              buttonClassName="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-medium text-muted-foreground shadow-sm transition hover:border-brand/40 hover:text-brand"
+            />
+          ) : (
+            <p className="text-sm text-subtle-foreground">
+              {t("tpl.noTemplatesHint")}{" "}
+              <Link
+                href="/admin/templates"
+                className="font-medium text-brand transition hover:text-brand-hover"
+              >
+                {t("tpl.createOne")}
+              </Link>
+            </p>
+          )}
+        </div>
       </div>
 
       {error && (
@@ -567,26 +434,3 @@ export default function ProgramEditor({
   );
 }
 
-function IconBtn({
-  label,
-  disabled,
-  onClick,
-  children,
-}: {
-  label: string;
-  disabled?: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      disabled={disabled}
-      onClick={onClick}
-      className="flex h-8 w-8 flex-none items-center justify-center rounded-lg text-muted-foreground transition hover:bg-pill hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30"
-    >
-      {children}
-    </button>
-  );
-}

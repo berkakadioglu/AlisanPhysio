@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LogOut } from "lucide-react";
 import { BRAND_NAME } from "@/lib/constants";
 import { t } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n-server";
@@ -7,10 +8,12 @@ import LanguageToggle from "@/app/language-toggle";
 import ThemeToggle from "@/app/theme-toggle";
 import NotificationBell from "@/components/notification-bell";
 import RefreshButton from "./refresh-button";
+import ContentNav from "./content-nav";
 
 /**
- * Admin top bar: wordmark → /admin, primary nav (Clients / Library),
- * a language toggle, a refresh control, and Sign out.
+ * Admin top bar: wordmark → /admin, primary nav (Clients, a grouped "Content"
+ * dropdown for the authoring areas, and Personal Exercises), plus the utility
+ * controls (notifications, theme, language, refresh, sign out).
  */
 export default async function AdminHeader({
   container = "max-w-3xl",
@@ -18,12 +21,14 @@ export default async function AdminHeader({
   container?: string;
 }) {
   const lang = await getLang();
+  const navLink =
+    "rounded-full px-3 py-1.5 font-medium text-muted-foreground transition hover:bg-pill hover:text-foreground";
   return (
     <header className="border-b border-border bg-surface shadow-soft">
       <div
         className={`mx-auto flex ${container} items-center justify-between gap-4 px-5 py-4 sm:px-8`}
       >
-        <div className="flex items-center gap-5">
+        <div className="flex items-center gap-4">
           <Link
             href="/admin"
             className="font-display text-lg font-extrabold tracking-tight text-brand"
@@ -31,22 +36,11 @@ export default async function AdminHeader({
             {BRAND_NAME}
           </Link>
           <nav className="flex items-center gap-1 text-sm">
-            <Link
-              href="/admin"
-              className="rounded-full px-3 py-1.5 font-medium text-muted-foreground transition hover:bg-pill hover:text-foreground"
-            >
+            <Link href="/admin" className={navLink}>
               {t(lang, "admin.clients")}
             </Link>
-            <Link
-              href="/admin/library"
-              className="rounded-full px-3 py-1.5 font-medium text-muted-foreground transition hover:bg-pill hover:text-foreground"
-            >
-              {t(lang, "admin.library")}
-            </Link>
-            <Link
-              href="/dashboard"
-              className="rounded-full px-3 py-1.5 font-medium text-muted-foreground transition hover:bg-pill hover:text-foreground"
-            >
+            <ContentNav />
+            <Link href="/dashboard" className={navLink}>
               {t(lang, "nav.personalExercises")}
             </Link>
           </nav>
@@ -60,9 +54,11 @@ export default async function AdminHeader({
           <form action={signOut}>
             <button
               type="submit"
-              className="rounded-full px-3.5 py-1.5 text-sm font-medium text-muted-foreground transition hover:bg-pill hover:text-foreground"
+              aria-label={t(lang, "common.signOut")}
+              title={t(lang, "common.signOut")}
+              className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition hover:bg-pill hover:text-foreground"
             >
-              {t(lang, "common.signOut")}
+              <LogOut className="h-4 w-4" aria-hidden />
             </button>
           </form>
         </div>

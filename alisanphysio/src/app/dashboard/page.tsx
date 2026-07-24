@@ -4,11 +4,14 @@ import { BRAND_NAME } from "@/lib/constants";
 import { loadDashboardData, firstNameOf, dayTitlesOf } from "@/lib/dashboard-data";
 import { generateSystemNotifications } from "@/lib/notifications";
 import { reviewedWeekSet } from "@/lib/reviews";
+import { nutritionPlanSummary } from "@/lib/nutrition";
+import { createClient } from "@/lib/supabase/server";
 import { t } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n-server";
 import AppHeader from "./app-header";
 import ProgramCard from "./program-card";
 import ReviewAction from "./review-action";
+import NutritionCard from "./nutrition-card";
 
 export const metadata: Metadata = {
   title: `Dashboard · ${BRAND_NAME}`,
@@ -24,6 +27,15 @@ export default async function DashboardPage() {
   // Which of the user's weeks already have a review → drives the inline
   // "Add review" vs "Review submitted" state on each reviewable program card.
   const reviewedWeeks = await reviewedWeekSet();
+
+  // Small nutrition entry point. RLS scopes the plan to the signed-in user.
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const nutrition = user
+    ? await nutritionPlanSummary(supabase, user.id)
+    : { hasPlan: false, mealCount: 0 };
 
   return (
     <div className="min-h-screen">
@@ -84,6 +96,15 @@ export default async function DashboardPage() {
             </div>
           )}
         </section>
+
+        {/* Small, understated nutrition entry point (secondary to the hero) */}
+        <div className="mt-6">
+          <NutritionCard
+            hasPlan={nutrition.hasPlan}
+            mealCount={nutrition.mealCount}
+            lang={lang}
+          />
+        </div>
 
         {/* Quiet navigation to the other buckets */}
         <nav className="mt-8 flex flex-col gap-3 sm:flex-row">

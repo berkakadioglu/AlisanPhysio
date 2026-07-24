@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { requireStaff } from "@/lib/admin-auth";
 import { BRAND_NAME } from "@/lib/constants";
-import type { ExerciseLibrary, Program, ProgramDay } from "@/lib/types";
+import type { Program, ProgramDay } from "@/lib/types";
+import { loadLibrary } from "@/lib/categories";
+import { loadTemplatesForPicker } from "@/lib/templates";
 import { defaultNewWeek, nextMondayISO, thisMondayISO } from "@/lib/program-dates";
 import { weekTitle } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n-server";
@@ -30,18 +32,16 @@ export default async function NewProgramPage({
   const { supabase } = await requireStaff();
   const lang = await getLang();
 
-  const [{ data: library }, { data: usedRows }] = await Promise.all([
-    supabase
-      .from("exercise_library")
-      .select("id, name, youtube_url, default_instructions, created_at")
-      .order("name", { ascending: true })
-      .returns<ExerciseLibrary[]>(),
-    supabase
-      .from("programs")
-      .select("week_start_date")
-      .eq("client_id", id)
-      .returns<{ week_start_date: string }[]>(),
-  ]);
+  const [{ exercises: library, categories }, templates, { data: usedRows }] =
+    await Promise.all([
+      loadLibrary(supabase),
+      loadTemplatesForPicker(supabase),
+      supabase
+        .from("programs")
+        .select("week_start_date")
+        .eq("client_id", id)
+        .returns<{ week_start_date: string }[]>(),
+    ]);
   const usedWeeks = (usedRows ?? []).map((r) => r.week_start_date);
 
   let initial: EditorInitial;
@@ -119,7 +119,9 @@ export default async function NewProgramPage({
         <ProgramEditor
           clientId={id}
           initial={initial}
-          library={library ?? []}
+          library={library}
+          categories={categories}
+          templates={templates}
           usedWeeks={usedWeeks}
         />
       </main>

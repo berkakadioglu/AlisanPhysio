@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { requireStaff } from "@/lib/admin-auth";
 import { BRAND_NAME } from "@/lib/constants";
-import type { ExerciseLibrary } from "@/lib/types";
+import { loadLibrary } from "@/lib/categories";
 import AdminHeader from "@/app/admin/admin-header";
 import LibraryManager from "./library-manager";
 
@@ -11,18 +11,13 @@ export const metadata: Metadata = {
 
 export default async function LibraryPage() {
   const { supabase } = await requireStaff();
-
-  const { data: items } = await supabase
-    .from("exercise_library")
-    .select("id, name, youtube_url, default_instructions, created_at")
-    .order("name", { ascending: true })
-    .returns<ExerciseLibrary[]>();
+  const { exercises, categories } = await loadLibrary(supabase);
 
   return (
     <div className="min-h-screen">
-      <AdminHeader container="max-w-3xl" />
-      <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8 sm:py-14">
-        <LibraryManager items={items ?? []} />
+      <AdminHeader container="max-w-5xl" />
+      <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8 sm:py-14">
+        <LibraryManager exercises={exercises} categories={categories} />
       </main>
     </div>
   );
