@@ -63,7 +63,7 @@ export default function MeasurementChart({
         viewBox={`0 0 ${W} ${H}`}
         preserveAspectRatio="xMidYMid meet"
         role="img"
-        className="h-auto w-full min-w-[320px]"
+        className="h-auto w-full min-w-[260px]"
         style={{ maxHeight: 300 }}
       >
         {/* Gridlines + y labels */}

@@ -19,7 +19,7 @@ export type DayInitial = {
 const primaryBtn =
   "rounded-xl bg-brand-solid px-5 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:bg-brand-solid-hover disabled:cursor-not-allowed disabled:opacity-60";
 const timeInput =
-  "w-28 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-brand/40 focus:ring-2 focus:ring-brand/15";
+  "w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-brand/40 focus:ring-2 focus:ring-brand/15";
 const noteInput =
   "w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-brand/40 focus:ring-2 focus:ring-brand/15";
 
@@ -122,8 +122,8 @@ export default function AvailabilityForm({
 
             {d.available && (
               <div className="mt-3 space-y-3 pl-7">
-                <div className="flex flex-wrap items-end gap-3">
-                  <div>
+                <div className="flex items-end gap-2">
+                  <div className="min-w-0 flex-1">
                     <label className="mb-1 block text-xs font-medium text-muted-foreground">
                       {t("avail.from")}
                     </label>
@@ -137,7 +137,7 @@ export default function AvailabilityForm({
                     />
                   </div>
                   <span className="pb-2.5 text-muted-foreground">–</span>
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <label className="mb-1 block text-xs font-medium text-muted-foreground">
                       {t("avail.to")}
                     </label>

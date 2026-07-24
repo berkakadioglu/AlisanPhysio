@@ -587,6 +587,11 @@ const en: Dict = {
   "nutriClient.notesFrom": "Notes from Alişan",
   "nutriClient.viewPlan": "View plan",
 
+  // Mobile navigation (hamburger drawer)
+  "nav.menu": "Menu",
+  "nav.closeMenu": "Close menu",
+  "nav.home": "Home",
+
   // Availability — nav + staff area
   "nav.availability": "Availability",
   "avail.staffHeading": "Availability",
@@ -1219,6 +1224,11 @@ const tr: Dict = {
     "Planınızın parçası olduğunda Alişan bir tane ekleyecek.",
   "nutriClient.notesFrom": "Alişan'dan notlar",
   "nutriClient.viewPlan": "Planı gör",
+
+  // Mobile navigation (hamburger drawer)
+  "nav.menu": "Menü",
+  "nav.closeMenu": "Menüyü kapat",
+  "nav.home": "Ana sayfa",
 
   // Availability — nav + staff area
   "nav.availability": "Uygunluk",

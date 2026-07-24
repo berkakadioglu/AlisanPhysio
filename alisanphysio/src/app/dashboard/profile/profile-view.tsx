@@ -214,9 +214,11 @@ function PersonalInfoSection({
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border/60 pb-3 last:border-0 last:pb-0">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="font-medium text-foreground">{value}</dd>
+    <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b border-border/60 pb-3 last:border-0 last:pb-0">
+      <dt className="flex-none text-muted-foreground">{label}</dt>
+      <dd className="min-w-0 break-words font-medium text-foreground sm:text-right">
+        {value}
+      </dd>
     </div>
   );
 }
@@ -488,7 +490,7 @@ function MeasurementsSection({
             {t("profile.addMeasurement")}
           </p>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-            <div className="space-y-1.5">
+            <div className="col-span-2 space-y-1.5 sm:col-span-1">
               <label
                 htmlFor="pf-date"
                 className="block text-xs font-medium text-muted-foreground"

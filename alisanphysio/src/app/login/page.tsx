@@ -29,7 +29,7 @@ export default async function LoginPage() {
           </p>
         </div>
 
-        <div className="rounded-2xl bg-surface p-8 shadow-soft">
+        <div className="rounded-2xl bg-surface p-6 shadow-soft sm:p-8">
           <h2 className="mb-6 text-lg font-semibold text-foreground">
             {t(lang, "login.heading")}
           </h2>
