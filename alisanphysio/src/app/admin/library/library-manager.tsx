@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Pencil, Play, Plus, Trash2, X } from "lucide-react";
+import { Check, ChevronDown, Pencil, Play, Plus, Trash2, X } from "lucide-react";
 import type { CategoryWithCount, LibraryExercise } from "@/lib/types";
 import { parseYouTubeId } from "@/lib/youtube";
 import { categoryLabel, type Lang } from "@/lib/i18n";
@@ -194,6 +194,24 @@ function CategorySidebar({
     }
   }
 
+  // On mobile the sidebar collapses to a compact toggle showing the active
+  // category, so the full list doesn't eat the screen above the exercise grid.
+  const [catOpen, setCatOpen] = useState(false);
+  const activeLabel =
+    activeCat === null
+      ? t("cat.all")
+      : categoryLabel(
+          lang,
+          categories.find((c) => c.id === activeCat) ?? {
+            name: "",
+            is_default: false,
+          },
+        );
+  const handleSelect = (id: string | null) => {
+    onSelect(id);
+    setCatOpen(false);
+  };
+
   const rowBase =
     "group flex items-center gap-1 rounded-xl pr-1 transition";
   const filterBtn = (active: boolean) =>
@@ -209,17 +227,37 @@ function CategorySidebar({
 
   return (
     <aside className="w-full flex-none rounded-2xl border border-border bg-surface p-3 shadow-soft lg:w-64">
-      <p className="px-2 pb-2 pt-1 text-xs font-semibold uppercase tracking-widest text-subtle-foreground">
+      {/* Mobile: compact toggle showing the active category */}
+      <button
+        type="button"
+        onClick={() => setCatOpen((o) => !o)}
+        aria-expanded={catOpen}
+        className="flex w-full items-center justify-between gap-2 px-2 py-1.5 lg:hidden"
+      >
+        <span className="text-xs font-semibold uppercase tracking-widest text-subtle-foreground">
+          {t("cat.heading")}
+        </span>
+        <span className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-foreground">
+          <span className="truncate">{activeLabel}</span>
+          <ChevronDown
+            className={`h-4 w-4 flex-none transition ${catOpen ? "rotate-180" : ""}`}
+            aria-hidden
+          />
+        </span>
+      </button>
+      {/* Desktop: static heading */}
+      <p className="hidden px-2 pb-2 pt-1 text-xs font-semibold uppercase tracking-widest text-subtle-foreground lg:block">
         {t("cat.heading")}
       </p>
 
-      <div className="space-y-0.5">
-        {/* All */}
-        <button
-          type="button"
-          onClick={() => onSelect(null)}
-          className={filterBtn(activeCat === null)}
-        >
+      <div className={`${catOpen ? "mt-2" : "hidden"} lg:mt-0 lg:block`}>
+        <div className="space-y-0.5">
+          {/* All */}
+          <button
+            type="button"
+            onClick={() => handleSelect(null)}
+            className={filterBtn(activeCat === null)}
+          >
           <span className="truncate">{t("cat.all")}</span>
           <span className={countPill(activeCat === null)}>{total}</span>
         </button>
@@ -241,14 +279,14 @@ function CategorySidebar({
             <div key={c.id} className={rowBase}>
               <button
                 type="button"
-                onClick={() => onSelect(c.id)}
+                onClick={() => handleSelect(c.id)}
                 className={filterBtn(activeCat === c.id)}
               >
                 <span className="truncate">{categoryLabel(lang, c)}</span>
                 <span className={countPill(activeCat === c.id)}>{c.count}</span>
               </button>
               {!c.is_default && (
-                <span className="flex flex-none items-center opacity-0 transition group-hover:opacity-100 focus-within:opacity-100">
+                <span className="flex flex-none items-center opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100">
                   <button
                     type="button"
                     onClick={() => {
@@ -305,6 +343,7 @@ function CategorySidebar({
             {t("cat.add")}
           </button>
         )}
+        </div>
       </div>
     </aside>
   );

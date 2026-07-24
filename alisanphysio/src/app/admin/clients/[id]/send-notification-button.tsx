@@ -68,11 +68,11 @@ function SendModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-scrim p-4"
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-scrim p-4 sm:items-center"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-sm rounded-2xl bg-surface p-6 shadow-lift sm:p-7"
+        className="my-auto max-h-[calc(100dvh-2rem)] w-full max-w-sm overflow-y-auto rounded-2xl bg-surface p-6 shadow-lift sm:p-7"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="font-display text-xl font-bold text-foreground">

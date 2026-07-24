@@ -591,6 +591,7 @@ const en: Dict = {
   "nav.menu": "Menu",
   "nav.closeMenu": "Close menu",
   "nav.home": "Home",
+  "nav.me": "Me",
 
   // Availability — nav + staff area
   "nav.availability": "Availability",
@@ -1229,6 +1230,7 @@ const tr: Dict = {
   "nav.menu": "Menü",
   "nav.closeMenu": "Menüyü kapat",
   "nav.home": "Ana sayfa",
+  "nav.me": "Kendim",
 
   // Availability — nav + staff area
   "nav.availability": "Uygunluk",

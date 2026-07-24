@@ -119,7 +119,7 @@ export default function AdminUsersView({ users }: { users: AdminUser[] }) {
           <li key={u.id}>
             <Link
               href={`/admin/clients/${u.id}${u.name ? "" : "?manage=1"}`}
-              className="group flex items-center gap-4 rounded-2xl bg-surface p-4 shadow-soft transition hover:-translate-y-0.5 hover:shadow-lift sm:p-5"
+              className="group flex items-center gap-3 rounded-2xl bg-surface p-4 shadow-soft transition hover:-translate-y-0.5 hover:shadow-lift sm:gap-4 sm:p-5"
             >
               <span className="flex h-11 w-11 flex-none items-center justify-center rounded-full bg-brand-tint font-display text-sm font-bold text-brand">
                 {initials(u.name, u.email)}
@@ -137,28 +137,48 @@ export default function AdminUsersView({ users }: { users: AdminUser[] }) {
                     {t("admin.addName")}
                   </p>
                 )}
-              </div>
-              {u.role === "client" && u.membership && (
-                <span className="flex flex-none items-center gap-1.5">
-                  <MembershipBadge membership={u.membership} size="sm" />
-                  {u.membershipEndDate && (
-                    <span className="hidden text-[11px] text-subtle-foreground sm:inline">
-                      {formatDay(u.membershipEndDate, lang)}
+
+                {/* Mobile: meta stacks under the name so it can't be crowded */}
+                <div className="mt-2 flex flex-wrap items-center gap-1.5 sm:hidden">
+                  {u.role === "client" && u.membership && (
+                    <MembershipBadge membership={u.membership} size="sm" />
+                  )}
+                  {u.reviewCount > 0 && (
+                    <span className="rounded-full bg-brand-tint px-2.5 py-0.5 text-xs font-medium text-brand tabular-nums">
+                      {reviewsCount(lang, u.reviewCount)}
                     </span>
                   )}
+                  <span className="rounded-full bg-pill px-2.5 py-0.5 text-xs font-medium text-muted-foreground tabular-nums">
+                    {programsCount(lang, u.programCount)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Desktop: meta inline on the right */}
+              <div className="hidden flex-none items-center gap-1.5 sm:flex">
+                {u.role === "client" && u.membership && (
+                  <span className="flex items-center gap-1.5">
+                    <MembershipBadge membership={u.membership} size="sm" />
+                    {u.membershipEndDate && (
+                      <span className="text-[11px] text-subtle-foreground">
+                        {formatDay(u.membershipEndDate, lang)}
+                      </span>
+                    )}
+                  </span>
+                )}
+                {u.reviewCount > 0 && (
+                  <span className="rounded-full bg-brand-tint px-2.5 py-0.5 text-xs font-medium text-brand tabular-nums">
+                    {reviewsCount(lang, u.reviewCount)}
+                  </span>
+                )}
+                <span className="rounded-full bg-pill px-2.5 py-0.5 text-xs font-medium text-muted-foreground tabular-nums">
+                  {programsCount(lang, u.programCount)}
                 </span>
-              )}
-              {u.reviewCount > 0 && (
-                <span className="hidden flex-none rounded-full bg-brand-tint px-2.5 py-0.5 text-xs font-medium text-brand tabular-nums sm:inline">
-                  {reviewsCount(lang, u.reviewCount)}
-                </span>
-              )}
-              <span className="flex-none rounded-full bg-pill px-2.5 py-0.5 text-xs font-medium text-muted-foreground tabular-nums">
-                {programsCount(lang, u.programCount)}
-              </span>
+              </div>
+
               <span
                 aria-hidden
-                className="flex-none text-subtle-foreground transition group-hover:translate-x-0.5 group-hover:text-brand"
+                className="flex-none self-center text-subtle-foreground transition group-hover:translate-x-0.5 group-hover:text-brand"
               >
                 →
               </span>
@@ -229,11 +249,11 @@ function NewClientModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-scrim p-4"
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-scrim p-4 sm:items-center"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-2xl bg-surface p-6 shadow-lift sm:p-7"
+        className="my-auto max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-2xl bg-surface p-6 shadow-lift sm:p-7"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="font-display text-xl font-bold text-foreground">

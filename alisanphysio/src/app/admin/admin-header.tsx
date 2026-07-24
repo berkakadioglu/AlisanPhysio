@@ -13,6 +13,7 @@ import MobileNav, {
 } from "@/components/mobile-nav";
 import RefreshButton from "./refresh-button";
 import ContentNav from "./content-nav";
+import MeNav from "./me-nav";
 
 /**
  * Admin top bar: wordmark → /admin, primary nav (Clients, a grouped "Content"
@@ -28,11 +29,10 @@ export default async function AdminHeader({
   const navLink =
     "rounded-full px-3 py-1.5 font-medium text-muted-foreground transition hover:bg-pill hover:text-foreground";
 
-  // Mobile drawer: top-level links + the "Content" areas as a grouped section.
+  // Mobile drawer: top-level links + the "Content" and "Me" grouped sections.
   const mobileLinks: MobileNavLink[] = [
     { href: "/admin", label: t(lang, "admin.clients") },
     { href: "/admin/availability", label: t(lang, "nav.availability") },
-    { href: "/dashboard", label: t(lang, "nav.personalExercises") },
   ];
   const contentGroup: MobileNavGroup = {
     label: t(lang, "nav.content"),
@@ -40,6 +40,13 @@ export default async function AdminHeader({
       { href: "/admin/library", label: t(lang, "nav.exerciseLibrary") },
       { href: "/admin/food-library", label: t(lang, "nav.foodLibrary") },
       { href: "/admin/templates", label: t(lang, "nav.dayTemplates") },
+    ],
+  };
+  const meGroup: MobileNavGroup = {
+    label: t(lang, "nav.me"),
+    items: [
+      { href: "/dashboard", label: t(lang, "nav.personalExercises") },
+      { href: "/dashboard/profile", label: t(lang, "profile.link") },
     ],
   };
 
@@ -64,9 +71,7 @@ export default async function AdminHeader({
             <Link href="/admin/availability" className={navLink}>
               {t(lang, "nav.availability")}
             </Link>
-            <Link href="/dashboard" className={navLink}>
-              {t(lang, "nav.personalExercises")}
-            </Link>
+            <MeNav />
           </nav>
         </div>
 
@@ -94,7 +99,7 @@ export default async function AdminHeader({
           <MobileNav
             homeHref="/admin"
             links={mobileLinks}
-            group={contentGroup}
+            groups={[contentGroup, meGroup]}
             signOutAction={signOut}
           >
             <RefreshButton />

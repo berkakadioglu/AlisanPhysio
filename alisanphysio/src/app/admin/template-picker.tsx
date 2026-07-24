@@ -52,7 +52,7 @@ export default function TemplatePickerMenu({
         <ul
           className={`absolute ${
             align === "right" ? "right-0" : "left-0"
-          } z-30 mt-1.5 max-h-72 w-64 overflow-auto rounded-xl border border-border bg-surface p-1.5 shadow-lift`}
+          } z-30 mt-1.5 max-h-72 w-64 max-w-[calc(100vw-2rem)] overflow-auto rounded-xl border border-border bg-surface p-1.5 shadow-lift`}
         >
           {templates.map((tpl) => (
             <li key={tpl.id}>

@@ -23,13 +23,13 @@ export type MobileNavGroup = { label: string; items: MobileNavLink[] };
 export default function MobileNav({
   homeHref,
   links,
-  group,
+  groups = [],
   signOutAction,
   children,
 }: {
   homeHref: string;
   links: MobileNavLink[];
-  group?: MobileNavGroup;
+  groups?: MobileNavGroup[];
   signOutAction: () => void;
   children?: React.ReactNode;
 }) {
@@ -124,25 +124,28 @@ export default function MobileNav({
                 ))}
               </ul>
 
-              {group && group.items.length > 0 && (
-                <div className="mt-4">
-                  <p className="px-3.5 pb-1.5 text-xs font-semibold uppercase tracking-wide text-subtle-foreground">
-                    {group.label}
-                  </p>
-                  <ul className="space-y-1">
-                    {group.items.map((l) => (
-                      <li key={l.href}>
-                        <Link
-                          href={l.href}
-                          onClick={() => setOpen(false)}
-                          className={rowFor(l.href)}
-                        >
-                          {l.label}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+              {groups.map(
+                (group) =>
+                  group.items.length > 0 && (
+                    <div key={group.label} className="mt-4">
+                      <p className="px-3.5 pb-1.5 text-xs font-semibold uppercase tracking-wide text-subtle-foreground">
+                        {group.label}
+                      </p>
+                      <ul className="space-y-1">
+                        {group.items.map((l) => (
+                          <li key={l.href}>
+                            <Link
+                              href={l.href}
+                              onClick={() => setOpen(false)}
+                              className={rowFor(l.href)}
+                            >
+                              {l.label}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ),
               )}
             </nav>
 

@@ -122,9 +122,9 @@ export default async function AdminClientDetailPage({
         </Link>
 
         <div className="mt-5 flex flex-wrap items-end justify-between gap-4">
-          <div>
+          <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2.5">
-              <h1 className="font-display text-3xl font-extrabold leading-tight tracking-tight text-foreground">
+              <h1 className="font-display text-2xl font-extrabold leading-tight tracking-tight text-foreground break-words sm:text-3xl">
                 {displayName}
               </h1>
               {client.role !== "client" ? (
@@ -147,7 +147,9 @@ export default async function AdminClientDetailPage({
               )}
             </div>
             {client.full_name?.trim() && email && (
-              <p className="mt-1.5 text-sm text-muted-foreground">{email}</p>
+              <p className="mt-1.5 break-words text-sm text-muted-foreground">
+                {email}
+              </p>
             )}
           </div>
           <div className="flex flex-wrap items-center gap-2">
