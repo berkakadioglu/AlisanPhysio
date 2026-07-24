@@ -197,7 +197,8 @@ export type NotificationType =
   | "membership_expiry"
   | "missing_info"
   | "weekly_review"
-  | "manual";
+  | "manual"
+  | "availability";
 
 /** An in-app notification. A user only ever sees their own. */
 export interface Notification {
@@ -210,6 +211,38 @@ export interface Notification {
   link: string | null;
   read: boolean;
   created_at: string;
+}
+
+// ---------------------------------------------------------------------------
+// Availability requests ("meeting requests") — staff ask a client when they're
+// free for a given week; the client answers with day + free-form time ranges.
+// ---------------------------------------------------------------------------
+
+/** A staff-sent request asking one client about one week's availability. */
+export interface AvailabilityRequest {
+  id: string;
+  client_id: string;
+  /** ISO date (YYYY-MM-DD) — the Monday of the asked-about week. */
+  week_start: string;
+  created_by: string | null;
+  created_at: string;
+}
+
+/** One day the client marked available, with a free-form time range + note. */
+export interface AvailabilitySlot {
+  id: string;
+  request_id: string;
+  /** ISO date (YYYY-MM-DD) — a specific day within the request's week. */
+  day_date: string;
+  time_from: string | null;
+  time_to: string | null;
+  note: string | null;
+  created_at: string;
+}
+
+/** A request with its submitted slots attached. */
+export interface AvailabilityRequestWithSlots extends AvailabilityRequest {
+  slots: AvailabilitySlot[];
 }
 
 /** Snapshot of a program / exercise stored in a review (survives later edits). */

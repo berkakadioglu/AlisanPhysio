@@ -5,6 +5,8 @@ import { loadDashboardData, firstNameOf, dayTitlesOf } from "@/lib/dashboard-dat
 import { generateSystemNotifications } from "@/lib/notifications";
 import { reviewedWeekSet } from "@/lib/reviews";
 import { nutritionPlanSummary } from "@/lib/nutrition";
+import { loadOwnRequests, pendingRequest } from "@/lib/availability";
+import { thisMondayISO } from "@/lib/program-dates";
 import { createClient } from "@/lib/supabase/server";
 import { t } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n-server";
@@ -12,6 +14,7 @@ import AppHeader from "./app-header";
 import ProgramCard from "./program-card";
 import ReviewAction from "./review-action";
 import NutritionCard from "./nutrition-card";
+import AvailabilityCard from "./availability-card";
 
 export const metadata: Metadata = {
   title: `Dashboard · ${BRAND_NAME}`,
@@ -36,6 +39,12 @@ export default async function DashboardPage() {
   const nutrition = user
     ? await nutritionPlanSummary(supabase, user.id)
     : { hasPlan: false, mealCount: 0 };
+
+  // A pending availability request (current-or-future week, not yet answered)
+  // surfaces a small, understated dashboard entry point.
+  const pendingAvailability = user
+    ? pendingRequest(await loadOwnRequests(supabase, user.id), thisMondayISO())
+    : null;
 
   return (
     <div className="min-h-screen">
@@ -96,6 +105,16 @@ export default async function DashboardPage() {
             </div>
           )}
         </section>
+
+        {/* Pending availability request (only shown when one is waiting) */}
+        {pendingAvailability && (
+          <div className="mt-6">
+            <AvailabilityCard
+              weekStart={pendingAvailability.week_start}
+              lang={lang}
+            />
+          </div>
+        )}
 
         {/* Small, understated nutrition entry point (secondary to the hero) */}
         <div className="mt-6">

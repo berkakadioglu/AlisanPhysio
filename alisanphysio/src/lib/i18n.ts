@@ -586,6 +586,66 @@ const en: Dict = {
     "Alişan will add one when it's part of your plan.",
   "nutriClient.notesFrom": "Notes from Alişan",
   "nutriClient.viewPlan": "View plan",
+
+  // Availability — nav + staff area
+  "nav.availability": "Availability",
+  "avail.staffHeading": "Availability",
+  "avail.staffSubtitle":
+    "Ask clients when they're free, then arrange the sessions yourself.",
+  "avail.week": "Week",
+  "avail.sendHeading": "Send a request",
+  "avail.sendSubtitle": "Pick a week and ask clients when they're free.",
+  "avail.sendAllActive": "Send to all active clients",
+  "avail.sendAllActiveCount": "Send to all {n} active clients",
+  "avail.sendSelected": "Send to selected",
+  "avail.sendSelectedCount": "Send to {n} selected",
+  "avail.selectClients": "Or pick individual clients",
+  "avail.selectClientsHint":
+    "Sending again for the same week is safe — clients already asked are skipped.",
+  "avail.noActiveClients": "No clients yet — add clients first.",
+  "avail.activeBadge": "Active",
+  "avail.inactiveBadge": "Inactive",
+  "avail.sending": "Sending…",
+  "avail.responsesHeading": "Responses",
+  "avail.responsesSubtitle": "What each client submitted for {range}.",
+  "avail.noRequests": "No requests sent for this week yet.",
+  "avail.responded": "Responded",
+  "avail.notResponded": "Not responded yet",
+  "avail.requestedOn": "Asked {date}",
+  "toast.availabilitySent": "Requests sent",
+
+  // Availability — client form
+  "avail.clientHeading": "Your availability",
+  "avail.clientSubtitle": "Let Alişan know when you're free for {range}.",
+  "avail.clientIntro": "Tick the days you're free and add a time range.",
+  "avail.available": "I'm available",
+  "avail.from": "From",
+  "avail.to": "To",
+  "avail.timePlaceholderFrom": "e.g. 18:00",
+  "avail.timePlaceholderTo": "e.g. 20:00",
+  "avail.dayNote": "Note",
+  "avail.dayNotePlaceholder": "e.g. after work, mornings only…",
+  "avail.submit": "Submit availability",
+  "avail.update": "Update availability",
+  "avail.submittedBadge": "Submitted",
+  "avail.submittedHint": "You can edit and resend anytime.",
+  "avail.emptyTitle": "No availability request right now",
+  "avail.emptyBody": "Alişan will ask when he needs to schedule sessions.",
+  "toast.availabilitySaved": "Availability saved",
+
+  // Availability — client dashboard entry point
+  "avail.card": "Availability",
+  "avail.cardPending": "Alişan asked when you're free",
+
+  // Availability — notification (staff-sent) + bell category
+  "notif.cat.availability": "Availability request",
+  "notif.availability.title": "When are you free?",
+  "notif.availability.body": "Alişan wants your availability for {range}.",
+
+  // Availability — errors
+  "err.availWeek": "Pick a valid week.",
+  "err.availNoClients": "Select at least one client.",
+  "err.availNoRequest": "There's no availability request for this week.",
 };
 
 const tr: Dict = {
@@ -1159,6 +1219,68 @@ const tr: Dict = {
     "Planınızın parçası olduğunda Alişan bir tane ekleyecek.",
   "nutriClient.notesFrom": "Alişan'dan notlar",
   "nutriClient.viewPlan": "Planı gör",
+
+  // Availability — nav + staff area
+  "nav.availability": "Uygunluk",
+  "avail.staffHeading": "Uygunluk",
+  "avail.staffSubtitle":
+    "Danışanlara ne zaman müsait olduklarını sorun, seansları kendiniz ayarlayın.",
+  "avail.week": "Hafta",
+  "avail.sendHeading": "Uygunluk talebi gönder",
+  "avail.sendSubtitle":
+    "Bir hafta seçin ve danışanlara ne zaman müsait olduklarını sorun.",
+  "avail.sendAllActive": "Tüm aktif danışanlara gönder",
+  "avail.sendAllActiveCount": "Tüm aktif danışanlara gönder ({n})",
+  "avail.sendSelected": "Seçilenlere gönder",
+  "avail.sendSelectedCount": "{n} seçili danışana gönder",
+  "avail.selectClients": "Ya da danışanları tek tek seçin",
+  "avail.selectClientsHint":
+    "Aynı hafta için tekrar göndermek güvenlidir — zaten sorulan danışanlar atlanır.",
+  "avail.noActiveClients": "Henüz danışan yok — önce danışan ekleyin.",
+  "avail.activeBadge": "Aktif",
+  "avail.inactiveBadge": "Pasif",
+  "avail.sending": "Gönderiliyor…",
+  "avail.responsesHeading": "Yanıtlar",
+  "avail.responsesSubtitle": "{range} için her danışanın gönderdikleri.",
+  "avail.noRequests": "Bu hafta için henüz talep gönderilmedi.",
+  "avail.responded": "Yanıtladı",
+  "avail.notResponded": "Henüz yanıtlamadı",
+  "avail.requestedOn": "{date} tarihinde soruldu",
+  "toast.availabilitySent": "Talepler gönderildi",
+
+  // Availability — client form
+  "avail.clientHeading": "Uygunluğunuz",
+  "avail.clientSubtitle":
+    "Alişan'a {range} için ne zaman müsait olduğunuzu bildirin.",
+  "avail.clientIntro": "Müsait olduğunuz günleri işaretleyip bir saat aralığı ekleyin.",
+  "avail.available": "Müsaitim",
+  "avail.from": "Başlangıç",
+  "avail.to": "Bitiş",
+  "avail.timePlaceholderFrom": "örn. 18:00",
+  "avail.timePlaceholderTo": "örn. 20:00",
+  "avail.dayNote": "Not",
+  "avail.dayNotePlaceholder": "örn. iş sonrası, sadece sabahları…",
+  "avail.submit": "Uygunluğu gönder",
+  "avail.update": "Uygunluğu güncelle",
+  "avail.submittedBadge": "Gönderildi",
+  "avail.submittedHint": "İstediğiniz zaman düzenleyip tekrar gönderebilirsiniz.",
+  "avail.emptyTitle": "Şu anda uygunluk talebi yok",
+  "avail.emptyBody": "Alişan seans planlaması gerektiğinde soracaktır.",
+  "toast.availabilitySaved": "Uygunluk kaydedildi",
+
+  // Availability — client dashboard entry point
+  "avail.card": "Uygunluk",
+  "avail.cardPending": "Alişan ne zaman müsait olduğunuzu sordu",
+
+  // Availability — notification (staff-sent) + bell category
+  "notif.cat.availability": "Uygunluk talebi",
+  "notif.availability.title": "Ne zaman müsaitsiniz?",
+  "notif.availability.body": "Alişan {range} için uygunluğunuzu öğrenmek istiyor.",
+
+  // Availability — errors
+  "err.availWeek": "Geçerli bir hafta seçin.",
+  "err.availNoClients": "En az bir danışan seçin.",
+  "err.availNoRequest": "Bu hafta için uygunluk talebi yok.",
 };
 
 const MESSAGES: Record<Lang, Dict> = { en, tr };
@@ -1195,6 +1317,28 @@ export function formatDay(iso: string, lang: Lang): string {
   const [y, m, d] = ymd(iso);
   const mon = MONTHS_SHORT[lang][m - 1];
   return lang === "tr" ? `${d} ${mon} ${y}` : `${mon} ${d}, ${y}`;
+}
+
+/** Short weekday names, index 0 = Monday … 6 = Sunday (deterministic — see note). */
+const WEEKDAYS_SHORT: Record<Lang, readonly string[]> = {
+  en: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+  tr: ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"],
+};
+
+/** A weekday + day/month, e.g. "Mon, Jul 6" / "Pzt, 6 Tem" (no year, no drift). */
+export function formatDayWithWeekday(iso: string, lang: Lang): string {
+  const [y, m, d] = ymd(iso);
+  const wd = (new Date(Date.UTC(y, m - 1, d)).getUTCDay() + 6) % 7; // 0=Mon
+  const mon = MONTHS_SHORT[lang][m - 1];
+  const dayMon = lang === "tr" ? `${d} ${mon}` : `${mon} ${d}`;
+  return `${WEEKDAYS_SHORT[lang][wd]}, ${dayMon}`;
+}
+
+/** "N day(s) available" — Turkish doesn't pluralize after numbers. */
+export function availDaysCount(lang: Lang, n: number): string {
+  return lang === "tr"
+    ? `${n} gün müsait`
+    : `${n} ${n === 1 ? "day" : "days"} available`;
 }
 
 // ---- Localized count helpers (Turkish doesn't pluralize after numbers) ----

@@ -40,6 +40,9 @@ export default async function AdminHeader({
               {t(lang, "admin.clients")}
             </Link>
             <ContentNav />
+            <Link href="/admin/availability" className={navLink}>
+              {t(lang, "nav.availability")}
+            </Link>
             <Link href="/dashboard" className={navLink}>
               {t(lang, "nav.personalExercises")}
             </Link>

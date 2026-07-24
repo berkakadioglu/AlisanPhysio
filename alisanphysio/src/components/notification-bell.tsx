@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, Megaphone, MessageSquareText, Ruler } from "lucide-react";
+import { Bell, CalendarClock, Megaphone, MessageSquareText, Ruler } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { Notification } from "@/lib/types";
 import { useI18n } from "@/app/i18n-provider";
@@ -12,6 +12,7 @@ import { useI18n } from "@/app/i18n-provider";
  * with its own label, icon and color chip in the panel:
  *   - Measurement request (missing_info / height + measurement nudge)
  *   - Feedback request (weekly_review nudge)
+ *   - Availability request (staff asked when the client is free)
  *   - Other (manual sends + any other system notice, e.g. membership expiry)
  */
 function categoryOf(type: string): {
@@ -21,6 +22,12 @@ function categoryOf(type: string): {
 } {
   if (type === "missing_info")
     return { labelKey: "notif.cat.measurement", Icon: Ruler, chip: "bg-brand-tint text-brand" };
+  if (type === "availability")
+    return {
+      labelKey: "notif.cat.availability",
+      Icon: CalendarClock,
+      chip: "bg-[var(--brand-tint)] text-brand-bright",
+    };
   if (type === "weekly_review")
     return {
       labelKey: "notif.cat.feedback",
