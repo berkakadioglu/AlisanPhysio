@@ -593,6 +593,16 @@ const en: Dict = {
   "nav.home": "Home",
   "nav.me": "Me",
 
+  // PDF export (button + generated document)
+  "export.pdf": "Save as PDF",
+  "export.chooseLanguage": "PDF language",
+  "export.generating": "Generating…",
+  "export.failed": "Could not generate the PDF. Please try again.",
+  "pdf.program": "Training Program",
+  "pdf.preparedBy": "Prepared by {name}",
+  "pdf.tagline": "Personal training & physiotherapy",
+  "pdf.watchVideo": "Watch on YouTube",
+
   // Availability — nav + staff area
   "nav.availability": "Availability",
   "avail.staffHeading": "Availability",
@@ -1231,6 +1241,16 @@ const tr: Dict = {
   "nav.closeMenu": "Menüyü kapat",
   "nav.home": "Ana sayfa",
   "nav.me": "Kendim",
+
+  // PDF export (button + generated document)
+  "export.pdf": "PDF olarak kaydet",
+  "export.chooseLanguage": "PDF dili",
+  "export.generating": "Oluşturuluyor…",
+  "export.failed": "PDF oluşturulamadı. Lütfen tekrar deneyin.",
+  "pdf.program": "Antrenman Programı",
+  "pdf.preparedBy": "{name} tarafından hazırlandı",
+  "pdf.tagline": "Kişisel antrenman & fizyoterapi",
+  "pdf.watchVideo": "YouTube'da izle",
 
   // Availability — nav + staff area
   "nav.availability": "Uygunluk",

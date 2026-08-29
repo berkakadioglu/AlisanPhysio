@@ -13,6 +13,9 @@ import ExerciseRowsEditor, {
   type RowSeed,
 } from "../exercise-rows-editor";
 import { deleteTemplate, saveTemplate } from "../template-actions";
+import ProgramExportButton, {
+  type ExportDoc,
+} from "@/components/program-export-button";
 
 export interface TemplateInitial {
   id?: string;
@@ -43,6 +46,27 @@ export default function TemplateEditor({
   );
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // The template's live state as a one-section export document.
+  const getExportDoc = (): ExportDoc => ({
+    title: title.trim() || "Template",
+    notes: null,
+    weekStart: null,
+    clientName: null,
+    days: [
+      {
+        title: "",
+        exercises: rows.map((r) => ({
+          name: r.name,
+          sets: r.sets,
+          reps: r.reps,
+          instructions: r.instructions,
+          media_url: r.media_url,
+          library_id: r.library_id,
+        })),
+      },
+    ],
+  });
 
   async function onSave() {
     setError(null);
@@ -94,9 +118,12 @@ export default function TemplateEditor({
         <span aria-hidden>←</span> {t("tpl.backToList")}
       </Link>
 
-      <h1 className="mt-5 font-display text-3xl font-extrabold leading-tight tracking-tight text-foreground">
-        {isEdit ? t("tpl.editHeading") : t("tpl.newHeading")}
-      </h1>
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="font-display text-3xl font-extrabold leading-tight tracking-tight text-foreground">
+          {isEdit ? t("tpl.editHeading") : t("tpl.newHeading")}
+        </h1>
+        <ProgramExportButton mode="inline" getDoc={getExportDoc} />
+      </div>
 
       <div className="mt-8 space-y-1.5 rounded-2xl bg-surface p-5 shadow-soft sm:p-6">
         <label className="block text-sm font-medium text-foreground">

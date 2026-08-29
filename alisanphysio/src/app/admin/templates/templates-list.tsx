@@ -7,6 +7,7 @@ import type { TemplateSummary } from "@/lib/types";
 import { exercisesCount } from "@/lib/i18n";
 import { useI18n } from "@/app/i18n-provider";
 import { useToast } from "@/app/toast";
+import ProgramExportButton from "@/components/program-export-button";
 import { deleteTemplate } from "../template-actions";
 
 export default function TemplatesList({
@@ -71,6 +72,9 @@ export default function TemplatesList({
                   {exercisesCount(lang, tpl.count)}
                 </span>
               </Link>
+              <div className="flex-none">
+                <ProgramExportButton mode="template" id={tpl.id} compact />
+              </div>
               <button
                 type="button"
                 onClick={() => remove(tpl)}

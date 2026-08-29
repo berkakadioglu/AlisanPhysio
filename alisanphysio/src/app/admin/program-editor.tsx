@@ -21,6 +21,9 @@ import ExerciseRowsEditor, {
   type Row,
 } from "./exercise-rows-editor";
 import TemplatePickerMenu from "./template-picker";
+import ProgramExportButton, {
+  type ExportDoc,
+} from "@/components/program-export-button";
 
 export interface EditorExercise {
   name: string;
@@ -220,6 +223,26 @@ export default function ProgramEditor({
     }
   }
 
+  // Snapshot the live editor state as a self-contained export document (works
+  // for unsaved edits + brand-new programs — the server resolves video ids).
+  const getExportDoc = (): ExportDoc => ({
+    title: title.trim() || "Program",
+    notes: notes.trim() || null,
+    weekStart: weekStartDate || null,
+    clientName: null,
+    days: days.map((d) => ({
+      title: d.title,
+      exercises: d.rows.map((r) => ({
+        name: r.name,
+        sets: r.sets,
+        reps: r.reps,
+        instructions: r.instructions,
+        media_url: r.media_url,
+        library_id: r.library_id,
+      })),
+    })),
+  });
+
   return (
     <>
       <Link
@@ -229,9 +252,12 @@ export default function ProgramEditor({
         <span aria-hidden>←</span> {t("editor.backToClient")}
       </Link>
 
-      <h1 className="mt-5 font-display text-3xl font-extrabold leading-tight tracking-tight text-foreground">
-        {isEdit ? t("editor.editHeading") : t("editor.newHeading")}
-      </h1>
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="font-display text-3xl font-extrabold leading-tight tracking-tight text-foreground">
+          {isEdit ? t("editor.editHeading") : t("editor.newHeading")}
+        </h1>
+        <ProgramExportButton mode="inline" getDoc={getExportDoc} />
+      </div>
 
       {/* Program fields */}
       <div className="mt-8 space-y-5 rounded-2xl bg-surface p-5 shadow-soft sm:p-6">

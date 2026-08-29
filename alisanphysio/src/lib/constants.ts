@@ -5,6 +5,9 @@
 export const BRAND_NAME = "AlisanPhysio";
 export const BRAND_TAGLINE = "Your programs, all in one place";
 
+/** Author shown on exported PDF documents (cover + footer). */
+export const PDF_AUTHOR = "Alişan";
+
 /** Where users land after a successful login. */
 export const AFTER_LOGIN_PATH = "/dashboard";
 /** Public routes that do not require authentication. */

@@ -10,6 +10,7 @@ import { formatDay, isLang, t, type Lang } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n-server";
 import AdminHeader from "@/app/admin/admin-header";
 import MembershipBadge from "@/components/membership-badge";
+import ProgramExportButton from "@/components/program-export-button";
 import ProgramCard from "@/app/dashboard/program-card";
 import NewProgramMenu from "./new-program-menu";
 import ResetPasswordButton from "./reset-password-button";
@@ -213,7 +214,13 @@ export default async function AdminClientDetailPage({
                         accent={key === "current"}
                         href={`/admin/clients/${id}/programs/${program.id}/edit`}
                       />
-                      <div className="px-1 text-right">
+                      <div className="flex items-center justify-between gap-2 px-1">
+                        <ProgramExportButton
+                          mode="program"
+                          id={program.id}
+                          compact
+                          align="left"
+                        />
                         <Link
                           href={`/dashboard/${program.id}`}
                           className="text-xs font-medium text-muted-foreground transition hover:text-brand"
