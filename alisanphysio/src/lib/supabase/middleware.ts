@@ -2,23 +2,27 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { PUBLIC_PATHS } from "@/lib/constants";
 import { membershipActive, todayISO } from "@/lib/membership";
-
-/** The blocked screen shown to a client without an active membership. */
-const INACTIVE_PATH = "/membership-inactive";
+import { routeRedirect } from "@/lib/route-access";
+import { DEMO_REQUEST_HEADER } from "@/lib/demo-route";
 
 /**
  * Refreshes the Supabase auth session on every matched request and guards
  * protected routes. Called from the root `proxy.ts` (Next.js 16 renamed the
  * `middleware` convention to `proxy`).
  *
- * Two gates, both re-checked server-side in the relevant pages/actions:
- *   1. Admin area (/admin) — only role='admin'.
+ * Two route gates:
+ *   1. Admin area (/admin) — staff roles only; pages/actions also re-check.
  *   2. Membership — a role='client' with no active membership is sent to the
- *      blocked screen. This gate applies to CLIENTS ONLY; admins (and any
- *      non-client role) are NEVER gated by membership.
+ *      blocked screen. This proxy is its enforcement point. Staff and public
+ *      marketing routes are never gated by membership.
  */
 export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request });
+  const responseForApp = () => {
+    const forwardedHeaders = new Headers(request.headers);
+    forwardedHeaders.set(DEMO_REQUEST_HEADER, "0");
+    return NextResponse.next({ request: { headers: forwardedHeaders } });
+  };
+  let supabaseResponse = responseForApp();
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -32,7 +36,7 @@ export async function updateSession(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value),
           );
-          supabaseResponse = NextResponse.next({ request });
+          supabaseResponse = responseForApp();
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options),
           );
@@ -48,9 +52,6 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
-  const isPublic = PUBLIC_PATHS.some(
-    (p) => pathname === p || pathname.startsWith(`${p}/`),
-  );
 
   const redirectTo = (path: string) => {
     const url = request.nextUrl.clone();
@@ -58,16 +59,8 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   };
 
-  // Not signed in and trying to reach a protected route → send to /login.
-  if (!user && !isPublic) {
-    return redirectTo("/login");
-  }
-
-  // Signed in but sitting on /login → let the root route them by role.
-  if (user && pathname === "/login") {
-    return redirectTo("/");
-  }
-
+  let role: string | null = null;
+  let activeMembership = false;
   if (user) {
     // One read of the caller's own row (RLS lets a user read their own profile).
     const { data: profile } = await supabase
@@ -80,36 +73,26 @@ export async function updateSession(request: NextRequest) {
         membership_end_date: string | null;
       }>();
 
-    const role = profile?.role;
-    const isStaff = role === "admin" || role === "manager";
-
-    // Admin area: staff (admin OR manager) may enter. UX redirect; every /admin
-    // page and action ALSO re-checks server-side (defense in depth).
-    if (pathname.startsWith("/admin") && !isStaff) {
-      return redirectTo("/dashboard");
-    }
-
-    // Membership gate — CLIENTS ONLY. Admins (and any non-client) are never
-    // gated: Alişan must always reach /admin regardless of membership fields.
+    role = profile?.role ?? null;
     if (role === "client") {
-      const active = membershipActive(
+      activeMembership = membershipActive(
         profile?.membership,
         profile?.membership_end_date,
         todayISO(),
       );
-      const onBlockedScreen = pathname === INACTIVE_PATH;
-      if (!active && !onBlockedScreen) {
-        return redirectTo(INACTIVE_PATH);
-      }
-      // Access restored while stuck on the blocked screen → let them back in.
-      if (active && onBlockedScreen) {
-        return redirectTo("/dashboard");
-      }
-    } else if (pathname === INACTIVE_PATH) {
-      // Admins/others never see the blocked screen; route them home.
-      return redirectTo("/");
     }
   }
+
+  const redirectPath = routeRedirect({
+    pathname,
+    authenticated: Boolean(user),
+    role:
+      role === "admin" || role === "manager" || role === "client" ? role : null,
+    membershipIsActive: activeMembership,
+    publicPaths: PUBLIC_PATHS,
+  });
+
+  if (redirectPath) return redirectTo(redirectPath);
 
   return supabaseResponse;
 }

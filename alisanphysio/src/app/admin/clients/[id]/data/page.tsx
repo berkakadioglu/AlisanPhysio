@@ -26,7 +26,7 @@ export default async function AdminClientDataPage({
   // Admin reads the client's rows via the admin SELECT RLS policies.
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, full_name, height_cm, membership, membership_end_date")
+    .select("id, full_name, height_cm, membership, membership_end_date, timezone")
     .eq("id", id)
     .maybeSingle<ProfileData>();
 

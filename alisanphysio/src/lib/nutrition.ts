@@ -8,7 +8,8 @@ import type {
 } from "@/lib/types";
 
 const MEAL_COLS = "id, plan_id, title, order_index, created_at";
-const ITEM_COLS = "id, meal_id, name, library_id, portion, note, order_index";
+const ITEM_COLS =
+  "id, meal_id, name, library_id, quantity, unit, is_manual_override, portion, note, order_index, kcal, protein_g, carb_g, fat_g, food_library(name, name_tr, serving_qty, serving_unit, grams_per_unit, kcal, protein_g, carb_g, fat_g)";
 
 /** The whole food library for the staff UI + combobox, sorted by name. */
 export async function loadFoodLibrary(
@@ -16,7 +17,9 @@ export async function loadFoodLibrary(
 ): Promise<FoodLibrary[]> {
   const { data } = await supabase
     .from("food_library")
-    .select("id, name, default_portion, note, created_at")
+    .select(
+      "id, name, name_tr, default_portion, serving_qty, serving_unit, grams_per_unit, note, kcal, protein_g, carb_g, fat_g, created_at",
+    )
     .order("name", { ascending: true })
     .returns<FoodLibrary[]>();
   return data ?? [];
@@ -34,7 +37,9 @@ export async function loadNutritionPlan(
 ): Promise<NutritionPlanWithMeals | null> {
   const { data: plan } = await supabase
     .from("nutrition_plans")
-    .select("id, client_id, notes, updated_at, created_at")
+    .select(
+      "id, client_id, notes, daily_kcal_target, daily_protein_target_g, updated_at, created_at",
+    )
     .eq("client_id", clientId)
     .maybeSingle<NutritionPlan>();
   if (!plan) return null;

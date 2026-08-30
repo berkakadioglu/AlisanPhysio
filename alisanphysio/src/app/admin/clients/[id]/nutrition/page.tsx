@@ -44,8 +44,8 @@ export default async function ClientNutritionPage({
 
   return (
     <div className="min-h-screen">
-      <AdminHeader container="max-w-3xl" />
-      <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8 sm:py-14">
+      <AdminHeader container="max-w-5xl" />
+      <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8 sm:py-14">
         <NutritionEditor
           clientId={id}
           clientName={displayName}

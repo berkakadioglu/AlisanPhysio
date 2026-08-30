@@ -5,7 +5,6 @@ import { loadDashboardData } from "@/lib/dashboard-data";
 import { reviewedWeekSet } from "@/lib/reviews";
 import { t } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n-server";
-import AppHeader from "../app-header";
 import ProgramList from "../program-list";
 
 export const metadata: Metadata = {
@@ -18,10 +17,7 @@ export default async function PastProgramsPage() {
   const reviewedWeeks = await reviewedWeekSet();
 
   return (
-    <div className="min-h-screen">
-      <AppHeader container="max-w-3xl" />
-
-      <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8 sm:py-14">
+      <main id="main-content" className="mx-auto min-w-0 max-w-4xl">
         <Link
           href="/dashboard"
           className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition hover:text-brand"
@@ -44,6 +40,5 @@ export default async function PastProgramsPage() {
           />
         </div>
       </main>
-    </div>
   );
 }

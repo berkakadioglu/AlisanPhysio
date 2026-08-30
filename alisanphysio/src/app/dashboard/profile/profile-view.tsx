@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import type { Complaint, Measurement } from "@/lib/types";
 import type { Membership } from "@/lib/membership";
 import { formatDay } from "@/lib/i18n";
 import { bmiCategory, computeBmi, type BmiCategory } from "@/lib/bmi";
+import { detectBrowserTimeZone } from "@/lib/scheduling";
 import { useI18n } from "@/app/i18n-provider";
 import { useToast } from "@/app/toast";
 import MembershipBadge from "@/components/membership-badge";
@@ -27,6 +28,7 @@ const primaryBtn =
   "rounded-xl bg-brand-solid px-4 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:bg-brand-solid-hover disabled:cursor-not-allowed disabled:opacity-60";
 const errorClass =
   "rounded-lg bg-danger-tint px-3.5 py-2.5 text-sm text-danger";
+const subscribeBrowserTimeZone = () => () => {};
 
 export interface ProfileData {
   id: string;
@@ -34,6 +36,7 @@ export interface ProfileData {
   height_cm: number | null;
   membership: Membership | null;
   membership_end_date: string | null;
+  timezone: string | null;
 }
 
 export default function ProfileView({
@@ -42,22 +45,26 @@ export default function ProfileView({
   measurements,
   complaints,
   readOnly = false,
+  showMeasurements = true,
 }: {
   profile: ProfileData;
   email: string;
   measurements: Measurement[];
   complaints: Complaint[];
   readOnly?: boolean;
+  showMeasurements?: boolean;
 }) {
   return (
     <div className="space-y-6">
       <PersonalInfoSection profile={profile} email={email} readOnly={readOnly} />
       {!readOnly && <ChangePasswordSection />}
-      <MeasurementsSection
-        measurements={measurements}
-        heightCm={profile.height_cm}
-        readOnly={readOnly}
-      />
+      {showMeasurements && (
+        <ProgressMeasurements
+          measurements={measurements}
+          heightCm={profile.height_cm}
+          readOnly={readOnly}
+        />
+      )}
       <ComplaintsSection complaints={complaints} readOnly={readOnly} />
     </div>
   );
@@ -82,6 +89,14 @@ function PersonalInfoSection({
   const [height, setHeight] = useState(
     profile.height_cm != null ? String(profile.height_cm) : "",
   );
+  const [timezone, setTimezone] = useState(profile.timezone ?? "");
+  const detectedTimezone = useSyncExternalStore(
+    subscribeBrowserTimeZone,
+    detectBrowserTimeZone,
+    () => null,
+  );
+  const displayedTimezone =
+    timezone || (!profile.timezone ? detectedTimezone ?? "" : "");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -89,7 +104,11 @@ function PersonalInfoSection({
     e.preventDefault();
     setError(null);
     setPending(true);
-    const res = await updatePersonalInfo({ fullName: name, height });
+    const res = await updatePersonalInfo({
+      fullName: name,
+      height,
+      timezone: displayedTimezone,
+    });
     if (res.ok) {
       toast(t("toast.profileSaved"));
       router.refresh();
@@ -117,6 +136,10 @@ function PersonalInfoSection({
             }
           />
           <Row label={t("profile.email")} value={email || "—"} />
+          <Row
+            label={t("profile.timezone")}
+            value={profile.timezone || t("profile.timezoneUnset")}
+          />
         </dl>
       ) : (
         <form onSubmit={submit} className="mt-4 space-y-4">
@@ -151,6 +174,36 @@ function PersonalInfoSection({
               placeholder="170"
             />
             <p className="text-xs text-subtle-foreground">{t("profile.heightHint")}</p>
+          </div>
+
+          <div className="space-y-1.5">
+            <label htmlFor="pf-timezone" className={labelClass}>
+              {t("profile.timezone")}
+            </label>
+            <input
+              id="pf-timezone"
+              type="text"
+              list="pf-timezone-options"
+              value={displayedTimezone}
+              onChange={(e) => setTimezone(e.target.value)}
+              className={inputClass}
+              placeholder="America/Toronto"
+              autoComplete="off"
+            />
+            <datalist id="pf-timezone-options">
+              <option value="America/Toronto" />
+              <option value="Europe/Istanbul" />
+              <option value="America/Vancouver" />
+              <option value="America/New_York" />
+              <option value="Europe/London" />
+              <option value="Europe/Berlin" />
+              <option value="UTC" />
+            </datalist>
+            <p className="text-xs text-subtle-foreground">
+              {detectedTimezone
+                ? t("profile.timezoneDetected", { timezone: detectedTimezone })
+                : t("profile.timezoneHint")}
+            </p>
           </div>
 
           <div className="space-y-1.5">
@@ -327,7 +380,7 @@ function bmiOf(weightKg: number, heightCm: number): number {
   return weightKg / (h * h);
 }
 
-function MeasurementsSection({
+export function ProgressMeasurements({
   measurements,
   heightCm,
   readOnly,
@@ -564,44 +617,26 @@ function MeasurementsSection({
         )}
       </div>
 
-      {/* Table */}
-      <div className="mt-6 overflow-x-auto">
+      {/* Responsive history: stacked records on phones, table on wider screens. */}
+      <div className="mt-6">
         {measurements.length > 0 ? (
-          <table className="w-full min-w-[520px] border-collapse text-sm">
-            <thead>
-              <tr className="border-b border-border text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                <th className="py-2.5 pr-3">{t("profile.date")}</th>
-                <th className="py-2.5 pr-3 text-right">{t("profile.colWeight")}</th>
-                <th className="py-2.5 pr-3 text-right">{t("profile.colWaist")}</th>
-                <th className="py-2.5 pr-3 text-right">{t("profile.colHip")}</th>
-                <th className="py-2.5 pr-3 text-right">{t("profile.colArm")}</th>
-                <th className="py-2.5 pr-3 text-right">{t("profile.colChest")}</th>
-                {!readOnly && <th className="py-2.5" aria-hidden />}
-              </tr>
-            </thead>
-            <tbody>
+          <>
+            <div className="space-y-2 sm:hidden">
               {measurements.map((m) => (
-                <tr key={m.id} className="border-b border-border/60 last:border-0">
-                  <td className="py-2.5 pr-3 font-medium text-foreground">
-                    {fmtDate(m.measured_on)}
-                  </td>
-                  <td className="py-2.5 pr-3 text-right tabular-nums text-foreground">
-                    {num(m.weight_kg)}
-                  </td>
-                  <td className="py-2.5 pr-3 text-right tabular-nums text-muted-foreground">
-                    {num(m.waist_cm)}
-                  </td>
-                  <td className="py-2.5 pr-3 text-right tabular-nums text-muted-foreground">
-                    {num(m.hip_cm)}
-                  </td>
-                  <td className="py-2.5 pr-3 text-right tabular-nums text-muted-foreground">
-                    {num(m.arm_cm)}
-                  </td>
-                  <td className="py-2.5 pr-3 text-right tabular-nums text-muted-foreground">
-                    {num(m.chest_cm)}
-                  </td>
-                  {!readOnly && (
-                    <td className="py-2.5 text-right">
+                <dl
+                  key={m.id}
+                  className="grid min-w-0 grid-cols-2 gap-3 rounded-xl bg-background/70 p-3.5 text-sm"
+                >
+                  <div className="col-span-2 flex min-w-0 items-start justify-between gap-3 border-b border-border pb-2">
+                    <div className="min-w-0">
+                      <dt className="break-words font-semibold text-foreground">
+                        {fmtDate(m.measured_on)}
+                      </dt>
+                      <dd className="mt-0.5 font-bold tabular-nums text-brand">
+                        {num(m.weight_kg)} {t("profile.chartKg")}
+                      </dd>
+                    </div>
+                    {!readOnly && (
                       <button
                         type="button"
                         onClick={() => remove(m.id)}
@@ -610,12 +645,81 @@ function MeasurementsSection({
                       >
                         {t("common.delete")}
                       </button>
-                    </td>
-                  )}
-                </tr>
+                    )}
+                  </div>
+                  {(
+                    [
+                      [t("profile.colWaist"), m.waist_cm],
+                      [t("profile.colHip"), m.hip_cm],
+                      [t("profile.colArm"), m.arm_cm],
+                      [t("profile.colChest"), m.chest_cm],
+                    ] as const
+                  ).map(([label, value]) => (
+                    <div key={label} className="min-w-0">
+                      <dt className="break-words text-xs text-muted-foreground">
+                        {label}
+                      </dt>
+                      <dd className="mt-0.5 font-semibold tabular-nums text-foreground">
+                        {num(value)}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
               ))}
-            </tbody>
-          </table>
+            </div>
+
+            <div className="hidden overflow-x-auto sm:block">
+              <table className="w-full min-w-[520px] border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-border text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    <th className="py-2.5 pr-3">{t("profile.date")}</th>
+                    <th className="py-2.5 pr-3 text-right">{t("profile.colWeight")}</th>
+                    <th className="py-2.5 pr-3 text-right">{t("profile.colWaist")}</th>
+                    <th className="py-2.5 pr-3 text-right">{t("profile.colHip")}</th>
+                    <th className="py-2.5 pr-3 text-right">{t("profile.colArm")}</th>
+                    <th className="py-2.5 pr-3 text-right">{t("profile.colChest")}</th>
+                    {!readOnly && <th className="py-2.5" aria-hidden />}
+                  </tr>
+                </thead>
+                <tbody>
+                  {measurements.map((m) => (
+                    <tr key={m.id} className="border-b border-border/60 last:border-0">
+                      <td className="py-2.5 pr-3 font-medium text-foreground">
+                        {fmtDate(m.measured_on)}
+                      </td>
+                      <td className="py-2.5 pr-3 text-right tabular-nums text-foreground">
+                        {num(m.weight_kg)}
+                      </td>
+                      <td className="py-2.5 pr-3 text-right tabular-nums text-muted-foreground">
+                        {num(m.waist_cm)}
+                      </td>
+                      <td className="py-2.5 pr-3 text-right tabular-nums text-muted-foreground">
+                        {num(m.hip_cm)}
+                      </td>
+                      <td className="py-2.5 pr-3 text-right tabular-nums text-muted-foreground">
+                        {num(m.arm_cm)}
+                      </td>
+                      <td className="py-2.5 pr-3 text-right tabular-nums text-muted-foreground">
+                        {num(m.chest_cm)}
+                      </td>
+                      {!readOnly && (
+                        <td className="py-2.5 text-right">
+                          <button
+                            type="button"
+                            onClick={() => remove(m.id)}
+                            disabled={deletingId === m.id}
+                            className="rounded-lg px-2.5 py-1 text-xs font-medium text-danger transition hover:bg-danger-tint disabled:opacity-50"
+                          >
+                            {t("common.delete")}
+                          </button>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         ) : (
           <p className="rounded-xl border border-dashed border-border bg-surface/50 px-5 py-8 text-center text-sm text-subtle-foreground">
             {readOnly
@@ -666,32 +770,6 @@ function EmptyChart({ text }: { text: string }) {
   );
 }
 
-// WHO BMI category → calm, muted palette that harmonizes with the theme
-// (blue / green / amber / soft red — informational, never alarming). Colors
-// resolve to CSS variables (see globals.css) so they re-theme in dark mode.
-const BMI_STYLE: Record<BmiCategory, { bg: string; fg: string; border: string }> = {
-  underweight: {
-    bg: "var(--bmi-underweight-bg)",
-    fg: "var(--bmi-underweight-fg)",
-    border: "var(--bmi-underweight-border)",
-  },
-  normal: {
-    bg: "var(--bmi-normal-bg)",
-    fg: "var(--bmi-normal-fg)",
-    border: "var(--bmi-normal-border)",
-  },
-  overweight: {
-    bg: "var(--bmi-overweight-bg)",
-    fg: "var(--bmi-overweight-fg)",
-    border: "var(--bmi-overweight-border)",
-  },
-  obese: {
-    bg: "var(--bmi-obese-bg)",
-    fg: "var(--bmi-obese-fg)",
-    border: "var(--bmi-obese-border)",
-  },
-};
-
 function BmiStatus({
   bmi,
   category,
@@ -700,32 +778,22 @@ function BmiStatus({
   category: BmiCategory;
 }) {
   const { t, lang } = useI18n();
-  const s = BMI_STYLE[category];
   const value = new Intl.NumberFormat(lang === "tr" ? "tr-TR" : "en-US", {
     maximumFractionDigits: 1,
   }).format(bmi);
   return (
-    <div
-      className="rounded-xl border px-4 py-3"
-      style={{ backgroundColor: s.bg, borderColor: s.border }}
-    >
+    <div className="rounded-xl border border-[var(--bmi-reference-border)] bg-[var(--bmi-reference-bg)] px-4 py-3">
       <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-        <span
-          className="rounded-full px-2 py-0.5 text-xs font-bold"
-          style={{ backgroundColor: s.fg, color: s.bg }}
-        >
+        <span className="rounded-full bg-[var(--bmi-reference-fg)] px-2 py-0.5 text-xs font-bold text-[var(--bmi-reference-bg)]">
           {t(`bmi.${category}`)}
         </span>
-        <span
-          className="text-sm font-semibold tabular-nums"
-          style={{ color: s.fg }}
-        >
+        <span className="text-sm font-semibold tabular-nums text-[var(--bmi-reference-fg)]">
           {t("bmi.value", { value })}
         </span>
         <span className="text-xs text-subtle-foreground">· {t("bmi.basedOn")}</span>
       </div>
-      <p className="mt-1 text-xs" style={{ color: s.fg }}>
-        {t(`bmi.note.${category}`)}
+      <p className="mt-1 text-xs leading-relaxed text-[var(--bmi-reference-fg)]">
+        {t("bmi.context")}
       </p>
     </div>
   );

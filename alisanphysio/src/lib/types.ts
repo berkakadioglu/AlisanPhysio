@@ -13,6 +13,8 @@ export interface Profile {
   full_name: string | null;
   role: Role;
   created_at: string;
+  /** IANA timezone used for all viewer-local scheduling times. */
+  timezone: string | null;
   /** Standing height in cm, used to compute BMI. Null until the client sets it. */
   height_cm: number | null;
   /** Membership tier (admin-set). Null = no membership. */
@@ -141,15 +143,43 @@ export interface TemplateSummary extends DayTemplate {
 }
 
 // ---------------------------------------------------------------------------
-// Nutrition (v1 — no macros/calories). plan → meals → items, one plan per user.
+// Nutrition. plan → meals → items, one plan per user. Meal-item nutrition
+// columns hold manual overrides and safe fallbacks; ordinary linked rows are
+// derived from their structured quantity and current library serving.
 // ---------------------------------------------------------------------------
 
+export interface NutritionValues {
+  kcal: number | null;
+  protein_g: number | null;
+  carb_g: number | null;
+  fat_g: number | null;
+}
+
+/** Units accepted by the structured nutrition portion model. */
+export type NutritionUnit =
+  | "g"
+  | "ml"
+  | "piece"
+  | "scoop"
+  | "tbsp"
+  | "tsp"
+  | "cup";
+
 /** A shared, staff-curated food (mirrors ExerciseLibrary, simpler). */
-export interface FoodLibrary {
+export interface FoodLibrary extends NutritionValues {
   id: string;
+  /** Canonical English name. */
   name: string;
+  /** Optional Turkish display name; English is the fallback. */
+  name_tr: string | null;
   /** A sensible default serving, e.g. "1 cup" / "150 g". Null if unset. */
   default_portion: string | null;
+  /** Numeric serving that the library nutrition values describe. */
+  serving_qty: number | null;
+  /** Structured unit for `serving_qty`; null on an unconverted legacy row. */
+  serving_unit: NutritionUnit | null;
+  /** Gram mass of one non-mass serving unit, when known. */
+  grams_per_unit: number | null;
   note: string | null;
   created_at: string;
 }
@@ -159,6 +189,8 @@ export interface NutritionPlan {
   id: string;
   client_id: string;
   notes: string | null;
+  daily_kcal_target: number | null;
+  daily_protein_target_g: number | null;
   updated_at: string;
   created_at: string;
 }
@@ -173,14 +205,33 @@ export interface Meal {
 }
 
 /** A food row inside a meal, optionally linked to a food_library entry. */
-export interface MealItem {
+export interface MealItem extends NutritionValues {
   id: string;
   meal_id: string;
   name: string;
   library_id: string | null;
+  /** Structured amount; null when this legacy row could not be converted. */
+  quantity: number | null;
+  /** Structured amount unit; null when this legacy row could not be converted. */
+  unit: NutritionUnit | null;
+  /** Stored nutrition snapshots win until staff explicitly clear the override. */
+  is_manual_override: boolean;
   portion: string | null;
   note: string | null;
   order_index: number;
+  /** Localized library names when the optional link still exists. */
+  food_library: Pick<
+    FoodLibrary,
+    | "name"
+    | "name_tr"
+    | "serving_qty"
+    | "serving_unit"
+    | "grams_per_unit"
+    | "kcal"
+    | "protein_g"
+    | "carb_g"
+    | "fat_g"
+  > | null;
 }
 
 /** A meal with its ordered items attached. */
@@ -198,7 +249,9 @@ export type NotificationType =
   | "missing_info"
   | "weekly_review"
   | "manual"
-  | "availability";
+  | "availability"
+  | "appointment_reminder"
+  | "appointment_cancelled";
 
 /** An in-app notification. A user only ever sees their own. */
 export interface Notification {
@@ -243,6 +296,91 @@ export interface AvailabilitySlot {
 /** A request with its submitted slots attached. */
 export interface AvailabilityRequestWithSlots extends AvailabilityRequest {
   slots: AvailabilitySlot[];
+}
+
+// ---------------------------------------------------------------------------
+// Scheduling. These names deliberately distinguish the new bookable slots
+// from the legacy AvailabilitySlot response rows above while the migration
+// preserves old availability-request history.
+// ---------------------------------------------------------------------------
+
+export type SchedulingMode = "coach_slots" | "client_proposal";
+export type BookableSlotStatus = "open" | "booked" | "closed";
+export type AppointmentStatus =
+  | "pending"
+  | "confirmed"
+  | "cancelled"
+  | "completed";
+export type AppointmentCancelledBy = "client" | "coach";
+export type ClientProposalStatus = "pending" | "accepted" | "declined";
+export type AppointmentReminderKind = "24h" | "12h";
+
+/** Single-row scheduling preferences owned by the coach/staff UI. */
+export interface CoachSettings {
+  scheduling_mode: SchedulingMode;
+  default_duration_min: number;
+  /** Coach's IANA timezone. */
+  timezone: string;
+}
+
+/** A concrete UTC slot published by the coach for Mode A booking. */
+export interface BookableAvailabilitySlot {
+  id: string;
+  created_at: string;
+  starts_at: string;
+  duration_min: number;
+  status: BookableSlotStatus;
+  note: string | null;
+}
+
+/** A real appointment. All timestamps are UTC ISO strings from timestamptz. */
+export interface Appointment {
+  id: string;
+  created_at: string;
+  client_id: string;
+  coach_id: string | null;
+  slot_id: string | null;
+  starts_at: string;
+  duration_min: number;
+  status: AppointmentStatus;
+  meeting_url: string | null;
+  agenda: string | null;
+  coach_note: string | null;
+  cancelled_by: AppointmentCancelledBy | null;
+  cancelled_reason: string | null;
+  cancelled_at: string | null;
+}
+
+/** Client-facing row shape; the private coach note is never selected. */
+export type ClientAppointment = Omit<Appointment, "coach_note">;
+
+export type SchedulingClientSummary = Pick<
+  Profile,
+  "id" | "full_name" | "timezone"
+>;
+
+/** Staff appointment query with client timezone/name embedded. */
+export interface AppointmentWithClient extends Appointment {
+  client: SchedulingClientSummary | null;
+}
+
+/** A client-authored candidate time in Mode B. */
+export interface ClientProposal {
+  id: string;
+  created_at: string;
+  client_id: string;
+  proposal_group_id: string;
+  proposed_start: string;
+  note: string | null;
+  status: ClientProposalStatus;
+  decision_note: string | null;
+  decided_at: string | null;
+  accepted_appointment_id: string | null;
+}
+
+/** Staff proposal query with client timezone/name embedded. */
+export interface ClientProposalWithClient extends ClientProposal {
+  client: SchedulingClientSummary | null;
 }
 
 /** Snapshot of a program / exercise stored in a review (survives later edits). */

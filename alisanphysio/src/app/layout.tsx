@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Archivo, Inter } from "next/font/google";
+import localFont from "next/font/local";
 import Script from "next/script";
 import "./globals.css";
 import { BRAND_NAME, BRAND_TAGLINE } from "@/lib/constants";
@@ -9,17 +9,92 @@ import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import { I18nProvider } from "./i18n-provider";
 import { ToastProvider } from "./toast";
 
+const MARKETING_INIT_SCRIPT = `(() => {
+  if (
+    location.pathname !== "/" &&
+    location.pathname !== "/pricing" &&
+    location.pathname !== "/assessment"
+  ) return;
+  const root = document.documentElement;
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduced) {
+    root.classList.add("marketing-veil-skip");
+    return;
+  }
+
+  root.classList.add("marketing-motion-enabled");
+  setTimeout(() => {
+    if (!document.querySelector(".marketing-motion-ready")) {
+      root.classList.add("marketing-motion-fallback");
+    }
+  }, 5000);
+  const key = "twa-marketing-veil-seen";
+  let show = true;
+  try {
+    show = !sessionStorage.getItem(key);
+    if (show) sessionStorage.setItem(key, "1");
+  } catch {}
+
+  if (!show) {
+    root.classList.add("marketing-veil-skip");
+    return;
+  }
+
+  root.dataset.marketingVeilStart = String(performance.now());
+  root.classList.add("marketing-veil-show");
+  let finished = false;
+  const leave = () => {
+    if (finished) return;
+    finished = true;
+    root.classList.add("marketing-veil-leave");
+    setTimeout(() => {
+      root.classList.remove("marketing-veil-show", "marketing-veil-leave");
+    }, 180);
+  };
+
+  setTimeout(leave, 500);
+  if (document.readyState === "complete") leave();
+  else addEventListener("load", leave, { once: true });
+})();`;
+
 // Body / UI type.
-const inter = Inter({
+const inter = localFont({
+  src: [
+    {
+      path: "../lib/pdf/fonts/Inter-Regular.ttf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../lib/pdf/fonts/Inter-SemiBold.ttf",
+      weight: "600",
+      style: "normal",
+    },
+    {
+      path: "../lib/pdf/fonts/Inter-Bold.ttf",
+      weight: "700",
+      style: "normal",
+    },
+  ],
   variable: "--font-inter",
-  subsets: ["latin"],
   display: "swap",
 });
 
-// Display headings — bold, modern, confident. Variable font covers 700–800.
-const archivo = Archivo({
+// Display headings — the same bundled files used by the PDF generator.
+const archivo = localFont({
+  src: [
+    {
+      path: "../lib/pdf/fonts/Archivo-Bold.ttf",
+      weight: "700",
+      style: "normal",
+    },
+    {
+      path: "../lib/pdf/fonts/Archivo-ExtraBold.ttf",
+      weight: "800",
+      style: "normal",
+    },
+  ],
   variable: "--font-archivo",
-  subsets: ["latin"],
   display: "swap",
 });
 
@@ -46,6 +121,12 @@ export default async function RootLayout({
       }`}
       suppressHydrationWarning
     >
+      <head>
+        <script
+          id="marketing-init"
+          dangerouslySetInnerHTML={{ __html: MARKETING_INIT_SCRIPT }}
+        />
+      </head>
       <body className="min-h-full flex flex-col font-sans">
         {/* Set the theme class before first paint (no FOUC). beforeInteractive
             inline scripts are hoisted into <head> and run before hydration —

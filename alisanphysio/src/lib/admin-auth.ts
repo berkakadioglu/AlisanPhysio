@@ -6,7 +6,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 export interface AdminContext {
   supabase: SupabaseClient;
   userId: string;
-  profile: Profile;
+  profile: Pick<Profile, "id" | "full_name" | "role" | "created_at" | "timezone">;
 }
 
 /**
@@ -26,9 +26,9 @@ async function requireRole(allowed: Role[]): Promise<AdminContext> {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, full_name, role, created_at")
+    .select("id, full_name, role, created_at, timezone")
     .eq("id", user.id)
-    .single<Profile>();
+    .single<AdminContext["profile"]>();
 
   if (!profile || !allowed.includes(profile.role)) {
     redirect("/dashboard");

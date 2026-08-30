@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Introduction film artwork</title>
+  <desc id="desc">Abstract forest green artwork with soft light and curved forms</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#07110c"/>
+      <stop offset="0.52" stop-color="#14532d"/>
+      <stop offset="1" stop-color="#07110c"/>
+    </linearGradient>
+    <radialGradient id="wash" cx="72%" cy="28%" r="64%">
+      <stop offset="0" stop-color="#22c55e" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#22c55e" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <rect width="1600" height="900" fill="url(#wash)"/>
+  <circle cx="1260" cy="140" r="360" fill="none" stroke="#fafaf7" stroke-opacity=".12" stroke-width="2"/>
+  <circle cx="1260" cy="140" r="260" fill="none" stroke="#fafaf7" stroke-opacity=".12" stroke-width="2"/>
+  <path d="M0 720C310 580 502 625 786 730s535 94 814-58v228H0Z" fill="#020604" fill-opacity=".42"/>
+</svg>

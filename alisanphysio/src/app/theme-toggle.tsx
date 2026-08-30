@@ -1,6 +1,5 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
 import { Moon, Sun } from "lucide-react";
 import { setThemeCookie, type Theme } from "@/lib/theme";
 import { useI18n } from "./i18n-provider";
@@ -12,36 +11,22 @@ import { useI18n } from "./i18n-provider";
  * flips it on click, persisting the explicit choice to the `theme` cookie. Pure
  * CSS re-theme — no navigation/refresh needed.
  *
- * We read the current theme via useSyncExternalStore + a MutationObserver so the
- * icon stays in sync without a setState-in-effect, and hydration matches the
- * server (which can't know the client class → getServerSnapshot returns light).
+ * The icon pair is switched by CSS from the actual `.dark` class. Reading that
+ * class at click time avoids stale hydration state when the server or pre-paint
+ * script already selected dark mode.
  */
-function subscribe(onChange: () => void): () => void {
-  const observer = new MutationObserver(onChange);
-  observer.observe(document.documentElement, {
-    attributes: true,
-    attributeFilter: ["class"],
-  });
-  return () => observer.disconnect();
-}
-function getSnapshot(): boolean {
-  return document.documentElement.classList.contains("dark");
-}
-function getServerSnapshot(): boolean {
-  return false;
-}
-
 export default function ThemeToggle() {
   const { t } = useI18n();
-  const isDark = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   function toggle() {
-    const next: Theme = isDark ? "light" : "dark";
+    const next: Theme = document.documentElement.classList.contains("dark")
+      ? "light"
+      : "dark";
     document.documentElement.classList.toggle("dark", next === "dark");
     setThemeCookie(next);
   }
 
-  const label = isDark ? t("theme.toLight") : t("theme.toDark");
+  const label = t("theme.toggle");
 
   return (
     <button
@@ -51,11 +36,8 @@ export default function ThemeToggle() {
       title={label}
       className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-surface text-muted-foreground transition hover:text-foreground"
     >
-      {isDark ? (
-        <Sun className="h-4 w-4" strokeWidth={2} aria-hidden />
-      ) : (
-        <Moon className="h-4 w-4" strokeWidth={2} aria-hidden />
-      )}
+      <Moon className="h-4 w-4 dark:hidden" strokeWidth={2} aria-hidden />
+      <Sun className="hidden h-4 w-4 dark:block" strokeWidth={2} aria-hidden />
     </button>
   );
 }

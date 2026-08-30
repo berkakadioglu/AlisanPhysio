@@ -13,6 +13,7 @@ import { useI18n } from "@/app/i18n-provider";
  *   - Measurement request (missing_info / height + measurement nudge)
  *   - Feedback request (weekly_review nudge)
  *   - Availability request (staff asked when the client is free)
+ *   - Appointment reminder / cancellation
  *   - Other (manual sends + any other system notice, e.g. membership expiry)
  */
 function categoryOf(type: string): {
@@ -27,6 +28,18 @@ function categoryOf(type: string): {
       labelKey: "notif.cat.availability",
       Icon: CalendarClock,
       chip: "bg-[var(--brand-tint)] text-brand-bright",
+    };
+  if (type === "appointment_reminder")
+    return {
+      labelKey: "notif.cat.appointment_reminder",
+      Icon: CalendarClock,
+      chip: "bg-[var(--brand-tint)] text-brand-bright",
+    };
+  if (type === "appointment_cancelled")
+    return {
+      labelKey: "notif.cat.appointment_cancelled",
+      Icon: CalendarClock,
+      chip: "bg-[var(--warning-tint)] text-[var(--warning)]",
     };
   if (type === "weekly_review")
     return {
@@ -128,7 +141,7 @@ export default function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 z-50 mt-2 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-border bg-surface shadow-lift">
+        <div className="fixed left-4 right-4 top-[4.5rem] z-50 w-auto overflow-hidden rounded-2xl border border-border bg-surface shadow-lift sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-80 sm:max-w-[calc(100vw-2rem)]">
           <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
             <span className="text-sm font-semibold text-foreground">
               {t("notif.title")}

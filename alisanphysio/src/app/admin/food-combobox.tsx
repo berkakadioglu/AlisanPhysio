@@ -3,9 +3,22 @@
 import { useState } from "react";
 import type { FoodLibrary } from "@/lib/types";
 import { useI18n } from "@/app/i18n-provider";
+import {
+  formatNutritionForDisplay,
+  hasNutritionValues,
+} from "@/lib/nutrition-math";
+import { formatNutritionPortion } from "@/lib/nutrition-display";
 
 const inputClass =
   "w-full rounded-lg border border-border bg-surface px-3 py-2 pr-16 text-sm text-foreground shadow-sm outline-none transition focus:border-brand/40 focus:ring-2 focus:ring-brand/15";
+
+function normalizeSearch(value: string) {
+  return value
+    .normalize("NFKD")
+    .replace(/\p{M}/gu, "")
+    .toLocaleLowerCase("tr-TR")
+    .replaceAll("ı", "i");
+}
 
 /**
  * Searchable combobox over the food library. Typing filters the list AND sets a
@@ -16,26 +29,45 @@ const inputClass =
 export default function FoodCombobox({
   items,
   value,
-  linked,
+  linkedId,
   onPick,
   onType,
 }: {
   items: FoodLibrary[];
   value: string;
-  /** true when the current name is linked to a food_library entry */
-  linked: boolean;
+  /** Library link for localized display; the stored snapshot remains English. */
+  linkedId: string | null;
   onPick: (item: FoodLibrary) => void;
   onType: (name: string) => void;
 }) {
-  const { t } = useI18n();
+  const { lang, t } = useI18n();
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
 
-  const q = value.trim().toLowerCase();
+  const linkedFood = linkedId
+    ? items.find((item) => item.id === linkedId) ?? null
+    : null;
+  const displayValue =
+    linkedFood && lang === "tr" && linkedFood.name_tr?.trim()
+      ? linkedFood.name_tr
+      : value;
+  const q = normalizeSearch(displayValue.trim());
   const matches = (
-    q ? items.filter((i) => i.name.toLowerCase().includes(q)) : items
+    q
+      ? items.filter((item) =>
+          normalizeSearch(
+            [item.name, item.name_tr, item.default_portion]
+              .filter(Boolean)
+              .join(" "),
+          ).includes(q),
+        )
+      : items
   ).slice(0, 40);
-  const exact = items.some((i) => i.name.toLowerCase() === q);
+  const exact = items.some(
+    (item) =>
+      normalizeSearch(item.name) === q ||
+      (item.name_tr ? normalizeSearch(item.name_tr) === q : false),
+  );
   const showAddNew = q.length > 0 && !exact;
   const optionCount = matches.length + (showAddNew ? 1 : 0);
 
@@ -76,7 +108,7 @@ export default function FoodCombobox({
   return (
     <div className="relative">
       <input
-        value={value}
+        value={displayValue}
         autoComplete="off"
         onChange={(e) => {
           onType(e.target.value);
@@ -90,7 +122,7 @@ export default function FoodCombobox({
         placeholder={t("foodCombo.search")}
       />
 
-      {linked && (
+      {linkedId && (
         <span
           aria-hidden
           className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full bg-brand-tint px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand"
@@ -118,18 +150,42 @@ export default function FoodCombobox({
                       : "text-foreground hover:bg-pill"
                   }`}
                 >
-                  <span className="truncate font-medium">{item.name}</span>
-                  {item.default_portion && (
-                    <span
-                      className={`flex-none rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                        active === idx
-                          ? "bg-brand/10 text-brand"
-                          : "bg-pill text-subtle-foreground"
-                      }`}
-                    >
-                      {item.default_portion}
+                  <span className="min-w-0">
+                    <span className="block truncate font-medium">
+                      {lang === "tr" && item.name_tr ? item.name_tr : item.name}
                     </span>
-                  )}
+                    {item.name_tr && (
+                      <span className="block truncate text-[11px] opacity-70">
+                        {lang === "tr" ? item.name : item.name_tr}
+                      </span>
+                    )}
+                  </span>
+                  <span className="flex-none text-right">
+                    {(item.serving_qty !== null && item.serving_unit) ||
+                    item.default_portion ? (
+                      <span
+                        className={`block rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                          active === idx
+                            ? "bg-brand/10 text-brand"
+                            : "bg-pill text-subtle-foreground"
+                        }`}
+                      >
+                        {item.serving_qty !== null && item.serving_unit
+                          ? formatNutritionPortion(
+                              item.serving_qty,
+                              item.serving_unit,
+                              lang,
+                            )
+                          : item.default_portion}
+                      </span>
+                    ) : null}
+                    {hasNutritionValues(item) && item.kcal !== null && (
+                      <span className="mt-1 block text-[10px] text-subtle-foreground">
+                        {formatNutritionForDisplay("kcal", item.kcal, lang)}{" "}
+                        {t("food.kcal")}
+                      </span>
+                    )}
+                  </span>
                 </button>
               </li>
             ))}

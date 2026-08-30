@@ -7,6 +7,8 @@ import { signOut } from "@/app/dashboard/actions";
 import LanguageToggle from "@/app/language-toggle";
 import ThemeToggle from "@/app/theme-toggle";
 import NotificationBell from "@/components/notification-bell";
+import { requireStaff } from "@/lib/admin-auth";
+import { generateDueAppointmentReminders } from "@/lib/notifications";
 import MobileNav, {
   type MobileNavGroup,
   type MobileNavLink,
@@ -25,14 +27,56 @@ export default async function AdminHeader({
 }: {
   container?: string;
 }) {
-  const lang = await getLang();
+  const [lang, { profile, supabase }] = await Promise.all([
+    getLang(),
+    requireStaff(),
+  ]);
+  const isAdmin = profile.role === "admin";
+  const [
+    ,
+    { count: pendingAppointmentCount },
+    { count: pendingProposalCount },
+    requestResult,
+  ] = await Promise.all([
+    generateDueAppointmentReminders(supabase),
+    supabase
+      .from("appointments")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending"),
+    supabase
+      .from("client_proposals")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending"),
+    isAdmin
+      ? supabase
+          .from("assessment_requests")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "new")
+      : Promise.resolve({ count: 0 }),
+  ]);
+  const schedulingPendingCount =
+    (pendingAppointmentCount ?? 0) + (pendingProposalCount ?? 0);
+  const newRequestCount = requestResult.count ?? 0;
   const navLink =
     "rounded-full px-3 py-1.5 font-medium text-muted-foreground transition hover:bg-pill hover:text-foreground";
 
   // Mobile drawer: top-level links + the "Content" and "Me" grouped sections.
   const mobileLinks: MobileNavLink[] = [
     { href: "/admin", label: t(lang, "admin.clients") },
-    { href: "/admin/availability", label: t(lang, "nav.availability") },
+    ...(isAdmin
+      ? [
+          {
+            href: "/admin/requests",
+            label: t(lang, "requests.nav"),
+            badge: newRequestCount,
+          },
+        ]
+      : []),
+    {
+      href: "/admin/availability",
+      label: t(lang, "schedule.nav"),
+      badge: schedulingPendingCount,
+    },
   ];
   const contentGroup: MobileNavGroup = {
     label: t(lang, "nav.content"),
@@ -53,7 +97,7 @@ export default async function AdminHeader({
   return (
     <header className="border-b border-border bg-surface shadow-soft">
       <div
-        className={`mx-auto flex ${container} items-center justify-between gap-3 px-5 py-4 sm:px-8`}
+        className={`mx-auto flex ${container} items-center justify-between gap-3 px-5 py-4 sm:px-8 lg:max-w-7xl`}
       >
         <div className="flex items-center gap-4">
           <Link
@@ -63,20 +107,43 @@ export default async function AdminHeader({
             {BRAND_NAME}
           </Link>
           {/* Desktop nav (hidden on mobile — see the drawer below) */}
-          <nav className="hidden items-center gap-1 text-sm md:flex">
+          <nav className="hidden items-center gap-1 text-sm lg:flex">
             <Link href="/admin" className={navLink}>
               {t(lang, "admin.clients")}
             </Link>
+            {isAdmin && (
+              <Link
+                href="/admin/requests"
+                className={`${navLink} inline-flex items-center gap-1.5`}
+              >
+                {t(lang, "requests.nav")}
+                {newRequestCount > 0 && (
+                  <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-solid px-1.5 text-[10px] font-bold tabular-nums text-white">
+                    {newRequestCount > 99 ? "99+" : newRequestCount}
+                  </span>
+                )}
+              </Link>
+            )}
             <ContentNav />
-            <Link href="/admin/availability" className={navLink}>
-              {t(lang, "nav.availability")}
+            <Link
+              href="/admin/availability"
+              className={`${navLink} inline-flex items-center gap-1.5`}
+            >
+              {t(lang, "schedule.nav")}
+              {schedulingPendingCount > 0 && (
+                <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-solid px-1.5 text-[10px] font-bold tabular-nums text-white">
+                  {schedulingPendingCount > 99
+                    ? "99+"
+                    : schedulingPendingCount}
+                </span>
+              )}
             </Link>
             <MeNav />
           </nav>
         </div>
 
         {/* Desktop utilities */}
-        <div className="hidden items-center gap-1.5 md:flex">
+        <div className="hidden items-center gap-1.5 lg:flex">
           <NotificationBell />
           <ThemeToggle />
           <LanguageToggle />
@@ -94,13 +161,14 @@ export default async function AdminHeader({
         </div>
 
         {/* Mobile: notification bell stays visible + hamburger drawer */}
-        <div className="flex items-center gap-1 md:hidden">
+        <div className="flex items-center gap-1 lg:hidden">
           <NotificationBell />
           <MobileNav
             homeHref="/admin"
             links={mobileLinks}
             groups={[contentGroup, meGroup]}
             signOutAction={signOut}
+            breakpoint="lg"
           >
             <RefreshButton />
           </MobileNav>

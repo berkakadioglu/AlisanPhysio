@@ -1,7 +1,9 @@
 "use client";
 
+import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { LANGS, setLangCookie, type Lang } from "@/lib/i18n";
+import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "./i18n-provider";
 
 /** Small TR / EN segmented toggle. Sets the `lang` cookie for the session and
@@ -9,11 +11,21 @@ import { useI18n } from "./i18n-provider";
 export default function LanguageToggle() {
   const { lang } = useI18n();
   const router = useRouter();
+  const [pending, startTransition] = useTransition();
 
   function set(next: Lang) {
     if (next === lang) return;
     setLangCookie(next);
-    router.refresh();
+    startTransition(async () => {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from("profiles").update({ language: next }).eq("id", user.id);
+      }
+      router.refresh();
+    });
   }
 
   return (
@@ -23,8 +35,9 @@ export default function LanguageToggle() {
           key={l}
           type="button"
           onClick={() => set(l)}
+          disabled={pending}
           aria-pressed={l === lang}
-          className={`rounded-full px-2.5 py-1 uppercase tracking-wide transition ${
+          className={`rounded-full px-2.5 py-1 uppercase tracking-wide transition disabled:cursor-wait disabled:opacity-60 ${
             l === lang
               ? "bg-brand-solid text-white shadow-sm"
               : "text-muted-foreground hover:text-foreground"

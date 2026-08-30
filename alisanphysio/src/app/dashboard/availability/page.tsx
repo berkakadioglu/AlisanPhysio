@@ -1,112 +1,165 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
 import { BRAND_NAME } from "@/lib/constants";
-import { formatWeekRange, t } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n-server";
 import {
-  loadOwnRequests,
-  pendingRequest,
-  weekDays,
-} from "@/lib/availability";
-import { thisMondayISO } from "@/lib/program-dates";
-import AppHeader from "../app-header";
-import AvailabilityForm, { type DayInitial } from "./availability-form";
+  loadCoachSettings,
+  loadOpenAvailabilitySlots,
+  loadOwnAppointments,
+  loadOwnClientProposals,
+} from "@/lib/scheduling-data";
+import {
+  canShowMeetingUrl,
+  isValidTimeZone,
+  localDateRangeToUtc,
+  zonedDateTimeParts,
+} from "@/lib/scheduling";
+import { createClient } from "@/lib/supabase/server";
+import DashboardSectionIntro from "@/components/dashboard-section-intro";
+import ClientScheduleView from "./client-schedule-view";
 
-export const metadata: Metadata = {
-  title: `Availability · ${BRAND_NAME}`,
-};
+const MONTH_RE = /^(\d{4})-(\d{2})$/;
 
-const WEEK_RE = /^\d{4}-\d{2}-\d{2}$/;
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLang();
+  return { title: `${t(lang, "schedule.metaTitle")} · ${BRAND_NAME}` };
+}
 
 export default async function AvailabilityPage({
   searchParams,
 }: {
-  searchParams: Promise<{ week?: string }>;
+  searchParams: Promise<{ month?: string }>;
 }) {
-  const supabase = await createClient();
-  const lang = await getLang();
-
+  const [supabase, lang, query] = await Promise.all([
+    createClient(),
+    getLang(),
+    searchParams,
+  ]);
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // The user's own requests (RLS scopes to client_id = auth.uid()).
-  const requests = await loadOwnRequests(supabase, user.id);
-  const { week } = await searchParams;
+  const [{ data: profile }, settings] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("timezone")
+      .eq("id", user.id)
+      .maybeSingle<{ timezone: string | null }>(),
+    loadCoachSettings(supabase),
+  ]);
+  const profileTimeZone =
+    profile?.timezone && isValidTimeZone(profile.timezone)
+      ? profile.timezone
+      : null;
+  const fallbackTimeZone =
+    settings?.timezone && isValidTimeZone(settings.timezone)
+      ? settings.timezone
+      : "UTC";
+  const queryTimeZone = profileTimeZone ?? fallbackTimeZone;
+  const generatedAt = new Date().toISOString();
+  const currentMonth = zonedDateTimeParts(generatedAt, queryTimeZone).date.slice(
+    0,
+    7,
+  );
+  const requestedMonth = validMonth(query.month);
+  const month = requestedMonth ?? currentMonth;
+  const firstDate = `${month}-01`;
+  const endDateExclusive = nextMonth(month);
+  const range = localDateRangeToUtc(firstDate, endDateExclusive, queryTimeZone);
+  // Before a browser-detected zone has been saved, the server cannot know the
+  // viewer's exact calendar boundary. A two-day guard on both sides covers the
+  // full IANA offset spread; the client then groups only dates in `month`.
+  const slotRange = profileTimeZone
+    ? range
+    : {
+        startsAt: new Date(Date.parse(range.startsAt) - 2 * 86_400_000).toISOString(),
+        endsAt: new Date(Date.parse(range.endsAt) + 2 * 86_400_000).toISOString(),
+      };
 
-  // Choose which request to show: the one named in ?week=, else the most
-  // relevant pending one, else the newest — else nothing to answer.
-  const chosen =
-    (week && WEEK_RE.test(week)
-      ? requests.find((r) => r.week_start === week)
-      : undefined) ??
-    pendingRequest(requests, thisMondayISO()) ??
-    requests[0] ??
-    null;
+  const [appointments, proposals, slots] = await Promise.all([
+    loadOwnAppointments(supabase, user.id),
+    loadOwnClientProposals(supabase, user.id),
+    settings?.scheduling_mode === "coach_slots"
+      ? loadOpenAvailabilitySlots(supabase, slotRange)
+      : Promise.resolve([]),
+  ]);
+  // Defense in depth: the migration RPC already masks client meeting URLs, but
+  // never serialize one unless this render is inside the permitted window.
+  const clientAppointments = appointments.map((appointment) => ({
+    ...appointment,
+    meeting_url: canShowMeetingUrl(appointment, generatedAt)
+      ? appointment.meeting_url
+      : null,
+  }));
+  const locale = lang === "tr" ? "tr-TR" : "en-GB";
 
   return (
-    <div className="min-h-screen">
-      <AppHeader container="max-w-3xl" />
-      <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8 sm:py-14">
-        <Link
-          href="/dashboard"
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition hover:text-brand"
-        >
-          <span aria-hidden>←</span> {t(lang, "prog.back")}
-        </Link>
-
-        {!chosen ? (
-          <div className="mt-8 rounded-2xl border border-dashed border-border bg-surface/50 px-6 py-16 text-center">
-            <p className="font-display text-lg font-bold text-foreground">
-              {t(lang, "avail.emptyTitle")}
-            </p>
-            <p className="mt-1.5 text-sm text-muted-foreground">
-              {t(lang, "avail.emptyBody")}
-            </p>
-          </div>
-        ) : (
-          <>
-            <h1 className="mt-5 font-display text-3xl font-extrabold leading-tight tracking-tight text-foreground">
-              {t(lang, "avail.clientHeading")}
-            </h1>
-            <p className="mt-2 text-base text-muted-foreground">
-              {t(lang, "avail.clientSubtitle", {
-                range: formatWeekRange(chosen.week_start, lang),
-              })}
-            </p>
-
-            <div className="mt-8">
-              <AvailabilityForm
-                lang={lang}
-                requestId={chosen.id}
-                days={buildDays(chosen.week_start, chosen.slots)}
-                alreadySubmitted={chosen.slots.length > 0}
-              />
-            </div>
-          </>
-        )}
-      </main>
-    </div>
+    <main id="main-content" className="mx-auto min-w-0 max-w-4xl">
+      <DashboardSectionIntro
+        eyebrow={t(lang, "schedule.eyebrow")}
+        title={t(lang, "schedule.clientTitle")}
+        body={t(lang, "schedule.clientBody")}
+      />
+      <div className="mt-7">
+        <ClientScheduleView
+          key={`${settings?.scheduling_mode ?? "coach_slots"}:${month}`}
+          lang={lang}
+          mode={settings?.scheduling_mode ?? "coach_slots"}
+          profileTimeZone={profileTimeZone}
+          fallbackTimeZone={fallbackTimeZone}
+          month={month}
+          monthWasRequested={Boolean(requestedMonth)}
+          monthLabel={formatMonthLabel(month, locale)}
+          weekdayLabels={weekdayLabels(locale)}
+          generatedAt={generatedAt}
+          appointments={clientAppointments}
+          slots={slots}
+          proposals={proposals}
+        />
+      </div>
+    </main>
   );
 }
 
-/** Build the 7-day editable model, pre-filling any already-submitted slots. */
-function buildDays(
-  weekStart: string,
-  slots: { day_date: string; time_from: string | null; time_to: string | null; note: string | null }[],
-): DayInitial[] {
-  const byDay = new Map(slots.map((s) => [s.day_date, s]));
-  return weekDays(weekStart).map((d) => {
-    const s = byDay.get(d);
-    return {
-      dayDate: d,
-      available: !!s,
-      timeFrom: s?.time_from ?? "",
-      timeTo: s?.time_to ?? "",
-      note: s?.note ?? "",
-    };
-  });
+function validMonth(value: string | undefined): string | null {
+  if (!value) return null;
+  const match = MONTH_RE.exec(value);
+  if (!match) return null;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  // Keep calendar arithmetic inside the four-digit range accepted by the
+  // wall-clock helpers, including the following month's exclusive boundary.
+  return year >= 100 && year <= 9998 && month >= 1 && month <= 12
+    ? value
+    : null;
+}
+
+function nextMonth(month: string): string {
+  const [year, monthNumber] = month.split("-").map(Number);
+  const value = new Date(Date.UTC(year, monthNumber, 1));
+  return `${value.getUTCFullYear()}-${String(value.getUTCMonth() + 1).padStart(
+    2,
+    "0",
+  )}-01`;
+}
+
+function formatMonthLabel(month: string, locale: string): string {
+  const [year, monthNumber] = month.split("-").map(Number);
+  return new Intl.DateTimeFormat(locale, {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(year, monthNumber - 1, 1)));
+}
+
+function weekdayLabels(locale: string): string[] {
+  const monday = Date.UTC(2026, 0, 5);
+  return Array.from({ length: 7 }, (_, index) =>
+    new Intl.DateTimeFormat(locale, {
+      weekday: "narrow",
+      timeZone: "UTC",
+    }).format(new Date(monday + index * 86_400_000)),
+  );
 }

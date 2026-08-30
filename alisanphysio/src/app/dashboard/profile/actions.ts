@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { t } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n-server";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { isValidTimeZone } from "@/lib/scheduling";
 
 type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -37,6 +38,7 @@ function parseNum(v: string | null | undefined): number | null {
 export async function updatePersonalInfo(input: {
   fullName: string;
   height: string;
+  timezone: string;
 }): Promise<ActionResult> {
   const { supabase, userId } = await requireUser();
   const lang = await getLang();
@@ -49,10 +51,14 @@ export async function updatePersonalInfo(input: {
   if (height !== null && (height < 50 || height > 260)) {
     return { ok: false, error: t(lang, "err.heightRange") };
   }
+  const timezone = input.timezone.trim() || null;
+  if (timezone !== null && !isValidTimeZone(timezone)) {
+    return { ok: false, error: t(lang, "err.timezoneInvalid") };
+  }
 
   const { error } = await supabase
     .from("profiles")
-    .update({ full_name: fullName || null, height_cm: height })
+    .update({ full_name: fullName || null, height_cm: height, timezone })
     .eq("id", userId);
   if (error) return { ok: false, error: error.message };
 

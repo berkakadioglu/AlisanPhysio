@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { isLang, setLangCookie } from "@/lib/i18n";
+import { portalPathForRole } from "@/lib/route-access";
 import { useI18n } from "@/app/i18n-provider";
 
 export default function LoginForm() {
@@ -32,21 +33,23 @@ export default function LoginForm() {
       return;
     }
 
-    // Seed the language cookie from the user's stored preference (best-effort;
-    // gracefully skipped if the column doesn't exist yet).
+    // Seed the language cookie and resolve the portal destination from the
+    // user's profile. A missing/unreadable profile safely falls back to the
+    // client dashboard; the proxy remains responsible for membership access.
     const { data: profile } = await supabase
       .from("profiles")
-      .select("language")
+      .select("language, role")
       .eq("id", data.user.id)
       .single();
-    const stored = (profile as { language?: string } | null)?.language;
+    const stored = (
+      profile as { language?: string; role?: string } | null
+    )?.language;
     if (isLang(stored)) {
       setLangCookie(stored);
     }
 
-    // Refresh server components so the session is picked up, then let the
-    // root route us by role (admin → /admin, client → /dashboard).
-    router.replace("/");
+    const role = (profile as { role?: string } | null)?.role;
+    router.replace(portalPathForRole(role, true));
     router.refresh();
   }
 

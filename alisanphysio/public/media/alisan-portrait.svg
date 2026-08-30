@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1200" role="img" aria-labelledby="title desc">
+  <title id="title">Alişan Alpdoğan portrait artwork</title>
+  <desc id="desc">Abstract green portrait composition</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#d8d1c1"/>
+      <stop offset=".48" stop-color="#8ea595"/>
+      <stop offset="1" stop-color="#14532d"/>
+    </linearGradient>
+    <linearGradient id="shape" x1=".2" y1="0" x2=".8" y2="1">
+      <stop offset="0" stop-color="#0b0f0d" stop-opacity=".18"/>
+      <stop offset="1" stop-color="#0b0f0d" stop-opacity=".68"/>
+    </linearGradient>
+  </defs>
+  <rect width="900" height="1200" fill="url(#bg)"/>
+  <circle cx="580" cy="315" r="166" fill="url(#shape)"/>
+  <path d="M182 1060c23-302 154-512 398-512 192 0 294 151 320 512Z" fill="url(#shape)"/>
+  <path d="M0 88h900M0 1112h900" stroke="#fafaf7" stroke-opacity=".46" stroke-width="2"/>
+</svg>

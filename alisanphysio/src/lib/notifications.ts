@@ -19,6 +19,29 @@ interface NewNotif {
   dedupe_key: string;
 }
 
+type ServerSupabase = Awaited<ReturnType<typeof createClient>>;
+
+/**
+ * Ask the database to lazily create any due appointment reminders for the
+ * current authenticated viewer. The RPC owns recipient scoping and the unique
+ * delivery claim, so repeated shell renders remain idempotent.
+ *
+ * Notification generation must never make an otherwise healthy app shell
+ * unavailable. A missing/not-yet-applied scheduling migration therefore
+ * behaves like "nothing generated" rather than throwing during navigation.
+ */
+export async function generateDueAppointmentReminders(
+  existingClient?: ServerSupabase,
+): Promise<number> {
+  const supabase = existingClient ?? (await createClient());
+  const { data, error } = await supabase.rpc(
+    "generate_due_appointment_reminders",
+  );
+  if (error) return 0;
+  const count = Number(data);
+  return Number.isFinite(count) ? count : 0;
+}
+
 /**
  * Create the signed-in user's system notifications, idempotently, on app load.
  * No cron: this runs server-side on the dashboard render. Duplicates are
@@ -29,12 +52,16 @@ interface NewNotif {
  * Runs as the USER's session, so every insert is user_id = auth.uid()
  * (notifications_insert_own) — never the service role.
  */
-export async function generateSystemNotifications(): Promise<void> {
-  const supabase = await createClient();
+export async function generateSystemNotifications(
+  existingClient?: ServerSupabase,
+): Promise<void> {
+  const supabase = existingClient ?? (await createClient());
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return;
+
+  await generateDueAppointmentReminders(supabase);
 
   const { data: profile } = await supabase
     .from("profiles")

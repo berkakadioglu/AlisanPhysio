@@ -1,5 +1,8 @@
-import { type NextRequest } from "next/server";
-import { updateSession } from "@/lib/supabase/middleware";
+import { type NextRequest, NextResponse } from "next/server";
+import {
+  DEMO_REQUEST_HEADER,
+  isDemoRequestPath,
+} from "@/lib/demo-route";
 
 /**
  * Next.js 16 renamed the `middleware` file convention to `proxy` (Node.js
@@ -9,6 +12,17 @@ import { updateSession } from "@/lib/supabase/middleware";
  * the Supabase session fresh and guard routes (admin area + membership gate).
  */
 export async function proxy(request: NextRequest) {
+  const isReadRequest = request.method === "GET" || request.method === "HEAD";
+  const isDemo =
+    isReadRequest && isDemoRequestPath(request.nextUrl.pathname);
+  const forwardedHeaders = new Headers(request.headers);
+  forwardedHeaders.set(DEMO_REQUEST_HEADER, isDemo ? "1" : "0");
+
+  if (isDemo) {
+    return NextResponse.next({ request: { headers: forwardedHeaders } });
+  }
+
+  const { updateSession } = await import("@/lib/supabase/middleware");
   return await updateSession(request);
 }
 
