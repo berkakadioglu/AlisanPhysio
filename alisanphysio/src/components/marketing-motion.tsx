@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import {
   Activity,
@@ -32,6 +32,7 @@ const veilIcons: LucideIcon[] = [
 ];
 
 const completedCounterKeys = new Set<string>();
+const REVEAL_SETTLE_MS = 1800;
 
 function counterKey(element: HTMLElement) {
   return `${element.dataset.marketingCount ?? "0"}:${element.dataset.marketingCountSuffix ?? ""}`;
@@ -77,8 +78,11 @@ function animateCounter(element: HTMLElement) {
 }
 
 function prepareBenefitIcons(root: HTMLElement, finish = false) {
+  const selector = root.matches(".marketing-benefit")
+    ? "svg *"
+    : ".marketing-benefit > svg *";
   root
-    .querySelectorAll<SVGGeometryElement>(".marketing-benefit > svg *")
+    .querySelectorAll<SVGGeometryElement>(selector)
     .forEach((geometry) => {
       if (typeof geometry.getTotalLength !== "function") return;
       try {
@@ -105,97 +109,249 @@ export default function MarketingMotion({ lang }: { lang: Lang }) {
   const pathname = usePathname();
   const [activeSection, setActiveSection] = useState("hero");
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const root = document.querySelector<HTMLElement>(".marketing");
     if (!root) return;
     const html = document.documentElement;
+    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const reduceMotion = motionQuery.matches;
+    const revealItems = new Set<HTMLElement>();
+    const counters = new Set<HTMLElement>();
+    const counterCleanups = new Set<() => void>();
+    const revealFrames = new Set<number>();
+    const revealTimeouts = new Set<number>();
+    let readyFrame = 0;
+    let disposed = false;
+    let failedOpen = false;
+    let motionDisabled = false;
+    let revealObserver: IntersectionObserver | null = null;
+    let countObserver: IntersectionObserver | null = null;
+    let mutationObserver: MutationObserver | null = null;
+    let handleMotionPreference: ((event: MediaQueryListEvent) => void) | null =
+      null;
 
-    const items = Array.from(
-      root.querySelectorAll<HTMLElement>("[data-marketing-reveal]"),
-    );
-    const counters = Array.from(
-      root.querySelectorAll<HTMLElement>("[data-marketing-count]"),
-    );
-    const reduceMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-
-    if (reduceMotion || !("IntersectionObserver" in window)) {
+    const showEverything = (markFallback = false) => {
+      if (markFallback) {
+        failedOpen = true;
+        html.classList.add("marketing-motion-fallback");
+      }
+      delete html.dataset.marketingMotionReady;
       html.classList.remove("marketing-motion-enabled");
       root.classList.remove("marketing-motion-ready");
-      items.forEach((item) => item.classList.add("is-visible"));
-      counters.forEach(finishCounter);
+      revealFrames.forEach((frame) => window.cancelAnimationFrame(frame));
+      revealFrames.clear();
+      revealTimeouts.forEach((timeout) => window.clearTimeout(timeout));
+      revealTimeouts.clear();
+      counterCleanups.forEach((cleanup) => cleanup());
+      counterCleanups.clear();
+      root
+        .querySelectorAll<HTMLElement>("[data-marketing-reveal]")
+        .forEach((item) => {
+          item.classList.remove("marketing-reveal-armed");
+          item.classList.add("is-visible");
+        });
+      root
+        .querySelectorAll<HTMLElement>("[data-marketing-count]")
+        .forEach(finishCounter);
       prepareBenefitIcons(root, true);
+    };
+
+    const stopObservers = () => {
+      revealObserver?.disconnect();
+      countObserver?.disconnect();
+      mutationObserver?.disconnect();
+    };
+
+    const failOpen = () => {
+      if (failedOpen || disposed) return;
+      stopObservers();
+      showEverything(true);
+    };
+
+    if (
+      reduceMotion ||
+      html.classList.contains("marketing-motion-fallback") ||
+      !("IntersectionObserver" in window) ||
+      !("MutationObserver" in window)
+    ) {
+      showEverything();
       return;
     }
 
-    html.classList.add("marketing-motion-enabled");
-    html.classList.remove("marketing-motion-fallback");
-    root.classList.add("marketing-motion-ready");
-    counters.forEach((counter) => {
+    const reveal = (item: HTMLElement) => {
+      if (
+        disposed ||
+        failedOpen ||
+        motionDisabled ||
+        item.classList.contains("is-visible")
+      ) {
+        return;
+      }
+
+      // Only a node the runtime has registered can ever be hidden. If the
+      // following frame stalls, this per-node watchdog removes the armed state.
+      item.classList.add("marketing-reveal-armed");
+      prepareBenefitIcons(item);
+      const timeout = window.setTimeout(() => {
+        revealTimeouts.delete(timeout);
+        item.classList.remove("marketing-reveal-armed");
+        item.classList.add("is-visible");
+        prepareBenefitIcons(item, true);
+      }, 700);
+      revealTimeouts.add(timeout);
+
+      const frame = window.requestAnimationFrame(() => {
+        revealFrames.delete(frame);
+        if (disposed || failedOpen) return;
+        window.clearTimeout(timeout);
+        revealTimeouts.delete(timeout);
+        item.classList.add("is-visible");
+
+        // The armed class exists only for the finite animation window. Once
+        // that window closes, remove every hidden starting-state selector so
+        // canceled CSS animations cannot strand nested headline or SVG parts.
+        const settleTimeout = window.setTimeout(() => {
+          revealTimeouts.delete(settleTimeout);
+          item.classList.remove("marketing-reveal-armed");
+          prepareBenefitIcons(item, true);
+        }, REVEAL_SETTLE_MS);
+        revealTimeouts.add(settleTimeout);
+      });
+      revealFrames.add(frame);
+    };
+
+    const registerReveal = (item: HTMLElement) => {
+      if (revealItems.has(item)) return;
+      revealItems.add(item);
+      if (item.classList.contains("is-visible")) return;
+
+      const rect = item.getBoundingClientRect();
+      if (rect.bottom <= 0) {
+        item.classList.add("is-visible");
+      } else if (isWithinViewport(item)) {
+        reveal(item);
+      } else {
+        // Offscreen content stays visible by default until the observer says it
+        // is time to animate. A failed observer can therefore never blank it.
+        revealObserver?.observe(item);
+      }
+    };
+
+    const registerCounter = (counter: HTMLElement) => {
+      if (counters.has(counter)) return;
+      counters.add(counter);
       if (counterIsComplete(counter)) {
         finishCounter(counter);
+      } else if (isWithinViewport(counter)) {
+        counterCleanups.add(animateCounter(counter));
       } else {
-        counter.textContent = `0${counter.dataset.marketingCountSuffix ?? ""}`;
+        countObserver?.observe(counter);
       }
-    });
-    prepareBenefitIcons(root);
+    };
 
-    const counterCleanups = new Set<() => void>();
-    const revealObserver = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
-          entry.target.classList.add("is-visible");
-          revealObserver.unobserve(entry.target);
-        });
-      },
-      { rootMargin: "0px 0px -8%", threshold: 0.12 },
-    );
-    const countObserver = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
-          counterCleanups.add(animateCounter(entry.target as HTMLElement));
-          countObserver.unobserve(entry.target);
-        });
-      },
-      { rootMargin: "0px 0px -12%", threshold: 0.55 },
-    );
+    const registerTree = (tree: HTMLElement) => {
+      if (tree.matches("[data-marketing-reveal]")) registerReveal(tree);
+      tree
+        .querySelectorAll<HTMLElement>("[data-marketing-reveal]")
+        .forEach(registerReveal);
+      if (tree.matches("[data-marketing-count]")) registerCounter(tree);
+      tree
+        .querySelectorAll<HTMLElement>("[data-marketing-count]")
+        .forEach(registerCounter);
+    };
 
-    let secondFrame = 0;
-    const firstFrame = requestAnimationFrame(() => {
-      secondFrame = requestAnimationFrame(() => {
-        items.forEach((item) => {
-          if (item.classList.contains("is-visible") || isWithinViewport(item)) {
-            item.classList.add("is-visible");
-            return;
+    try {
+      revealObserver = new IntersectionObserver(
+        (entries) => {
+          try {
+            entries.forEach((entry) => {
+              if (!entry.isIntersecting) return;
+              revealObserver?.unobserve(entry.target);
+              reveal(entry.target as HTMLElement);
+            });
+          } catch {
+            failOpen();
           }
-          revealObserver.observe(item);
-        });
-        counters.forEach((counter) => {
-          if (counterIsComplete(counter)) {
-            finishCounter(counter);
-            return;
+        },
+        { rootMargin: "0px 0px 14%", threshold: 0 },
+      );
+      countObserver = new IntersectionObserver(
+        (entries) => {
+          try {
+            entries.forEach((entry) => {
+              if (!entry.isIntersecting) return;
+              countObserver?.unobserve(entry.target);
+              counterCleanups.add(
+                animateCounter(entry.target as HTMLElement),
+              );
+            });
+          } catch {
+            failOpen();
           }
-          if (isWithinViewport(counter)) {
-            counterCleanups.add(animateCounter(counter));
-            return;
-          }
-          countObserver.observe(counter);
-        });
+        },
+        { rootMargin: "0px 0px 14%", threshold: 0 },
+      );
+      mutationObserver = new MutationObserver((records) => {
+        try {
+          records.forEach((record) => {
+            record.addedNodes.forEach((node) => {
+              if (node instanceof HTMLElement) registerTree(node);
+            });
+          });
+        } catch {
+          failOpen();
+        }
       });
-    });
+      mutationObserver.observe(root, { childList: true, subtree: true });
+      registerTree(root);
+
+      handleMotionPreference = (event: MediaQueryListEvent) => {
+        if (!event.matches) return;
+        motionDisabled = true;
+        stopObservers();
+        showEverything();
+      };
+      motionQuery.addEventListener("change", handleMotionPreference);
+
+      // This class is a non-authoritative styling hook. The dataset flag is the
+      // runtime-only readiness signal read by the inline watchdog.
+      root.classList.add("marketing-motion-ready");
+      readyFrame = window.requestAnimationFrame(() => {
+        if (
+          !disposed &&
+          !failedOpen &&
+          !motionDisabled &&
+          !html.classList.contains("marketing-motion-fallback")
+        ) {
+          html.dataset.marketingMotionReady = "true";
+        }
+      });
+
+    } catch {
+      failOpen();
+    }
 
     return () => {
-      cancelAnimationFrame(firstFrame);
-      cancelAnimationFrame(secondFrame);
-      revealObserver.disconnect();
-      countObserver.disconnect();
+      disposed = true;
+      window.cancelAnimationFrame(readyFrame);
+      revealFrames.forEach((frame) => window.cancelAnimationFrame(frame));
+      revealTimeouts.forEach((timeout) => window.clearTimeout(timeout));
+      stopObservers();
+      if (handleMotionPreference) {
+        motionQuery.removeEventListener("change", handleMotionPreference);
+      }
       counterCleanups.forEach((cleanup) => cleanup());
-      counters
-        .filter((counter) => counter.dataset.marketingCountStarted === "true")
+      Array.from(counters)
+        .filter(
+          (counter) => counter.dataset.marketingCountStarted === "true",
+        )
         .forEach(finishCounter);
+      revealItems.forEach((item) =>
+        item.classList.remove("marketing-reveal-armed"),
+      );
+      prepareBenefitIcons(root, true);
+      delete html.dataset.marketingMotionReady;
+      html.classList.remove("marketing-motion-enabled");
       root.classList.remove("marketing-motion-ready");
     };
   }, [lang, pathname]);

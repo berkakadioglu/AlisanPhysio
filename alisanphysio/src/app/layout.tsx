@@ -16,18 +16,42 @@ const MARKETING_INIT_SCRIPT = `(() => {
     location.pathname !== "/assessment"
   ) return;
   const root = document.documentElement;
-  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const releaseMotion = () => {
+    delete root.dataset.marketingMotionReady;
+    root.classList.remove("marketing-motion-enabled");
+    document
+      .querySelector(".marketing")
+      ?.classList.remove("marketing-motion-ready");
+    document.querySelectorAll(".marketing-reveal-armed").forEach((item) => {
+      item.classList.remove("marketing-reveal-armed");
+    });
+  };
+  const clearVeil = () => {
+    root.classList.remove("marketing-veil-show", "marketing-veil-leave");
+  };
+
+  // CSS also has a deadline, but this timer releases the root scroll lock in
+  // normal browsers even when the load event never arrives.
+  setTimeout(clearVeil, 900);
+
+  let reduced = false;
+  try {
+    reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  } catch {}
   if (reduced) {
+    releaseMotion();
+    clearVeil();
     root.classList.add("marketing-veil-skip");
     return;
   }
 
-  root.classList.add("marketing-motion-enabled");
+  // Server content stays visible by default. The client motion controller is
+  // the only code allowed to arm reveal elements, and this runtime-only flag
+  // is set only after its observers are attached.
   setTimeout(() => {
-    if (!document.querySelector(".marketing-motion-ready")) {
-      root.classList.add("marketing-motion-fallback");
-    }
-  }, 5000);
+    if (root.dataset.marketingMotionReady !== "true") releaseMotion();
+  }, 1200);
+
   const key = "twa-marketing-veil-seen";
   let show = true;
   try {
@@ -36,25 +60,29 @@ const MARKETING_INIT_SCRIPT = `(() => {
   } catch {}
 
   if (!show) {
+    clearVeil();
     root.classList.add("marketing-veil-skip");
     return;
   }
 
-  root.dataset.marketingVeilStart = String(performance.now());
-  root.classList.add("marketing-veil-show");
   let finished = false;
   const leave = () => {
     if (finished) return;
     finished = true;
     root.classList.add("marketing-veil-leave");
-    setTimeout(() => {
-      root.classList.remove("marketing-veil-show", "marketing-veil-leave");
-    }, 180);
+    setTimeout(clearVeil, 180);
   };
 
-  setTimeout(leave, 500);
-  if (document.readyState === "complete") leave();
-  else addEventListener("load", leave, { once: true });
+  try {
+    root.dataset.marketingVeilStart = String(performance.now());
+    root.classList.add("marketing-veil-show");
+    setTimeout(leave, 500);
+    if (document.readyState === "complete") leave();
+    else addEventListener("load", leave, { once: true });
+  } catch {
+    clearVeil();
+    root.classList.add("marketing-veil-skip");
+  }
 })();`;
 
 // Body / UI type.
