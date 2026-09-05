@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { prevMondayISO } from "@/lib/program-dates";
+import { thisMonthISO, isReviewDue } from "@/lib/month";
 import { todayISO } from "@/lib/membership";
 import { formatDay, t } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n-server";
@@ -65,11 +65,12 @@ export async function generateSystemNotifications(
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, role, height_cm, membership, membership_end_date")
+    .select("id, role, timezone, height_cm, membership, membership_end_date")
     .eq("id", user.id)
     .single<{
       id: string;
       role: string;
+      timezone: string | null;
       height_cm: number | null;
       membership: string | null;
       membership_end_date: string | null;
@@ -113,33 +114,25 @@ export async function generateSystemNotifications(
     }
   }
 
-  // --- weekly_review (any role with a program for last week) ----------------
-  const reviewWeek = prevMondayISO();
-  const { data: progs } = await supabase
-    .from("programs")
-    .select("id")
-    .eq("client_id", user.id)
-    .eq("week_start_date", reviewWeek)
-    .limit(1);
-  if ((progs?.length ?? 0) > 0) {
-    const { data: review } = await supabase
-      .from("weekly_reviews")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("week_start", reviewWeek)
-      .maybeSingle();
-    const key = `weekly_review:${reviewWeek}`;
-    if (review) {
-      resolveKeys.push(key);
-    } else {
-      toInsert.push({
-        type: "weekly_review",
-        title: t(lang, "notif.review.title"),
-        body: t(lang, "notif.review.body"),
-        link: "/dashboard/review",
-        dedupe_key: key,
-      });
-    }
+  // Monthly review prompt, only during the final seven local calendar dates.
+  const now = new Date();
+  const month = thisMonthISO(now, profile.timezone);
+  const { data: progs } = await supabase.from("programs").select("id")
+    .eq("kind", "client").eq("client_id", user.id).eq("month_start_date", month).limit(1);
+  const program = progs?.[0];
+  // Expired prompts should not remain actionable in the notification bell.
+  const { data: oldPrompts } = await supabase.from("notifications").select("dedupe_key")
+    .eq("user_id", user.id).eq("type", "program_review").eq("read", false);
+  for (const prompt of oldPrompts ?? []) {
+    if (!program || prompt.dedupe_key !== `program_review:${program.id}` || !isReviewDue(month, now, profile.timezone)) resolveKeys.push(prompt.dedupe_key);
+  }
+  if (program && isReviewDue(month, now, profile.timezone)) {
+    const { data: review } = await supabase.from("program_reviews").select("id")
+      .eq("client_id", user.id).eq("program_id", program.id).maybeSingle();
+    const key = `program_review:${program.id}`;
+    if (review) resolveKeys.push(key);
+    else toInsert.push({ type: "program_review", title: t(lang, "notif.review.title"),
+      body: t(lang, "notif.review.body"), link: `/dashboard/review?program=${program.id}`, dedupe_key: key });
   }
 
   if (toInsert.length > 0) {

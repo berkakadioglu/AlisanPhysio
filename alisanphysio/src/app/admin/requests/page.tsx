@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ClipboardList, MoveRight } from "lucide-react";
 import {
   ASSESSMENT_STATUSES,
+  assessmentPlanLabel,
   isAssessmentStatus,
   type AssessmentRequest,
   type AssessmentStatus,
@@ -11,7 +12,6 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { BRAND_NAME } from "@/lib/constants";
 import { getLang } from "@/lib/i18n-server";
 import { t, type Lang } from "@/lib/i18n";
-import { MARKETING, marketingText } from "@/lib/marketing-content";
 import AdminHeader from "../admin-header";
 import RequestStatusBadge from "./request-status-badge";
 
@@ -73,12 +73,7 @@ export default async function AdminRequestsPage({
     { new: 0, contacted: 0, accepted: 0, declined: 0 },
   );
 
-  const planLabel = (plan: RequestListRow["selected_plan"]) => {
-    const match = MARKETING.pricing.plans.find((item) => item.id === plan);
-    return match
-      ? marketingText(lang, match.name)
-      : t(lang, "requests.notProvided");
-  };
+  const planLabel = (plan: RequestListRow["selected_plan"]) => assessmentPlanLabel(lang, plan);
 
   return (
     <div className="min-h-screen">

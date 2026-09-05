@@ -20,7 +20,7 @@ export default async function UpcomingProgramsPage() {
           href="/dashboard"
           className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition hover:text-brand"
         >
-          <span aria-hidden>←</span> {t(lang, "list.backToThisWeek")}
+          <span aria-hidden>←</span> {t(lang, "list.backToThisMonth")}
         </Link>
 
         <h1 className="mt-5 font-display text-3xl font-extrabold leading-tight tracking-tight text-foreground">

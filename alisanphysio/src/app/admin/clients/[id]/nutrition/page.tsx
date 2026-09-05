@@ -1,3 +1,5 @@
+import { getLang } from "@/lib/i18n-server";
+import { t } from "@/lib/i18n";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requireStaff } from "@/lib/admin-auth";
@@ -18,20 +20,21 @@ export default async function ClientNutritionPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const lang = await getLang();
   const { supabase } = await requireStaff();
 
   const { data: client } = await supabase
     .from("profiles")
-    .select("id, full_name")
+    .select("id, full_name, nutrition_enabled")
     .eq("id", id)
-    .maybeSingle<Pick<Profile, "id" | "full_name">>();
+    .maybeSingle<Pick<Profile, "id" | "full_name" | "nutrition_enabled">>();
   if (!client) {
     notFound();
   }
 
   const [foods, plan] = await Promise.all([
     loadFoodLibrary(supabase),
-    loadNutritionPlan(supabase, id),
+    loadNutritionPlan(supabase, id, true),
   ]);
 
   // Resolve a friendly display name (email fallback via the service-role client).
@@ -46,6 +49,7 @@ export default async function ClientNutritionPage({
     <div className="min-h-screen">
       <AdminHeader container="max-w-5xl" />
       <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8 sm:py-14">
+        {!client.nutrition_enabled && <p className="mb-5 rounded-xl bg-pill p-4 text-sm text-muted-foreground">{t(lang, "nutrition.hiddenNote")}</p>}
         <NutritionEditor
           clientId={id}
           clientName={displayName}

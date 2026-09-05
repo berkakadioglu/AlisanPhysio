@@ -1,3 +1,4 @@
+import StudioCredit from "@/components/studio-credit";
 import Link from "next/link";
 import type { Lang } from "@/lib/i18n";
 import {
@@ -59,6 +60,7 @@ export default function MarketingFooter({
             brand: MARKETING.brand.name,
           })}
         </span>
+        <StudioCredit lang={lang} variant="marketing" />
         <span>{marketingText(lang, copy.serviceNote)}</span>
       </div>
     </footer>

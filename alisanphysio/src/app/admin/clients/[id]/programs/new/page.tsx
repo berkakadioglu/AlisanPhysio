@@ -1,130 +1,43 @@
-import type { Metadata } from "next";
+import { notFound, redirect } from "next/navigation";
 import { requireStaff } from "@/lib/admin-auth";
-import { BRAND_NAME } from "@/lib/constants";
-import type { Program, ProgramDay } from "@/lib/types";
 import { loadLibrary } from "@/lib/categories";
 import { loadTemplatesForPicker } from "@/lib/templates";
-import { defaultNewWeek, nextMondayISO, thisMondayISO } from "@/lib/program-dates";
-import { weekTitle } from "@/lib/i18n";
+import { defaultNewMonth, nextMonthISO } from "@/lib/month";
+import { monthTitle, t } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n-server";
+import { loadEditorDays } from "@/lib/program-editor-loader";
+import type { Program } from "@/lib/types";
 import AdminHeader from "@/app/admin/admin-header";
-import ProgramEditor, {
-  type EditorDay,
-  type EditorExercise,
-  type EditorInitial,
-} from "@/app/admin/program-editor";
+import ProgramEditor from "@/app/admin/program-editor";
 
-export const metadata: Metadata = {
-  title: `New program · ${BRAND_NAME}`,
-};
-
-type SourceExercise = EditorExercise & { day_id: string | null };
-
-export default async function NewProgramPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<{ copyFrom?: string }>;
+export default async function NewProgramPage({ params, searchParams }: {
+  params: Promise<{ id: string }>; searchParams: Promise<{ copyFrom?: string }>;
 }) {
-  const { id } = await params;
-  const { copyFrom } = await searchParams;
-  const { supabase } = await requireStaff();
-  const lang = await getLang();
-
-  const [{ exercises: library, categories }, templates, { data: usedRows }] =
-    await Promise.all([
-      loadLibrary(supabase),
-      loadTemplatesForPicker(supabase),
-      supabase
-        .from("programs")
-        .select("week_start_date")
-        .eq("client_id", id)
-        .returns<{ week_start_date: string }[]>(),
-    ]);
-  const usedWeeks = (usedRows ?? []).map((r) => r.week_start_date);
-
-  let initial: EditorInitial;
-
+  const [{ id }, { copyFrom }, { supabase }, lang] = await Promise.all([params, searchParams, requireStaff(), getLang()]);
+  const { data: client } = await supabase.from("profiles").select("id, timezone").eq("id", id).maybeSingle();
+  if (!client) notFound();
+  const [{ exercises: library, categories }, templates, used] = await Promise.all([
+    loadLibrary(supabase), loadTemplatesForPicker(supabase),
+    supabase.from("programs").select("month_start_date").eq("kind", "client").eq("client_id", id),
+  ]);
+  if (used.error) throw new Error("Could not load programme months");
+  const usedMonths = (used.data ?? []).map((p) => p.month_start_date as string);
+  let month = defaultNewMonth(usedMonths, new Date(), client.timezone);
+  let notes = "";
+  let days: Awaited<ReturnType<typeof loadEditorDays>> = [];
   if (copyFrom) {
-    // "Copy from previous week": duplicate the full structure into next week.
-    const { data: source } = await supabase
-      .from("programs")
-      .select("id, client_id, title, week_start_date, notes")
-      .eq("id", copyFrom)
-      .eq("client_id", id)
-      .maybeSingle<Program>();
-
-    const [{ data: sourceDays }, { data: sourceExercises }] = await Promise.all([
-      supabase
-        .from("program_days")
-        .select("id, program_id, title, order_index, created_at")
-        .eq("program_id", copyFrom)
-        .order("order_index", { ascending: true })
-        .returns<ProgramDay[]>(),
-      supabase
-        .from("exercises")
-        .select("name, sets, reps, instructions, media_url, library_id, day_id, order_index")
-        .eq("program_id", copyFrom)
-        .order("order_index", { ascending: true })
-        .returns<(SourceExercise & { order_index: number })[]>(),
-    ]);
-
-    const exercises = sourceExercises ?? [];
-    const toEditor = (e: SourceExercise): EditorExercise => ({
-      name: e.name,
-      sets: e.sets,
-      reps: e.reps,
-      instructions: e.instructions,
-      media_url: e.media_url,
-      library_id: e.library_id,
-    });
-
-    let editorDays: EditorDay[];
-    if (sourceDays && sourceDays.length > 0) {
-      editorDays = sourceDays.map((d) => ({
-        title: d.title ?? "",
-        exercises: exercises.filter((e) => e.day_id === d.id).map(toEditor),
-      }));
-    } else {
-      // No days on the source → keep it flat.
-      editorDays = [{ title: "", exercises: exercises.map(toEditor) }];
-    }
-
-    const monday = source
-      ? nextMondayISO(source.week_start_date)
-      : thisMondayISO();
-
-    initial = {
-      title: weekTitle(monday, lang),
-      weekStartDate: monday,
-      notes: source?.notes ?? "",
-      days: editorDays,
-    };
-  } else {
-    // Default to the first upcoming week that doesn't already have a program.
-    const monday = defaultNewWeek(usedWeeks);
-    initial = {
-      title: weekTitle(monday, lang),
-      weekStartDate: monday,
-      notes: "",
-      days: [],
-    };
+    // A copy source is explicitly either this client's programme OR a catalogue.
+    const { data: own } = await supabase.from("programs").select("*").eq("kind", "client").eq("client_id", id).eq("id", copyFrom).maybeSingle<Program>();
+    const { data: catalog } = own ? { data: null } : await supabase.from("programs").select("*").eq("kind", "catalog").eq("id", copyFrom).maybeSingle<Program>();
+    const source = own ?? catalog;
+    if (!source) notFound();
+    if (source.kind === "catalog") redirect(`/admin/programs/${source.id}/assign?client=${id}`);
+    if (source.kind === "client") month = nextMonthISO(source.month_start_date);
+    days = await loadEditorDays(supabase, source.id, t(lang, "editor.ungrouped"));
+    notes = source.notes ?? "";
   }
-
-  return (
-    <div className="min-h-screen">
-      <AdminHeader container="max-w-3xl" />
-      <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8 sm:py-14">
-        <ProgramEditor
-          clientId={id}
-          initial={initial}
-          library={library}
-          categories={categories}
-          templates={templates}
-          usedWeeks={usedWeeks}
-        />
-      </main>
-    </div>
-  );
+  return <div className="min-h-screen"><AdminHeader container="max-w-3xl" />
+    <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8 sm:py-14">
+      <ProgramEditor clientId={id} timeZone={client.timezone} initial={{ title: monthTitle(month, lang), monthStartDate: month, notes, days }} library={library} categories={categories} templates={templates} usedMonths={usedMonths} />
+    </main></div>;
 }

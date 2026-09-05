@@ -9,7 +9,7 @@ import { useI18n } from "@/app/i18n-provider";
 export interface ProgramSummary {
   id: string;
   title: string;
-  weekStartDate: string;
+  monthStartDate: string;
   dayTitles: string[];
   exerciseCount: number;
 }
@@ -17,9 +17,11 @@ export interface ProgramSummary {
 export default function NewProgramMenu({
   clientId,
   programs,
+  allowCatalogue = true,
 }: {
   clientId: string;
   programs: ProgramSummary[];
+  allowCatalogue?: boolean;
 }) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
@@ -52,6 +54,10 @@ export default function NewProgramMenu({
                 {t("menu.startBlankSub")}
               </span>
             </Link>
+            {allowCatalogue && <Link href={`/admin/programs?client=${clientId}`} className="block rounded-xl px-3.5 py-2.5 text-sm text-foreground transition hover:bg-pill">
+              <span className="font-medium">{t("catalog.fromCatalogue")}</span>
+              <span className="block text-xs text-muted-foreground">{t("catalog.fromCatalogueSub")}</span>
+            </Link>}
             <button
               type="button"
               onClick={() => {

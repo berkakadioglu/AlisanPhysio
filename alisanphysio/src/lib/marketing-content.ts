@@ -24,7 +24,7 @@ export function marketingTemplate(
 /**
  * Single source of truth for the public marketing experience.
  *
- * All biography, credentials, statistics, reviews, pricing and asset paths
+ * All biography, credentials, statistics, pricing and asset paths
  * live here so the marketing components remain structural and copy-free.
  */
 export const MARKETING = {
@@ -68,7 +68,6 @@ export const MARKETING = {
   section: {
     about: { en: "About", tr: "Hakkında" },
     why: { en: "The method", tr: "Yaklaşım" },
-    reviews: { en: "Client notes", tr: "Danışan notları" },
     pricing: { en: "Pricing", tr: "Fiyatlandırma" },
     faq: { en: "Questions", tr: "Sorular" },
   },
@@ -234,8 +233,8 @@ export const MARKETING = {
       tr: "Koçluğunuzun nasıl bir araya geldiğini görün.",
     },
     body: {
-      en: "Preview how weekly programmes, exercise guidance, nutrition and progress tracking live together in one clear client experience.",
-      tr: "Haftalık programların, egzersiz yönlendirmelerinin, beslenmenin ve ilerleme takibinin tek bir anlaşılır danışan deneyiminde nasıl buluştuğunu inceleyin.",
+      en: "Preview how monthly programmes, exercise guidance, nutrition and progress tracking live together in one clear client experience.",
+      tr: "Aylık programların, egzersiz yönlendirmelerinin, beslenmenin ve ilerleme takibinin tek bir anlaşılır danışan deneyiminde nasıl buluştuğunu inceleyin.",
     },
     cta: { en: "Explore the demo", tr: "Demoyu incele" },
   },
@@ -319,8 +318,8 @@ export const MARKETING = {
     overview: {
       greeting: { en: "Good morning, Deniz.", tr: "Günaydın, Deniz." },
       intro: {
-        en: "Here is the shape of your current week and the next coaching touchpoint.",
-        tr: "Güncel haftanızın özeti ve sıradaki koçluk adımınız burada.",
+        en: "Here is the shape of your current month and the next coaching touchpoint.",
+        tr: "Güncel ayınızın özeti ve sıradaki koçluk adımınız burada.",
       },
       metrics: [
         { value: { en: "3", tr: "3" }, label: { en: "training days", tr: "antrenman günü" } },
@@ -345,16 +344,16 @@ export const MARKETING = {
       coachNoteEyebrow: { en: "Coach note", tr: "Koç notu" },
       coachNoteTitle: { en: "The trend is moving in the right direction.", tr: "Gidişat doğru yönde ilerliyor." },
       coachNoteBody: {
-        en: "Your squat control and weekly consistency both improved. Keep the final two reps smooth; we will add load only when the tempo stays steady.",
-        tr: "Squat kontrolünüz ve haftalık devamlılığınız gelişti. Son iki tekrarı akıcı tutun; yükü yalnızca tempo sabit kaldığında artıracağız.",
+        en: "Your squat control and monthly consistency both improved. Keep the final two reps smooth; we will add load only when the tempo stays steady.",
+        tr: "Squat kontrolünüz ve aylık devamlılığınız gelişti. Son iki tekrarı akıcı tutun; yükü yalnızca tempo sabit kaldığında artıracağız.",
       },
-      reviewEyebrow: { en: "Weekly check-in", tr: "Haftalık değerlendirme" },
-      reviewTitle: { en: "Review due Sunday", tr: "Değerlendirme pazar günü" },
+      reviewEyebrow: { en: "Monthly check-in", tr: "Aylık değerlendirme" },
+      reviewTitle: { en: "Review by month-end", tr: "Ay bitmeden değerlendirin" },
       reviewBody: {
-        en: "In the real panel, your energy, pain and session feedback help shape the next week.",
-        tr: "Gerçek panelde enerji, ağrı ve seans geri bildirimleriniz sonraki haftayı şekillendirir.",
+        en: "During the last seven days of the month, share your energy, pain and session feedback to help shape the next month.",
+        tr: "Ayın son yedi gününde enerji, ağrı ve seans geri bildirimlerinizi paylaşarak sonraki ayı şekillendirin.",
       },
-      reviewAction: { en: "Send weekly review", tr: "Haftalık değerlendirmeyi gönder" },
+      reviewAction: { en: "Send monthly review", tr: "Aylık değerlendirmeyi gönder" },
     },
     programme: {
       eyebrow: { en: "Monthly training programme", tr: "Aylık antrenman programı" },
@@ -369,7 +368,7 @@ export const MARKETING = {
           id: "2026-07",
           label: { en: "July 2026", tr: "Temmuz 2026" },
           phase: { en: "Foundation & control", tr: "Temel ve kontrol" },
-          range: { en: "July 6–31", tr: "6–31 Temmuz" },
+          range: { en: "July 1–31", tr: "1–31 Temmuz" },
           summary: {
             en: "Build repeatable movement quality and a comfortable training rhythm.",
             tr: "Tekrarlanabilir hareket kalitesi ve rahat bir antrenman düzeni oluşturun.",
@@ -377,7 +376,7 @@ export const MARKETING = {
           days: [
             {
               id: "jul-a",
-              title: { en: "Day 1 · Lower-body control", tr: "1. Gün · Alt vücut kontrolü" },
+              title: { en: "Leg day", tr: "Bacak günü" },
               focus: { en: "Knee-friendly strength", tr: "Diz dostu kuvvet" },
               duration: 44,
               note: { en: "Leave two calm reps in reserve.", tr: "İki rahat tekrarı yedekte bırakın." },
@@ -388,7 +387,7 @@ export const MARKETING = {
             },
             {
               id: "jul-b",
-              title: { en: "Day 2 · Upper-body base", tr: "2. Gün · Üst vücut temeli" },
+              title: { en: "Back day", tr: "Sırt günü" },
               focus: { en: "Push, pull and trunk", tr: "İtiş, çekiş ve gövde" },
               duration: 42,
               note: { en: "Keep shoulder effort below 3 out of 10.", tr: "Omuz zorlanmasını 10 üzerinden 3'ün altında tutun." },
@@ -399,7 +398,7 @@ export const MARKETING = {
             },
             {
               id: "jul-c",
-              title: { en: "Day 3 · Full-body rhythm", tr: "3. Gün · Tüm vücut ritmi" },
+              title: { en: "Core day", tr: "Kor günü" },
               focus: { en: "Hinge and carry", tr: "Kalça menteşesi ve taşıma" },
               duration: 39,
               note: { en: "Move continuously without rushing transitions.", tr: "Geçişleri aceleye getirmeden sürekli hareket edin." },
@@ -414,7 +413,7 @@ export const MARKETING = {
           id: "2026-08",
           label: { en: "August 2026", tr: "Ağustos 2026" },
           phase: { en: "Strength & capacity", tr: "Kuvvet ve kapasite" },
-          range: { en: "August 3–30", tr: "3–30 Ağustos" },
+          range: { en: "August 1–31", tr: "1–31 Ağustos" },
           summary: {
             en: "Progress strength while building tolerance for short run intervals.",
             tr: "Kısa koşu aralıklarına tolerans geliştirirken kuvveti ilerletin.",
@@ -422,7 +421,7 @@ export const MARKETING = {
           days: [
             {
               id: "aug-a",
-              title: { en: "Day 1 · Squat strength", tr: "1. Gün · Squat kuvveti" },
+              title: { en: "Leg day", tr: "Bacak günü" },
               focus: { en: "Controlled loading", tr: "Kontrollü yüklenme" },
               duration: 48,
               note: { en: "Add load only if every rep keeps the same depth.", tr: "Yalnızca her tekrar aynı derinlikteyse yük ekleyin." },
@@ -433,7 +432,7 @@ export const MARKETING = {
             },
             {
               id: "aug-b",
-              title: { en: "Day 2 · Hinge & press", tr: "2. Gün · Kalça menteşesi ve itiş" },
+              title: { en: "Chest & back day", tr: "Göğüs ve sırt günü" },
               focus: { en: "Posterior chain", tr: "Arka zincir" },
               duration: 46,
               note: { en: "Stop the set if hamstring tension changes to back strain.", tr: "Arka bacak gerilimi bel zorlanmasına dönüşürse seti bırakın." },
@@ -444,7 +443,7 @@ export const MARKETING = {
             },
             {
               id: "aug-c",
-              title: { en: "Day 3 · Run support", tr: "3. Gün · Koşu desteği" },
+              title: { en: "Mobility day", tr: "Mobilite günü" },
               focus: { en: "Single-leg control", tr: "Tek bacak kontrolü" },
               duration: 43,
               note: { en: "Finish with six rounds of one-minute easy run intervals.", tr: "Altı tur bir dakikalık rahat koşu aralığıyla bitirin." },
@@ -459,7 +458,7 @@ export const MARKETING = {
           id: "2026-09",
           label: { en: "September 2026", tr: "Eylül 2026" },
           phase: { en: "Build & consolidate", tr: "Gelişim ve pekiştirme" },
-          range: { en: "September 1–27", tr: "1–27 Eylül" },
+          range: { en: "September 1–30", tr: "1–30 Eylül" },
           summary: {
             en: "Turn the new movement capacity into steady, confident work.",
             tr: "Yeni hareket kapasitesini istikrarlı ve güvenli çalışmaya dönüştürün.",
@@ -467,7 +466,7 @@ export const MARKETING = {
           days: [
             {
               id: "sep-a",
-              title: { en: "Day 1 · Unilateral strength", tr: "1. Gün · Tek taraflı kuvvet" },
+              title: { en: "Leg day", tr: "Bacak günü" },
               focus: { en: "Leg strength", tr: "Bacak kuvveti" },
               duration: 50,
               note: { en: "Match the working range on both sides.", tr: "Her iki tarafta aynı çalışma aralığını koruyun." },
@@ -478,7 +477,7 @@ export const MARKETING = {
             },
             {
               id: "sep-b",
-              title: { en: "Day 2 · Hip drive", tr: "2. Gün · Kalça kuvveti" },
+              title: { en: "Chest & back day", tr: "Göğüs ve sırt günü" },
               focus: { en: "Strength endurance", tr: "Kuvvette dayanıklılık" },
               duration: 47,
               note: { en: "Keep one strong rep in reserve on the final set.", tr: "Son sette bir güçlü tekrarı yedekte bırakın." },
@@ -489,7 +488,7 @@ export const MARKETING = {
             },
             {
               id: "sep-c",
-              title: { en: "Day 3 · Athletic base", tr: "3. Gün · Atletik temel" },
+              title: { en: "Core day", tr: "Kor günü" },
               focus: { en: "Hinge and anti-rotation", tr: "Kalça menteşesi ve rotasyon kontrolü" },
               duration: 45,
               note: { en: "Use crisp technique before increasing pace.", tr: "Hızı artırmadan önce tekniği net tutun." },
@@ -666,103 +665,24 @@ export const MARKETING = {
       { id: "hero", label: { en: "Introduction", tr: "Giriş" } },
       { id: "about", label: { en: "About", tr: "Hakkında" } },
       { id: "why", label: { en: "The method", tr: "Yaklaşım" } },
-      { id: "reviews", label: { en: "Client notes", tr: "Danışan notları" } },
-      { id: "pricing", label: { en: "Pricing", tr: "Fiyatlandırma" } },
-      { id: "cta", label: { en: "Next step", tr: "Sıradaki adım" } },
-    ],
-  },
-  reviews: {
-    avatar: "/media/client-avatar.svg",
-    avatarAlt: { en: "", tr: "" },
-    eyebrow: { en: "Notes from the process", tr: "Süreçten notlar" },
-    title: { en: "Progress feels personal.", tr: "İlerleme kişisel hissettirir." },
-    intro: {
-      en: "These testimonials will be replaced with real client feedback before launch.",
-      tr: "Bu yorumlar yayından önce gerçek danışan geri bildirimleriyle değiştirilecektir.",
-    },
-    ratingLabel: { en: "{rating} out of 5 stars", tr: "5 üzerinden {rating} yıldız" },
-    // TODO: replace with real testimonials before launch
-    items: [
-      {
-        name: { en: "Deniz K.", tr: "Deniz K." },
-        descriptor: { en: "Office worker", tr: "Ofis çalışanı" },
-        quote: {
-          en: "Long workdays stopped dictating whether I could train. The plan gave me clear priorities for the time I had.",
-          tr: "Uzun iş günleri artık antrenman yapıp yapamayacağımı belirlemiyordu. Plan, ayırabildiğim süre için net öncelikler sundu.",
-        },
-        rating: 5,
-      },
-      {
-        name: { en: "Michael R.", tr: "Michael R." },
-        descriptor: { en: "Returning after knee surgery", tr: "Diz ameliyatı sonrası antrenmana dönüş" },
-        quote: {
-          en: "I understood the purpose of each exercise and knew what to focus on as I returned to training.",
-          tr: "Her egzersizin amacını anladım ve antrenmana dönerken neye odaklanmam gerektiğini biliyordum.",
-        },
-        rating: 5,
-      },
-      {
-        name: { en: "Ece A.", tr: "Ece A." },
-        descriptor: { en: "Strength-focused training", tr: "Kuvvet odaklı antrenman" },
-        quote: {
-          en: "The monthly updates kept the programme challenging while making the next step easy to understand.",
-          tr: "Aylık güncellemeler programı zorlayıcı tutarken bir sonraki adımı anlamayı kolaylaştırdı.",
-        },
-        rating: 5,
-      },
-      {
-        name: { en: "Daniel M.", tr: "Daniel M." },
-        descriptor: { en: "Remote coaching", tr: "Uzaktan koçluk" },
-        quote: {
-          en: "Even at a distance, the process felt organised and the feedback felt personal.",
-          tr: "Uzaktan çalışmamıza rağmen süreç düzenli, geri bildirimler ise kişisel hissettirdi.",
-        },
-        rating: 5,
-      },
-      {
-        name: { en: "Selin T.", tr: "Selin T." },
-        descriptor: { en: "Busy parent", tr: "Yoğun ebeveyn" },
-        quote: {
-          en: "Short sessions and clear priorities made it easier to keep training through an unpredictable week.",
-          tr: "Kısa seanslar ve net öncelikler, öngörülemeyen bir haftada antrenmana devam etmeyi kolaylaştırdı.",
-        },
-        rating: 5,
-      },
-      {
-        name: { en: "Alex P.", tr: "Alex P." },
-        descriptor: { en: "Mobility-focused training", tr: "Mobilite odaklı antrenman" },
-        quote: {
-          en: "Seeing my measurements and training progress together gave me a clearer view than the scale alone.",
-          tr: "Ölçümlerimi ve antrenman ilerlememi birlikte görmek, yalnızca tartıya bakmaktan daha net bir tablo sundu.",
-        },
-        rating: 5,
-      },
+      { id: "next", label: { en: "Next step", tr: "Sıradaki adım" } },
     ],
   },
   pricing: {
     eyebrow: { en: "Coaching plans", tr: "Koçluk planları" },
-    title: { en: "Choose your rhythm.", tr: "Ritminizi seçin." },
-    intro: {
-      en: "The same personal coaching standard, with a commitment that suits your next chapter.",
-      tr: "Aynı kişisel koçluk standardı; sıradaki döneminize uygun taahhüt seçeneğiyle.",
-    },
+    title: { en: "Coaching, one month at a time.", tr: "Her ay sizinle ilerleyen koçluk." },
     pageTitle: { en: "Invest in a stronger next season.", tr: "Daha güçlü bir döneme yatırım yapın." },
     pageIntro: {
-      en: "Two clear options. Both include the programme, support and feedback loop needed to keep moving forward.",
-      tr: "İki net seçenek. Her ikisi de ilerlemek için gereken programı, desteği ve geri bildirim döngüsünü içerir.",
+      en: "Personal coaching, renewed monthly. Or start with a free movement screen to meet Alişan and talk through your goals.",
+      tr: "Her ay yenilenen kişisel koçluk. Dilerseniz önce ücretsiz hareket taramasında Alişan’la tanışın ve hedeflerinizi konuşun.",
     },
-    mostPopular: { en: "Most popular", tr: "En çok tercih edilen" },
     contactForPricing: { en: "Contact for pricing", tr: "Fiyat için iletişime geçin" },
     gettingStartedNote: {
-      en: "Choose the option that suits your timeline, then request an assessment to get started.",
-      tr: "Sürenize uygun seçeneği belirleyin, ardından başlamak için değerlendirme talep edin.",
+      en: "To begin monthly coaching, request an assessment and share your goals with Alişan.",
+      tr: "Aylık koçluğa başlamak için değerlendirme talep edin ve hedeflerinizi Alişan’la paylaşın.",
     },
-    anchorLabel: { en: "Three monthly payments", tr: "Üç aylık ayrı ödeme" },
-    saveLabel: { en: "Save {percent}%", tr: "%{percent} tasarruf" },
-    equivalentLabel: { en: "Equivalent to {price} / month", tr: "Aylık karşılığı {price}" },
     periodLabels: {
       month: { en: "month", tr: "ay" },
-      threeMonths: { en: "3 months", tr: "3 ay" },
     },
     featureListLabel: { en: "Plan includes", tr: "Plana dahil" },
     sharedFeatures: [
@@ -772,7 +692,6 @@ export const MARKETING = {
       { en: "Full access to the client app", tr: "Danışan uygulamasına tam erişim" },
       { en: "Monthly progress review and programme update", tr: "Aylık ilerleme değerlendirmesi ve program güncellemesi" },
     ],
-    viewAllCta: { en: "Compare plans", tr: "Planları karşılaştır" },
     plans: [
       {
         id: "monthly",
@@ -781,36 +700,30 @@ export const MARKETING = {
           en: "A focused month-to-month coaching partnership.",
           tr: "Aydan aya ilerleyen odaklı koçluk ortaklığı.",
         },
-        recommended: false,
         price: {
           en: { amount: 120, currency: "CAD", period: "month" },
           tr: { amount: 120, currency: "CAD", period: "month" },
         },
-        monthlyEquivalent: {
-          en: { amount: 120, currency: "CAD" },
-          tr: { amount: 120, currency: "CAD" },
-        },
         cta: { en: "Request an assessment", tr: "Değerlendirme talep et" },
       },
-      {
-        id: "quarterly",
-        name: { en: "Quarterly", tr: "Üç Aylık" },
-        description: {
-          en: "A full training block with space to adapt and compound progress.",
-          tr: "Uyarlama ve ilerlemeyi büyütme alanı sunan tam bir antrenman dönemi.",
-        },
-        recommended: true,
-        price: {
-          en: { amount: 300, currency: "CAD", period: "threeMonths" },
-          tr: { amount: 300, currency: "CAD", period: "threeMonths" },
-        },
-        monthlyEquivalent: {
-          en: { amount: 100, currency: "CAD" },
-          tr: { amount: 100, currency: "CAD" },
-        },
-        cta: { en: "Start a quarterly plan", tr: "Üç aylık plana başla" },
-      },
     ],
+    fms: {
+      eyebrow: { en: "A conversation first", tr: "Önce tanışalım" },
+      title: { en: "Not sure yet?", tr: "Henüz emin değil misiniz?" },
+      description: {
+        en: "Meet Alişan, explore how you move and discuss where to begin.",
+        tr: "Alişan’la tanışın, hareketlerinizi birlikte değerlendirin ve nereden başlayacağınızı konuşun.",
+      },
+      price: { en: "Free", tr: "Ücretsiz" },
+      format: { en: "Movement screen", tr: "Hareket taraması" },
+      points: [
+        { en: "30 minutes with Alişan", tr: "Alişan’la 30 dakika" },
+        { en: "Online, wherever you are", tr: "Bulunduğunuz yerden çevrim içi" },
+        { en: "No payment or account required", tr: "Ödeme veya hesap gerekmez" },
+        { en: "No commitment to coaching", tr: "Koçluğa başlama zorunluluğu yok" },
+      ],
+      cta: { en: "Book a free screen", tr: "Ücretsiz tarama için randevu alın" },
+    },
     faqEyebrow: { en: "Before you begin", tr: "Başlamadan önce" },
     faqTitle: { en: "Straight answers.", tr: "Net yanıtlar." },
     faqIntro: {
@@ -935,12 +848,7 @@ export const MARKETING = {
       },
     ],
     plan: {
-      confirmed: { en: "Plan selected", tr: "Plan seçildi" },
-      change: { en: "Change", tr: "Değiştir" },
-      done: { en: "Done", tr: "Tamam" },
-      choose: { en: "Choose a plan", tr: "Plan seçin" },
-      none: { en: "I am not sure yet", tr: "Henüz emin değilim" },
-      noneShort: { en: "No plan selected", tr: "Plan seçilmedi" },
+      confirmed: { en: "Coaching plan", tr: "Koçluk planı" },
     },
     fields: {
       fullName: { label: { en: "Full name", tr: "Ad soyad" }, placeholder: { en: "Your full name", tr: "Adınız ve soyadınız" } },
@@ -952,6 +860,7 @@ export const MARKETING = {
       sex: { label: { en: "Sex", tr: "Cinsiyet" } },
       height: { label: { en: "Height (cm)", tr: "Boy (cm)" }, placeholder: { en: "175", tr: "175" } },
       weight: { label: { en: "Weight (kg)", tr: "Kilo (kg)" }, placeholder: { en: "72", tr: "72" } },
+      biggestExpectation: { label: { en: "What is your biggest expectation from me?", tr: "Benden en büyük beklentin ne?" } },
       primaryGoal: { label: { en: "Primary goal", tr: "Ana hedef" }, placeholder: { en: "What would meaningful progress look like for you?", tr: "Sizin için anlamlı ilerleme nasıl görünürdü?" } },
       experience: { label: { en: "Training experience", tr: "Antrenman deneyimi" } },
       days: { label: { en: "Preferred days per week", tr: "Haftada tercih edilen gün sayısı" }, placeholder: { en: "Choose", tr: "Seçin" } },
@@ -1008,6 +917,7 @@ export const MARKETING = {
     validation: {
       requiredName: { en: "Enter your full name.", tr: "Adınızı ve soyadınızı girin." },
       invalidEmail: { en: "Enter a valid email address.", tr: "Geçerli bir e-posta adresi girin." },
+      requiredExpectation: { en: "Please share your biggest expectation (up to 1,500 characters).", tr: "Lütfen en büyük beklentini paylaş (en fazla 1.500 karakter)." },
       requiredGoal: { en: "Tell us your primary goal.", tr: "Ana hedefinizi paylaşın." },
       requiredConsent: { en: "Consent is required before sending.", tr: "Göndermeden önce onay vermeniz gerekir." },
       invalidValue: { en: "Check this value and try again.", tr: "Bu değeri kontrol edip yeniden deneyin." },
@@ -1026,14 +936,15 @@ export const MARKETING = {
       homeLink: { en: "Back to the main page", tr: "Ana sayfaya dön" },
     },
   },
-  cta: {
-    eyebrow: { en: "Your next chapter", tr: "Sıradaki döneminiz" },
-    title: { en: "Train for the life you actually live.", tr: "Gerçekten yaşadığınız hayat için antrenman yapın." },
+  next: {
+    eyebrow: { en: "Your next step", tr: "Sıradaki adımınız" },
+    title: { en: "Start with what feels right.", tr: "Size uygun adımla başlayın." },
     body: {
-      en: "Start with a plan that understands where you are and builds toward where you want to be.",
-      tr: "Bulunduğunuz yeri anlayan ve ulaşmak istediğiniz yere doğru ilerleyen bir planla başlayın.",
+      en: "Explore personal coaching, or meet Alişan for a free 30-minute online movement screen, with no commitment.",
+      tr: "Kişisel koçluğu keşfedin ya da hiçbir taahhüt olmadan, ücretsiz 30 dakikalık çevrim içi hareket taramasında Alişan’la tanışın.",
     },
-    button: { en: "See coaching plans", tr: "Koçluk planlarını görün" },
+    primaryCta: { en: "See coaching plans", tr: "Koçluk planlarını görün" },
+    secondaryCta: { en: "Book a free 30-minute movement screen", tr: "Ücretsiz 30 dakikalık hareket taraması ayırtın" },
   },
   footer: {
     blurb: {
@@ -1046,7 +957,7 @@ export const MARKETING = {
       { href: "/#about", label: { en: "About", tr: "Hakkında" } },
       { href: "/#why", label: { en: "The method", tr: "Yaklaşım" } },
       { href: "/demo", label: { en: "Demo", tr: "Demo" } },
-      { href: "/#reviews", label: { en: "Client notes", tr: "Danışan notları" } },
+      { href: "/fms", label: { en: "Free screen", tr: "Ücretsiz tarama" } },
       { href: "/pricing", label: { en: "Pricing", tr: "Fiyatlandırma" }, prominent: true },
     ],
     socialTitle: { en: "Connect", tr: "Bağlantı" },

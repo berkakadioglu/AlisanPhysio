@@ -34,7 +34,7 @@ export async function GET(
 
   const { data: program } = await supabase
     .from("programs")
-    .select("id, client_id, title, week_start_date, notes")
+    .select("id, kind, client_id, title, month_start_date, notes")
     .eq("id", id)
     .maybeSingle<Program>();
   if (!program) return new Response("Not found", { status: 404 });
@@ -55,11 +55,11 @@ export async function GET(
         .eq("program_id", id)
         .order("order_index", { ascending: true })
         .returns<{ id: string; title: string | null; order_index: number }[]>(),
-      supabase
+      program.kind === "client" ? supabase
         .from("profiles")
         .select("full_name")
         .eq("id", program.client_id)
-        .maybeSingle<{ full_name: string | null }>(),
+        .maybeSingle<{ full_name: string | null }>() : Promise.resolve({ data: null }),
     ]);
 
   const exercises: RawExercise[] = (exRows ?? []).map((e) => ({
@@ -70,8 +70,8 @@ export async function GET(
   const doc: ProgramDoc = {
     title: program.title,
     notes: program.notes,
-    weekStart: program.week_start_date,
-    clientName: profile?.full_name?.trim() || null,
+    monthStart: program.month_start_date,
+    clientName: program.kind === "client" ? profile?.full_name?.trim() || null : null,
     days: groupIntoDays(dayRows ?? [], exercises),
   };
 

@@ -1,28 +1,24 @@
+import { reviewContext, isReviewDue } from "@/lib/reviews";
 import Link from "next/link";
 import { Check, Plus } from "lucide-react";
 import { t, type Lang } from "@/lib/i18n";
 
-/**
- * Inline review affordance for a reviewable program (current or past week):
- * an "Add review" button, or a "Review submitted" state once a review exists
- * for that week (tapping it re-opens the form to edit — the action upserts).
- *
- * Pure presentational (plain links), so it renders in server components and can
- * sit as a sibling BELOW a ProgramCard <Link> (never nested inside one).
- * `block` makes it a full-width row for the program-detail list header.
- */
-export default function ReviewAction({
-  weekStart,
+export default async function ReviewAction({
+  programId,
+  monthStartDate,
   reviewed,
   lang,
   block = false,
 }: {
-  weekStart: string;
+  programId: string;
+  monthStartDate: string;
   reviewed: boolean;
   lang: Lang;
   block?: boolean;
 }) {
-  const href = `/dashboard/review?week=${weekStart}`;
+  const { now, timeZone } = await reviewContext();
+  if (!reviewed && !isReviewDue(monthStartDate, now, timeZone)) return null;
+  const href = `/dashboard/review?program=${programId}`;
   const layout = block ? "flex w-full justify-center" : "inline-flex";
 
   if (reviewed) {

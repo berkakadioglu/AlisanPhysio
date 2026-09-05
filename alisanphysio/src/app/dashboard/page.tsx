@@ -9,11 +9,11 @@ import {
 } from "lucide-react";
 import { BRAND_NAME } from "@/lib/constants";
 import { loadDashboardData, firstNameOf, dayTitlesOf } from "@/lib/dashboard-data";
-import { reviewedWeekSet } from "@/lib/reviews";
+import { isReviewDue, reviewedProgramSet } from "@/lib/reviews";
 import { nutritionPlanSummary } from "@/lib/nutrition";
 import { isActiveAppointmentStatus } from "@/lib/scheduling";
 import { createClient } from "@/lib/supabase/server";
-import { formatWeekRange, t } from "@/lib/i18n";
+import { formatMonth, t } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n-server";
 import type { ClientAppointment } from "@/lib/types";
 import DashboardSectionIntro, {
@@ -40,7 +40,7 @@ export default async function DashboardPage() {
 
   const firstName = firstNameOf(profile);
   const lang = await getLang();
-  const reviewedWeeks = await reviewedWeekSet();
+  const reviewedPrograms = await reviewedProgramSet();
   const supabase = await createClient();
   const {
     data: { user },
@@ -49,7 +49,7 @@ export default async function DashboardPage() {
 
   const [nutrition, appointmentResult, measurementResult, timezoneResult] = user
     ? await Promise.all([
-        nutritionPlanSummary(supabase, user.id),
+        profile?.nutrition_enabled ? nutritionPlanSummary(supabase, user.id) : Promise.resolve({ hasPlan: false, mealCount: 0 }),
         supabase
           .rpc("get_own_appointments", {
             p_from: new Date(now - 24 * 60 * 60 * 1_000).toISOString(),
@@ -98,7 +98,7 @@ export default async function DashboardPage() {
   const metrics = [
     { value: numberOrDash(currentDays), label: t(lang, "dash.metric.trainingDays") },
     { value: numberOrDash(currentExercises), label: t(lang, "dash.metric.exercises") },
-    { value: numberOrDash(nutrition.mealCount), label: t(lang, "dash.metric.meals") },
+    ...(profile?.nutrition_enabled ? [{ value: numberOrDash(nutrition.mealCount), label: t(lang, "dash.metric.meals") }] : []),
     { value: numberOrDash(measurementCount), label: t(lang, "dash.metric.measurements") },
   ];
 
@@ -139,10 +139,10 @@ export default async function DashboardPage() {
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand">
-                {t(lang, "dash.thisWeek")}
+                {t(lang, "dash.thisMonth")}
               </p>
               <h2 className="mt-2 break-words font-display text-xl font-bold text-foreground">
-                {current?.title ?? t(lang, "dash.noThisWeekTitle")}
+                {current?.title ?? t(lang, "dash.noThisMonthTitle")}
               </h2>
             </div>
             <span className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-brand-tint text-brand">
@@ -152,7 +152,7 @@ export default async function DashboardPage() {
           {current ? (
             <>
               <p className="mt-3 text-sm font-semibold text-brand">
-                {formatWeekRange(current.week_start_date, lang)}
+                {formatMonth(current.month_start_date, lang)}
               </p>
               <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">
                 {dayTitlesOf(current).filter(Boolean).join(" · ") ||
@@ -168,7 +168,7 @@ export default async function DashboardPage() {
             </>
           ) : (
             <p className="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground">
-              {t(lang, "dash.noThisWeekBody")}
+              {t(lang, "dash.noThisMonthBody")}
             </p>
           )}
         </article>
@@ -256,6 +256,7 @@ export default async function DashboardPage() {
           )}
         </article>
 
+        {current && (reviewedPrograms.has(current.id) || isReviewDue(current.month_start_date, new Date(now), storedTimeZone)) && (
         <article className={cardClass}>
           <div className="flex items-center gap-2 text-brand">
             <ClipboardCheck className="h-4 w-4" aria-hidden />
@@ -272,13 +273,15 @@ export default async function DashboardPage() {
           {current && (
             <div className="mt-5">
               <ReviewAction
-                weekStart={current.week_start_date}
-                reviewed={reviewedWeeks.has(current.week_start_date)}
+                programId={current.id}
+                monthStartDate={current.month_start_date}
+                reviewed={reviewedPrograms.has(current.id)}
                 lang={lang}
               />
             </div>
           )}
         </article>
+        )}
       </div>
     </main>
   );

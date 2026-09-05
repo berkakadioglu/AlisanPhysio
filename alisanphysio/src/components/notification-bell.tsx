@@ -11,7 +11,7 @@ import { useI18n } from "@/app/i18n-provider";
  * Map a stored notification `type` to one of three display categories, each
  * with its own label, icon and color chip in the panel:
  *   - Measurement request (missing_info / height + measurement nudge)
- *   - Feedback request (weekly_review nudge)
+ *   - Feedback request (program_review nudge)
  *   - Availability request (staff asked when the client is free)
  *   - Appointment reminder / cancellation
  *   - Other (manual sends + any other system notice, e.g. membership expiry)
@@ -41,7 +41,7 @@ function categoryOf(type: string): {
       Icon: CalendarClock,
       chip: "bg-[var(--warning-tint)] text-[var(--warning)]",
     };
-  if (type === "weekly_review")
+  if (type === "program_review")
     return {
       labelKey: "notif.cat.feedback",
       Icon: MessageSquareText,

@@ -122,7 +122,7 @@ export async function deleteLibraryExercise(input: {
 }
 
 // ---------------------------------------------------------------------------
-// Categories (staff-gated; defaults are guarded against rename/delete)
+// Categories (staff-gated; all stored categories are editable)
 // ---------------------------------------------------------------------------
 
 export async function createCategory(input: { name: string }): Promise<Result> {
@@ -157,20 +157,10 @@ export async function renameCategory(input: {
   const name = input.name.trim();
   if (!name) return { ok: false, error: t(lang, "err.giveCategoryName") };
 
-  // Defaults are locked (belt-and-braces alongside the UI guard).
-  const { data: cat } = await supabase
-    .from("exercise_categories")
-    .select("is_default")
-    .eq("id", input.id)
-    .maybeSingle<{ is_default: boolean }>();
-  if (!cat) return { ok: false, error: t(lang, "err.cantEditDefault") };
-  if (cat.is_default) return { ok: false, error: t(lang, "err.cantEditDefault") };
-
   const { error } = await supabase
     .from("exercise_categories")
     .update({ name })
-    .eq("id", input.id)
-    .eq("is_default", false);
+    .eq("id", input.id);
   if (error) return { ok: false, error: error.message };
 
   revalidatePath("/admin/library");
@@ -179,22 +169,12 @@ export async function renameCategory(input: {
 
 export async function deleteCategory(input: { id: string }): Promise<Result> {
   const { supabase } = await requireStaff();
-  const lang = await getLang();
-
-  const { data: cat } = await supabase
-    .from("exercise_categories")
-    .select("is_default")
-    .eq("id", input.id)
-    .maybeSingle<{ is_default: boolean }>();
-  if (!cat) return { ok: false, error: t(lang, "err.cantEditDefault") };
-  if (cat.is_default) return { ok: false, error: t(lang, "err.cantEditDefault") };
 
   // Mappings cascade away; exercises are untouched.
   const { error } = await supabase
     .from("exercise_categories")
     .delete()
-    .eq("id", input.id)
-    .eq("is_default", false);
+    .eq("id", input.id);
   if (error) return { ok: false, error: error.message };
 
   revalidatePath("/admin/library");

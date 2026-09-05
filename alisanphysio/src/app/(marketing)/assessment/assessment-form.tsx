@@ -35,6 +35,7 @@ const EMPTY_VALUES: AssessmentFormValues = {
   height_cm: "",
   weight_kg: "",
   primary_goal: "",
+  biggest_expectation: "",
   training_experience: "",
   days_per_week: "",
   equipment_access: "",
@@ -55,6 +56,7 @@ const FIELD_ORDER: AssessmentField[] = [
   "height_cm",
   "weight_kg",
   "primary_goal",
+  "biggest_expectation",
   "training_experience",
   "days_per_week",
   "equipment_access",
@@ -76,6 +78,7 @@ const FIELD_STEP: Record<AssessmentField, number> = {
   height_cm: 1,
   weight_kg: 1,
   primary_goal: 1,
+  biggest_expectation: 1,
   training_experience: 2,
   days_per_week: 2,
   equipment_access: 2,
@@ -192,11 +195,10 @@ export default function AssessmentForm({
   const [step, setStep] = useState(0);
   const [values, setValues] = useState<AssessmentFormValues>({
     ...EMPTY_VALUES,
-    selected_plan: initialPlan ?? "",
+    selected_plan: initialPlan ?? "monthly",
   });
   const [consent, setConsent] = useState(false);
   const [website, setWebsite] = useState("");
-  const [planEditing, setPlanEditing] = useState(!initialPlan);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -271,6 +273,7 @@ export default function AssessmentForm({
       if (!optionalNumberValid(values.weight_kg, 20, 500)) {
         next.weight_kg = invalidValue;
       }
+      if (!values.biggest_expectation.trim() || values.biggest_expectation.length > 1500) next.biggest_expectation = text(copy.validation.requiredExpectation);
       if (!values.primary_goal.trim()) {
         next.primary_goal = text(copy.validation.requiredGoal);
       }
@@ -387,12 +390,7 @@ export default function AssessmentForm({
     }
   }
 
-  const plan = MARKETING.pricing.plans.find(
-    (item) => item.id === values.selected_plan,
-  );
-  const planLabel = plan
-    ? text(plan.name)
-    : text(copy.plan.noneShort);
+  const planLabel = text(MARKETING.pricing.plans[0].name);
   const choiceLabel = (
     options: ReadonlyArray<{ value: string; label: Readonly<Record<Lang, string>> }>,
     value: string,
@@ -474,63 +472,7 @@ export default function AssessmentForm({
       </div>
 
       <div className="marketing-assessment-plan-panel">
-        <div>
-          <span>
-            {text(values.selected_plan ? copy.plan.confirmed : copy.plan.choose)}
-          </span>
-          <strong>{planLabel}</strong>
-        </div>
-        <button
-          id={fieldId("selected_plan")}
-          type="button"
-          onClick={() => setPlanEditing((current) => !current)}
-          aria-expanded={planEditing}
-          aria-controls="assessment-plan-options"
-        >
-          {text(planEditing ? copy.plan.done : copy.plan.change)}
-        </button>
-        {planEditing && (
-          <fieldset
-            id="assessment-plan-options"
-            className="marketing-assessment-plan-options"
-          >
-            <legend className="sr-only">{text(copy.plan.choose)}</legend>
-            {MARKETING.pricing.plans.map((item) => (
-              <label key={item.id}>
-                <input
-                  type="radio"
-                  name="assessment-plan"
-                  value={item.id}
-                  checked={values.selected_plan === item.id}
-                  onChange={() => {
-                    update("selected_plan", item.id);
-                    setPlanEditing(false);
-                    requestAnimationFrame(() =>
-                      document.getElementById(fieldId("selected_plan"))?.focus(),
-                    );
-                  }}
-                />
-                <span>{text(item.name)}</span>
-              </label>
-            ))}
-            <label>
-              <input
-                type="radio"
-                name="assessment-plan"
-                value=""
-                checked={!values.selected_plan}
-                onChange={() => {
-                  update("selected_plan", "");
-                  setPlanEditing(false);
-                  requestAnimationFrame(() =>
-                    document.getElementById(fieldId("selected_plan"))?.focus(),
-                  );
-                }}
-              />
-              <span>{text(copy.plan.none)}</span>
-            </label>
-          </fieldset>
-        )}
+        <div><span>{text(copy.plan.confirmed)}</span><strong>{planLabel}</strong></div>
       </div>
 
       <form onSubmit={submit} noValidate>
@@ -601,6 +543,11 @@ export default function AssessmentForm({
                 <textarea id={fieldId("primary_goal")} required aria-required="true" rows={5} maxLength={1500} value={values.primary_goal} onChange={(event) => update("primary_goal", event.target.value)} placeholder={text(copy.fields.primaryGoal.placeholder)} {...commonInput("primary_goal")} />
                 <ErrorText field="primary_goal" error={errors.primary_goal} />
               </div>
+              <div className="marketing-assessment-field marketing-assessment-field--wide">
+                <FieldLabel htmlFor={fieldId("biggest_expectation")} label={text(copy.fields.biggestExpectation.label)} required />
+                <textarea id={fieldId("biggest_expectation")} required aria-required="true" rows={4} maxLength={1500} value={values.biggest_expectation} onChange={(event) => update("biggest_expectation", event.target.value)} {...commonInput("biggest_expectation")} />
+                <ErrorText field="biggest_expectation" error={errors.biggest_expectation} />
+              </div>
             </div>
           )}
 
@@ -670,6 +617,7 @@ export default function AssessmentForm({
                   { label: text(copy.fields.height.label), value: provided(values.height_cm) },
                   { label: text(copy.fields.weight.label), value: provided(values.weight_kg) },
                   { label: text(copy.fields.primaryGoal.label), value: provided(values.primary_goal) },
+                  { label: text(copy.fields.biggestExpectation.label), value: provided(values.biggest_expectation) },
                 ]} />
                 <ReviewGroup title={text(copy.review.training)} editLabel={text(copy.actions.edit)} editAriaLabel={editAria(text(copy.review.training))} onEdit={() => setStep(2)} rows={[
                   { label: text(copy.fields.experience.label), value: choiceLabel(copy.options.experience, values.training_experience) },
@@ -680,19 +628,10 @@ export default function AssessmentForm({
                   { label: text(copy.fields.injury.label), value: provided(values.injury_history) },
                   { label: text(copy.fields.medical.label), value: provided(values.medical_notes) },
                 ]} />
-                <ReviewGroup title={text(copy.review.plan)} editLabel={text(copy.actions.edit)} editAriaLabel={editAria(text(copy.review.plan))} onEdit={() => {
-                  setPlanEditing(true);
-                  requestAnimationFrame(() => document.getElementById(fieldId("selected_plan"))?.focus());
-                }} rows={[
-                  {
-                    label: text(
-                      values.selected_plan
-                        ? copy.plan.confirmed
-                        : copy.plan.choose,
-                    ),
-                    value: planLabel,
-                  },
-                ]} />
+                <section className="marketing-assessment-review-group">
+                  <div className="marketing-assessment-review-group__heading"><h3>{text(copy.review.plan)}</h3></div>
+                  <dl><div><dt>{text(copy.plan.confirmed)}</dt><dd>{planLabel}</dd></div></dl>
+                </section>
               </div>
 
               <div className="marketing-assessment-field">

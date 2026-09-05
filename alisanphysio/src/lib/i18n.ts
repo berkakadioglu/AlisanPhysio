@@ -22,6 +22,70 @@ export function setLangCookie(lang: Lang): void {
 type Dict = Record<string, string>;
 
 const en: Dict = {
+  "studio.createdBefore": "Created by ",
+  "studio.builtBefore": "Built by ",
+  "studio.after": "",
+  "studio.invitation": "Want a similar platform?",
+  "studio.contact": "Get in touch",
+  "requests.planMonthly": "Monthly",
+  "requests.planQuarterly": "Quarterly",
+  "lib.noInstructions": "Coaching cues can be added in Edit.",
+  "nutrition.on": "Nutrition: on",
+  "nutrition.off": "Nutrition: off",
+  "nutrition.hiddenNote": "Nutrition is off for this client. You can prepare the plan here; they cannot see it yet.",
+  "nutrition.error": "Could not change nutrition access. Please try again.",
+  "requests.biggestExpectation": "What is your biggest expectation from me?",
+  "fms.nav": "FMS bookings",
+
+  "editor.dayName": "Training day name",
+  "editor.ungrouped": "Additional training",
+  "catalog.label": "Catalogue programme",
+  "catalog.heading": "Programmes",
+  "catalog.create": "New programme",
+  "catalog.assign": "Assign to client",
+  "catalog.client": "Choose a client",
+  "catalog.intro": "Reusable programmes, ready to copy and tailor for each client.",
+  "catalog.empty": "Catalogue programmes are reusable starting points that you copy into a client’s month and adjust independently.",
+  "catalog.search": "Search by title…",
+  "catalog.noMatches": "No programmes match your search.",
+  "catalog.updated": "Last updated",
+  "catalog.days": "Days",
+  "catalog.exercises": "Exercises",
+  "catalog.clients": "Clients assigned",
+  "catalog.assignments": "Total assignments",
+  "catalog.duplicate": "Duplicate",
+  "catalog.copyTitle": "{title} (copy)",
+  "catalog.confirmDelete": "Delete “{title}”? Its days and exercises will be removed from the catalogue. Client programmes already copied from it will stay unchanged.",
+  "catalog.notFound": "This catalogue programme no longer exists.",
+  "catalog.copyError": "The programme could not be copied. Please try again.",
+  "catalog.deleteError": "The programme could not be deleted. Please try again.",
+  "catalog.chooseFor": "Choose a programme for {name}.",
+  "catalog.unnamedClient": "Unnamed client",
+  "catalog.back": "Back to Programmes",
+  "catalog.fromCatalogue": "From catalogue",
+  "catalog.fromCatalogueSub": "Choose a saved programme to copy independently.",
+  "catalog.productName": "Programme name",
+  "catalog.titlePlaceholder": "e.g. Signature Mobility",
+  "catalog.invalidClient": "Choose an existing client.",
+  "catalog.loadMonthsError": "The client’s programme months could not be checked. Please try again.",
+  "catalog.noClients": "Create a client account before assigning a programme.",
+  "catalog.checkingMonths": "Checking this client’s programme months…",
+  "catalog.retry": "Try again",
+  "catalog.assigning": "Creating the client’s copy…",
+  "catalog.assignAndEdit": "Assign and edit copy",
+  "catalog.snapshot": "Creates an independent copy of the saved days, exercises and notes for the chosen month. Editing or deleting the catalogue programme later will not change the client’s copy.",
+  "err.programShape": "Client programmes need a client and a month; standalone programmes have neither.",
+  "err.programSets": "Sets must be a non-negative whole number.",
+  "err.programMonthTaken": "This client already has a programme for that month. Choose another month or edit the existing programme.",
+  "err.programMonthLocked": "A reviewed programme cannot move to another month. Create a copy instead.",
+  "err.programSave": "The programme could not be saved. No changes were applied. Please try again.",
+  "review.notDue": "Reviews open during the last seven days of the programme month and close when that month ends.",
+  "err.reviewAlreadySubmitted": "You have already submitted this programme’s monthly review.",
+  "err.reviewDays": "Enter a whole number of days within this calendar month.",
+  "err.reviewSelection": "The programme changed. Reload the page and check your selections.",
+  "err.reviewSave": "Your review could not be submitted. Please try again.",
+  "pdf.notesFrom": "Notes from Alisan",
+
   // Common
   "common.signOut": "Sign out",
   "common.cancel": "Cancel",
@@ -46,13 +110,13 @@ const en: Dict = {
   // Client dashboard
   "dash.welcomeName": "Welcome back, {name}",
   "dash.welcome": "Welcome back",
-  "dash.subtitleClient": "Here's your program for this week.",
+  "dash.subtitleClient": "Here's your programme for this month.",
   "dash.subtitleAdmin": "You're signed in as an administrator.",
-  "dash.thisWeek": "This week",
+  "dash.thisMonth": "This month",
   "dash.pastPrograms": "Past programs",
   "dash.upcomingPrograms": "Upcoming programs",
-  "dash.noThisWeekTitle": "No program scheduled for this week yet",
-  "dash.noThisWeekBody": "Alişan will add your next program soon.",
+  "dash.noThisMonthTitle": "No programme scheduled for this month yet",
+  "dash.noThisMonthBody": "Alişan will add your next program soon.",
   "dash.clientFallback": "Client",
   "dash.coachLine": "Coach: {name}",
   "dash.coachingSince": "Coaching since {date}",
@@ -65,9 +129,9 @@ const en: Dict = {
   "dash.tab.schedule": "Schedule",
   "dash.overviewEyebrow": "Your coaching",
   "dash.overviewBody":
-    "Here is the shape of your current week and the next coaching touchpoint.",
-  "dash.metric.trainingDays": "Training days this week",
-  "dash.metric.exercises": "Exercises this week",
+    "Your current month and your next coaching touchpoint.",
+  "dash.metric.trainingDays": "Training days this month",
+  "dash.metric.exercises": "Exercises this month",
   "dash.metric.meals": "Meals in your plan",
   "dash.metric.measurements": "Progress entries",
   "dash.programmeReadyBody": "Your programme is ready to open.",
@@ -78,26 +142,26 @@ const en: Dict = {
   "dash.noAppointmentBody":
     "Sessions are arranged directly. If Alişan needs your availability, the request will appear in Schedule.",
   "dash.coachNoteEyebrow": "Coach note",
-  "dash.coachNoteTitle": "A note for this week",
+  "dash.coachNoteTitle": "A note for this month",
   "dash.noCoachNoteTitle": "No coach note yet",
   "dash.noCoachNoteBody": "Any programme note from Alişan will appear here.",
-  "dash.checkInEyebrow": "Check-in",
-  "dash.checkInTitle": "Weekly reflection",
-  "dash.checkInBody": "Share how this training week went or update your check-in.",
-  "dash.noCheckInBody": "Your next check-in will appear with an active programme week.",
+  "dash.checkInEyebrow": "Monthly review",
+  "dash.checkInTitle": "Monthly reflection",
+  "dash.checkInBody": "Share how this training month went. Submit once during the last seven days of the month.",
+  "dash.noCheckInBody": "Your monthly review opens during the last seven days of the month.",
   "dash.programmeEyebrow": "Training programme",
-  "dash.programmeTitle": "Every training week, in one place.",
+  "dash.programmeTitle": "Every training month, in one place.",
   "dash.programmeBody":
-    "Open the current programme, look ahead, or revisit a previous week and its check-in.",
+    "Repeat your named training days throughout the month. Open this month, look ahead, or revisit a past programme.",
 
   // Buckets / lists
   "bucket.upcoming": "Upcoming",
   "bucket.past": "Past",
   "list.pastTitle": "Past programs",
-  "list.pastSubtitle": "Your previous weeks, newest first.",
+  "list.pastSubtitle": "Your previous months, newest first.",
   "list.upcomingTitle": "Upcoming programs",
   "list.upcomingSubtitle": "What's coming next, soonest first.",
-  "list.backToThisWeek": "Back to this week",
+  "list.backToThisMonth": "Back to this month",
   "list.emptyPast": "No past programs yet.",
   "list.emptyUpcoming": "Nothing scheduled yet.",
 
@@ -203,18 +267,18 @@ const en: Dict = {
   "admin.manage": "Manage",
   "admin.resetPassword": "Reset password",
   "admin.newProgram": "New program",
-  "admin.emptyCurrent": "No program for this week.",
+  "admin.emptyCurrent": "No programme for this month.",
   "admin.emptyUpcoming": "Nothing scheduled.",
   "admin.emptyPast": "No past programs.",
 
   // New program menu + copy modal
   "menu.startBlank": "Start blank",
   "menu.startBlankSub": "A fresh, empty program.",
-  "menu.copyPrev": "Copy from previous week",
+  "menu.copyPrev": "Copy from another month",
   "menu.copyPrevSub": "Duplicate a program's days & exercises.",
   "copy.title": "Copy from a previous program",
   "copy.subtitle":
-    "Pick a week to duplicate its days and exercises into a new one.",
+    "Choose a programme to copy its named days and exercises into the next month.",
   "copy.empty": "No previous programs to copy yet.",
   "copy.startInstead": "Start blank instead",
 
@@ -222,21 +286,21 @@ const en: Dict = {
   "editor.newHeading": "New program",
   "editor.editHeading": "Edit program",
   "editor.backToClient": "Back to client",
-  "editor.week": "Week",
+  "editor.month": "Month",
   "editor.title": "Title",
   "editor.titleHint": "(auto-filled, editable)",
   "editor.notes": "Notes",
-  "editor.notesPlaceholder": "A note for the week…",
-  "editor.titlePlaceholder": "Week of Aug 4, 2026",
+  "editor.notesPlaceholder": "A note for the month…",
+  "editor.titlePlaceholder": "September 2026",
   "editor.hasProgram": "· has a program",
   "editor.dayLabel": "Day {n}",
   "editor.dayPlaceholder":
-    "e.g. Chest Day, Leg Day, Knee Rehab — leave blank for a simple list",
+    "Chest day, Back day, Leg day…",
   "editor.addDay": "Add day",
   "editor.addExercise": "Add exercise",
   "editor.sets": "Sets",
   "editor.reps": "Reps",
-  "editor.instructions": "Instructions for this week (optional)",
+  "editor.instructions": "Instructions for this month (optional)",
   "editor.mediaUrl": "Media URL (optional) — demo video or image",
   "editor.videoOverride": "Video override (optional)",
   "editor.linkedNote": "▶ Linked to the library — the demo video comes from there.",
@@ -267,9 +331,9 @@ const en: Dict = {
   "lib.summary": "{n} exercises · {m} with a video",
   "lib.newExercise": "New exercise",
   "lib.search": "Search exercises…",
-  "lib.hasVideo": "▶ Video",
+  "lib.hasVideo": "Video",
   "lib.noVideo": "No video",
-  "lib.preview": "▶ Preview",
+  "lib.preview": "Preview",
   "lib.previewAria": "Preview {name}",
   "lib.empty": "The library is empty. Add your first exercise.",
   "lib.noMatches": "No exercises match your search.",
@@ -296,7 +360,6 @@ const en: Dict = {
   "cat.delete": "Delete category",
   "cat.confirmDelete":
     "Delete the category “{name}”? The exercises stay — only the category and its tags are removed.",
-  "cat.defaultLocked": "Default categories can't be renamed or deleted.",
   "cat.assignLabel": "Categories",
   "cat.assignHint": "Tag this exercise with one or more categories.",
   "cat.none": "Uncategorized",
@@ -375,7 +438,7 @@ const en: Dict = {
   "toast.templateSaved": "Template saved",
   "toast.templateDeleted": "Template deleted",
 
-  // Weekly-review indicators + inline add-review
+  // Monthly-review indicators + inline add-review
   "review.submitted": "Review submitted",
   "review.add": "Add review",
 
@@ -539,8 +602,8 @@ const en: Dict = {
   "notif.expiry.titleSoon": "Your membership ends soon",
   "notif.expiry.titleEnded": "Your membership has ended",
   "notif.expiry.body": "Ends {date} — contact Alişan to renew.",
-  "notif.review.title": "Your weekly review is ready",
-  "notif.review.body": "Tell Alişan how last week went.",
+  "notif.review.title": "Your monthly review is ready",
+  "notif.review.body": "Tell Alişan how this month went before the month ends.",
 
   // Manual send (staff)
   "manage.sendNotification": "Send notification",
@@ -553,11 +616,11 @@ const en: Dict = {
   "send.sending": "Sending…",
   "toast.notificationSent": "Notification sent",
 
-  // Weekly review — form
-  "review.link": "Weekly review",
-  "review.heading": "Last week's review",
+  // Monthly review — form
+  "review.link": "Monthly review",
+  "review.heading": "Monthly programme review",
   "review.subtitle": "Tell Alişan how {range} went.",
-  "review.daysAttended": "How many days did you train last week?",
+  "review.daysAttended": "How many days did you train this month?",
   "review.programsDone": "Which programs did you do?",
   "review.hardExercises": "Which exercises were hard?",
   "review.hardHint": "Check the ones you struggled with.",
@@ -565,13 +628,13 @@ const en: Dict = {
   "review.notePlaceholder": "Optional — pain, energy, questions…",
   "review.submit": "Submit review",
   "review.update": "Update review",
-  "review.none": "You had no program last week — nothing to review yet.",
+  "review.none": "There is no monthly programme to review.",
   "toast.reviewSubmitted": "Review submitted",
-  "err.reviewNoPrograms": "There's nothing to review for last week.",
+  "err.reviewNoPrograms": "No client programme was found for this review.",
 
-  // Weekly review — staff view
-  "review.staffHeading": "Weekly reviews",
-  "review.staffEmpty": "No weekly reviews submitted yet.",
+  // Monthly review — staff view
+  "review.staffHeading": "Monthly reviews",
+  "review.staffEmpty": "No monthly reviews submitted yet.",
   "review.daysLabel": "Days trained",
   "review.programsLabel": "Programs done",
   "review.hardLabel": "Found hard",
@@ -593,7 +656,7 @@ const en: Dict = {
   "err.emailInUse": "That email / username is already in use.",
   "err.emailInvalid": "Enter a valid email / username (e.g. name@example.com).",
   "err.giveTitle": "Give the program a title.",
-  "err.pickDate": "Pick a valid week start date.",
+  "err.pickDate": "Choose a valid programme month.",
   "err.giveExerciseName": "Give the exercise a name.",
   "err.notYouTube": "That doesn't look like a YouTube link.",
   "err.exerciseExists": "An exercise with that name already exists.",
@@ -610,7 +673,6 @@ const en: Dict = {
   "err.notifTitle": "Enter a title for the notification.",
   "err.giveCategoryName": "Give the category a name.",
   "err.categoryExists": "A category with that name already exists.",
-  "err.cantEditDefault": "Default categories can't be renamed or deleted.",
   "err.giveTemplateTitle": "Give the template a title.",
 
   // Admin nav — grouped ("Content" dropdown)
@@ -1038,6 +1100,70 @@ const en: Dict = {
 };
 
 const tr: Dict = {
+  "studio.createdBefore": "",
+  "studio.builtBefore": "",
+  "studio.after": " tarafından geliştirildi",
+  "studio.invitation": "Benzer bir platform mu istiyorsunuz?",
+  "studio.contact": "İletişime geçin",
+  "requests.planMonthly": "Aylık",
+  "requests.planQuarterly": "Üç Aylık",
+  "lib.noInstructions": "Koçluk notlarını Düzenle bölümünden ekleyebilirsiniz.",
+  "nutrition.on": "Beslenme: açık",
+  "nutrition.off": "Beslenme: kapalı",
+  "nutrition.hiddenNote": "Bu danışan için beslenme kapalı. Planı burada hazırlayabilirsiniz; danışan henüz göremez.",
+  "nutrition.error": "Beslenme erişimi değiştirilemedi. Lütfen tekrar deneyin.",
+  "requests.biggestExpectation": "Benden en büyük beklentin ne?",
+  "fms.nav": "FMS randevuları",
+
+  "editor.dayName": "Antrenman günü adı",
+  "editor.ungrouped": "Ek antrenman",
+  "catalog.label": "Katalog programı",
+  "catalog.heading": "Programlar",
+  "catalog.create": "Yeni program",
+  "catalog.assign": "Danışana ata",
+  "catalog.client": "Danışan seçin",
+  "catalog.intro": "Her danışana kopyalayıp uyarlayabileceğiniz hazır programlar.",
+  "catalog.empty": "Katalog programları, bir danışanın seçilen ayına kopyalayıp bağımsız olarak düzenleyebileceğiniz başlangıç planlarıdır.",
+  "catalog.search": "Ada göre ara…",
+  "catalog.noMatches": "Aramanızla eşleşen program yok.",
+  "catalog.updated": "Son güncelleme",
+  "catalog.days": "Gün",
+  "catalog.exercises": "Egzersiz",
+  "catalog.clients": "Atanan danışan",
+  "catalog.assignments": "Toplam atama",
+  "catalog.duplicate": "Çoğalt",
+  "catalog.copyTitle": "{title} (kopya)",
+  "catalog.confirmDelete": "“{title}” silinsin mi? Günleri ve egzersizleri katalogdan kaldırılacak. Daha önce danışanlara kopyalanan programlar değişmeden kalacak.",
+  "catalog.notFound": "Bu katalog programı artık mevcut değil.",
+  "catalog.copyError": "Program kopyalanamadı. Lütfen yeniden deneyin.",
+  "catalog.deleteError": "Program silinemedi. Lütfen yeniden deneyin.",
+  "catalog.chooseFor": "{name} için bir program seçin.",
+  "catalog.unnamedClient": "İsimsiz danışan",
+  "catalog.back": "Programlara dön",
+  "catalog.fromCatalogue": "Katalogdan",
+  "catalog.fromCatalogueSub": "Bağımsız kopyalamak için kayıtlı bir program seçin.",
+  "catalog.productName": "Program adı",
+  "catalog.titlePlaceholder": "örn. Signature Mobility",
+  "catalog.invalidClient": "Kayıtlı bir danışan seçin.",
+  "catalog.loadMonthsError": "Danışanın program ayları kontrol edilemedi. Lütfen yeniden deneyin.",
+  "catalog.noClients": "Program atamadan önce bir danışan hesabı oluşturun.",
+  "catalog.checkingMonths": "Danışanın program ayları kontrol ediliyor…",
+  "catalog.retry": "Yeniden dene",
+  "catalog.assigning": "Danışanın kopyası oluşturuluyor…",
+  "catalog.assignAndEdit": "Ata ve kopyayı düzenle",
+  "catalog.snapshot": "Kayıtlı günlerin, egzersizlerin ve notların seçilen ay için bağımsız bir kopyasını oluşturur. Katalog programını sonradan düzenlemek veya silmek danışanın kopyasını değiştirmez.",
+  "err.programShape": "Danışan programında danışan ve ay olmalıdır; bağımsız programda ikisi de bulunmaz.",
+  "err.programSets": "Set sayısı sıfır veya pozitif bir tam sayı olmalıdır.",
+  "err.programMonthTaken": "Bu danışanın seçilen ay için zaten bir programı var. Başka bir ay seçin veya mevcut programı düzenleyin.",
+  "err.programMonthLocked": "Değerlendirilmiş program başka bir aya taşınamaz. Yeni bir kopya oluşturun.",
+  "err.programSave": "Program kaydedilemedi. Değişiklikler uygulanmadı. Lütfen tekrar deneyin.",
+  "review.notDue": "Değerlendirme, program ayının son yedi gününde açılır ve ay bittiğinde kapanır.",
+  "err.reviewAlreadySubmitted": "Bu programın aylık değerlendirmesini zaten gönderdiniz.",
+  "err.reviewDays": "Bu takvim ayındaki gün sayısını aşmayan bir tam sayı girin.",
+  "err.reviewSelection": "Program değişti. Sayfayı yenileyip seçimlerinizi kontrol edin.",
+  "err.reviewSave": "Değerlendirmeniz gönderilemedi. Lütfen tekrar deneyin.",
+  "pdf.notesFrom": "Alisan’dan notlar",
+
   // Common
   "common.signOut": "Çıkış yap",
   "common.cancel": "İptal",
@@ -1062,13 +1188,13 @@ const tr: Dict = {
   // Client dashboard
   "dash.welcomeName": "Tekrar hoş geldiniz, {name}",
   "dash.welcome": "Tekrar hoş geldiniz",
-  "dash.subtitleClient": "Bu haftaki programınız burada.",
+  "dash.subtitleClient": "Bu ayki programınız burada.",
   "dash.subtitleAdmin": "Yönetici olarak giriş yaptınız.",
-  "dash.thisWeek": "Bu hafta",
+  "dash.thisMonth": "Bu ay",
   "dash.pastPrograms": "Geçmiş programlar",
   "dash.upcomingPrograms": "Yaklaşan programlar",
-  "dash.noThisWeekTitle": "Bu hafta için henüz bir program yok",
-  "dash.noThisWeekBody": "Alişan yakında bir sonraki programınızı ekleyecek.",
+  "dash.noThisMonthTitle": "Bu ay için henüz bir program yok",
+  "dash.noThisMonthBody": "Alişan yakında bir sonraki programınızı ekleyecek.",
   "dash.clientFallback": "Danışan",
   "dash.coachLine": "Koç: {name}",
   "dash.coachingSince": "{date} tarihinden beri koçluk alıyor",
@@ -1081,9 +1207,9 @@ const tr: Dict = {
   "dash.tab.schedule": "Takvim",
   "dash.overviewEyebrow": "Koçluk planınız",
   "dash.overviewBody":
-    "Bu haftanın genel görünümü ve sıradaki koçluk adımı burada.",
-  "dash.metric.trainingDays": "Bu haftaki antrenman günleri",
-  "dash.metric.exercises": "Bu haftaki egzersizler",
+    "Güncel ayınızın özeti ve sıradaki koçluk adımınız.",
+  "dash.metric.trainingDays": "Bu ayki antrenman günleri",
+  "dash.metric.exercises": "Bu ayki egzersizler",
   "dash.metric.meals": "Planınızdaki öğünler",
   "dash.metric.measurements": "İlerleme kayıtları",
   "dash.programmeReadyBody": "Programınız görüntülenmeye hazır.",
@@ -1094,26 +1220,26 @@ const tr: Dict = {
   "dash.noAppointmentBody":
     "Seanslar doğrudan planlanır. Alişan uygunluğunuzu istediğinde talep Takvim bölümünde görünür.",
   "dash.coachNoteEyebrow": "Koç notu",
-  "dash.coachNoteTitle": "Bu hafta için not",
+  "dash.coachNoteTitle": "Bu ay için not",
   "dash.noCoachNoteTitle": "Henüz koç notu yok",
   "dash.noCoachNoteBody": "Alişan'ın programa eklediği not burada görünür.",
-  "dash.checkInEyebrow": "Haftalık değerlendirme",
-  "dash.checkInTitle": "Haftayı değerlendirin",
-  "dash.checkInBody": "Bu antrenman haftasının nasıl geçtiğini paylaşın veya kaydınızı güncelleyin.",
-  "dash.noCheckInBody": "Sıradaki değerlendirme, aktif bir program haftasıyla birlikte görünür.",
+  "dash.checkInEyebrow": "Aylık değerlendirme",
+  "dash.checkInTitle": "Ayı değerlendirin",
+  "dash.checkInBody": "Bu antrenman ayının nasıl geçtiğini paylaşın. Ayın son yedi gününde bir kez gönderin.",
+  "dash.noCheckInBody": "Aylık değerlendirmeniz ayın son yedi gününde açılır.",
   "dash.programmeEyebrow": "Antrenman programı",
-  "dash.programmeTitle": "Tüm antrenman haftalarınız tek bir yerde.",
+  "dash.programmeTitle": "Tüm antrenman aylarınız tek bir yerde.",
   "dash.programmeBody":
-    "Güncel programınızı açın, sonraki haftalara bakın veya geçmiş bir haftayı ve değerlendirmesini yeniden inceleyin.",
+    "Adlandırılmış antrenman günlerinizi ay boyunca tekrarlayın. Bu ayı açın, ileriye bakın veya geçmiş bir programı inceleyin.",
 
   // Buckets / lists
   "bucket.upcoming": "Yaklaşan",
   "bucket.past": "Geçmiş",
   "list.pastTitle": "Geçmiş programlar",
-  "list.pastSubtitle": "Önceki haftalarınız, en yeniden eskiye.",
+  "list.pastSubtitle": "Önceki aylarınız, en yeniden eskiye.",
   "list.upcomingTitle": "Yaklaşan programlar",
   "list.upcomingSubtitle": "Sırada ne var, en yakından uzağa.",
-  "list.backToThisWeek": "Bu haftaya dön",
+  "list.backToThisMonth": "Bu aya dön",
   "list.emptyPast": "Henüz geçmiş program yok.",
   "list.emptyUpcoming": "Henüz planlanmış bir şey yok.",
 
@@ -1219,18 +1345,18 @@ const tr: Dict = {
   "admin.manage": "Yönet",
   "admin.resetPassword": "Şifre sıfırla",
   "admin.newProgram": "Yeni program",
-  "admin.emptyCurrent": "Bu hafta için program yok.",
+  "admin.emptyCurrent": "Bu ay için program yok.",
   "admin.emptyUpcoming": "Planlanmış bir şey yok.",
   "admin.emptyPast": "Geçmiş program yok.",
 
   // New program menu + copy modal
   "menu.startBlank": "Boştan başla",
   "menu.startBlankSub": "Yeni, boş bir program.",
-  "menu.copyPrev": "Önceki haftadan kopyala",
+  "menu.copyPrev": "Başka bir aydan kopyala",
   "menu.copyPrevSub": "Bir programın günlerini ve egzersizlerini çoğaltın.",
   "copy.title": "Önceki bir programdan kopyala",
   "copy.subtitle":
-    "Günlerini ve egzersizlerini yeni bir programa kopyalamak için bir hafta seçin.",
+    "Adlandırılmış günlerini ve egzersizlerini sonraki aya kopyalamak için bir program seçin.",
   "copy.empty": "Kopyalanacak önceki program yok.",
   "copy.startInstead": "Bunun yerine boştan başla",
 
@@ -1238,21 +1364,21 @@ const tr: Dict = {
   "editor.newHeading": "Yeni program",
   "editor.editHeading": "Programı düzenle",
   "editor.backToClient": "Danışana dön",
-  "editor.week": "Hafta",
+  "editor.month": "Ay",
   "editor.title": "Başlık",
   "editor.titleHint": "(otomatik dolar, düzenlenebilir)",
   "editor.notes": "Notlar",
-  "editor.notesPlaceholder": "Haftaya dair bir not…",
-  "editor.titlePlaceholder": "4 Ağu 2026 Haftası",
+  "editor.notesPlaceholder": "Aya dair bir not…",
+  "editor.titlePlaceholder": "Eylül 2026",
   "editor.hasProgram": "· programı var",
   "editor.dayLabel": "{n}. Gün",
   "editor.dayPlaceholder":
-    "örn. Göğüs Günü, Bacak Günü, Diz Rehabilitasyonu — basit liste için boş bırakın",
+    "Göğüs günü, Sırt günü, Bacak günü…",
   "editor.addDay": "Gün ekle",
   "editor.addExercise": "Egzersiz ekle",
   "editor.sets": "Set",
   "editor.reps": "Tekrar",
-  "editor.instructions": "Bu hafta için talimatlar (isteğe bağlı)",
+  "editor.instructions": "Bu ay için talimatlar (isteğe bağlı)",
   "editor.mediaUrl": "Medya URL (isteğe bağlı) — demo video veya görsel",
   "editor.videoOverride": "Videoyu değiştir (isteğe bağlı)",
   "editor.linkedNote": "▶ Kütüphaneye bağlı — demo video oradan gelir.",
@@ -1283,9 +1409,9 @@ const tr: Dict = {
   "lib.summary": "{n} egzersiz · {m} tanesinde video var",
   "lib.newExercise": "Yeni egzersiz",
   "lib.search": "Egzersiz ara…",
-  "lib.hasVideo": "▶ Video",
+  "lib.hasVideo": "Video",
   "lib.noVideo": "Video yok",
-  "lib.preview": "▶ Önizleme",
+  "lib.preview": "Önizleme",
   "lib.previewAria": "{name} önizlemesi",
   "lib.empty": "Kütüphane boş. İlk egzersizinizi ekleyin.",
   "lib.noMatches": "Aramanızla eşleşen egzersiz yok.",
@@ -1312,8 +1438,6 @@ const tr: Dict = {
   "cat.delete": "Kategoriyi sil",
   "cat.confirmDelete":
     "“{name}” kategorisi silinsin mi? Egzersizler kalır — yalnızca kategori ve etiketleri kaldırılır.",
-  "cat.defaultLocked":
-    "Varsayılan kategoriler yeniden adlandırılamaz veya silinemez.",
   "cat.assignLabel": "Kategoriler",
   "cat.assignHint": "Bu egzersizi bir veya daha fazla kategoriyle etiketleyin.",
   "cat.none": "Kategorisiz",
@@ -1394,7 +1518,7 @@ const tr: Dict = {
   "toast.templateSaved": "Taslak kaydedildi",
   "toast.templateDeleted": "Taslak silindi",
 
-  // Weekly-review indicators + inline add-review
+  // Monthly-review indicators + inline add-review
   "review.submitted": "Değerlendirme gönderildi",
   "review.add": "Değerlendirme ekle",
 
@@ -1558,8 +1682,8 @@ const tr: Dict = {
   "notif.expiry.titleSoon": "Üyeliğiniz yakında sona eriyor",
   "notif.expiry.titleEnded": "Üyeliğiniz sona erdi",
   "notif.expiry.body": "{date} tarihinde bitiyor — yenilemek için Alişan ile iletişime geçin.",
-  "notif.review.title": "Haftalık değerlendirmeniz hazır",
-  "notif.review.body": "Alişan'a geçen haftanın nasıl geçtiğini anlatın.",
+  "notif.review.title": "Aylık değerlendirmeniz hazır",
+  "notif.review.body": "Ay bitmeden bu ayın nasıl geçtiğini Alişan’a anlatın.",
 
   // Manual send (staff)
   "manage.sendNotification": "Bildirim gönder",
@@ -1572,11 +1696,11 @@ const tr: Dict = {
   "send.sending": "Gönderiliyor…",
   "toast.notificationSent": "Bildirim gönderildi",
 
-  // Weekly review — form
-  "review.link": "Haftalık değerlendirme",
-  "review.heading": "Geçen haftanın değerlendirmesi",
-  "review.subtitle": "Alişan'a {range} haftasının nasıl geçtiğini anlatın.",
-  "review.daysAttended": "Geçen hafta kaç gün antrenman yaptınız?",
+  // Monthly review — form
+  "review.link": "Aylık değerlendirme",
+  "review.heading": "Aylık program değerlendirmesi",
+  "review.subtitle": "{range} ayının nasıl geçtiğini Alişan’a anlatın.",
+  "review.daysAttended": "Bu ay kaç gün antrenman yaptınız?",
   "review.programsDone": "Hangi programları yaptınız?",
   "review.hardExercises": "Hangi egzersizler zorladı?",
   "review.hardHint": "Zorlandıklarınızı işaretleyin.",
@@ -1584,13 +1708,13 @@ const tr: Dict = {
   "review.notePlaceholder": "İsteğe bağlı — ağrı, enerji, sorular…",
   "review.submit": "Değerlendirmeyi gönder",
   "review.update": "Değerlendirmeyi güncelle",
-  "review.none": "Geçen hafta programınız yoktu — henüz değerlendirilecek bir şey yok.",
+  "review.none": "Değerlendirilecek bir aylık program yok.",
   "toast.reviewSubmitted": "Değerlendirme gönderildi",
-  "err.reviewNoPrograms": "Geçen hafta için değerlendirilecek bir şey yok.",
+  "err.reviewNoPrograms": "Bu değerlendirme için danışan programı bulunamadı.",
 
-  // Weekly review — staff view
-  "review.staffHeading": "Haftalık değerlendirmeler",
-  "review.staffEmpty": "Henüz haftalık değerlendirme gönderilmedi.",
+  // Monthly review — staff view
+  "review.staffHeading": "Aylık değerlendirmeler",
+  "review.staffEmpty": "Henüz aylık değerlendirme gönderilmedi.",
   "review.daysLabel": "Antrenman günü",
   "review.programsLabel": "Yapılan programlar",
   "review.hardLabel": "Zorlayanlar",
@@ -1613,7 +1737,7 @@ const tr: Dict = {
   "err.emailInvalid":
     "Geçerli bir e-posta / kullanıcı adı girin (örn. name@example.com).",
   "err.giveTitle": "Programa bir başlık verin.",
-  "err.pickDate": "Geçerli bir hafta başlangıç tarihi seçin.",
+  "err.pickDate": "Geçerli bir program ayı seçin.",
   "err.giveExerciseName": "Egzersize bir ad verin.",
   "err.notYouTube": "Bu bir YouTube bağlantısına benzemiyor.",
   "err.exerciseExists": "Bu adda bir egzersiz zaten var.",
@@ -1630,8 +1754,6 @@ const tr: Dict = {
   "err.notifTitle": "Bildirim için bir başlık girin.",
   "err.giveCategoryName": "Kategoriye bir ad verin.",
   "err.categoryExists": "Bu adda bir kategori zaten var.",
-  "err.cantEditDefault":
-    "Varsayılan kategoriler yeniden adlandırılamaz veya silinemez.",
   "err.giveTemplateTitle": "Taslağa bir başlık verin.",
 
   // Admin nav — grouped ("Content" dropdown)
@@ -2146,44 +2268,8 @@ export function mealsCount(lang: Lang, n: number): string {
   return lang === "tr" ? `${n} öğün` : `${n} ${n === 1 ? "meal" : "meals"}`;
 }
 
-/**
- * Display names for the seeded default categories (is_default=true), keyed by
- * the English name stored in the DB (see migration 0010). Custom categories
- * Alişan adds are shown exactly as typed, so they don't appear here.
- */
-const DEFAULT_CATEGORY_NAMES: Record<Lang, Record<string, string>> = {
-  en: {
-    Chest: "Chest",
-    Back: "Back",
-    Legs: "Legs",
-    Shoulders: "Shoulders",
-    Arms: "Arms",
-    Core: "Core",
-    "Full Body": "Full Body",
-    Mobility: "Mobility",
-    Rehab: "Rehab",
-  },
-  tr: {
-    Chest: "Göğüs",
-    Back: "Sırt",
-    Legs: "Bacak",
-    Shoulders: "Omuz",
-    Arms: "Kol",
-    Core: "Kor",
-    "Full Body": "Tüm Vücut",
-    Mobility: "Mobilite",
-    Rehab: "Rehabilitasyon",
-  },
-};
-
-/** A category's display name: translated for defaults, as-typed for custom. */
-export function categoryLabel(
-  lang: Lang,
-  category: { name: string; is_default: boolean },
-): string {
-  if (category.is_default) {
-    return DEFAULT_CATEGORY_NAMES[lang][category.name] ?? category.name;
-  }
+/** Category names are authored content, displayed exactly as stored. */
+export function categoryLabel(_lang: Lang, category: { name: string }): string {
   return category.name;
 }
 
@@ -2193,7 +2279,7 @@ function ymd(iso: string): [number, number, number] {
   return [y, m, d];
 }
 
-/** The Sunday (Monday + 6) that ends a program week, as [y, m, d] (UTC). */
+/** The Sunday (Monday + 6) that ends a calendar week, as [y, m, d] (UTC). */
 function weekEnd(iso: string): [number, number, number] {
   const [y, m, d] = ymd(iso);
   const e = new Date(Date.UTC(y, m - 1, d + 6));
@@ -2221,23 +2307,11 @@ export function formatWeekRange(iso: string, lang: Lang): string {
   return `${sMon} ${sd} – ${ed}, ${sy}`;
 }
 
-/** A default program title: "Week of Jul 6, 2026" / "6 Tem 2026 Haftası". */
-export function weekTitle(iso: string, lang: Lang): string {
-  const date = formatDay(iso, lang);
-  return lang === "tr" ? `${date} Haftası` : `Week of ${date}`;
+/** Localised month, independent of the display machine timezone. */
+export function formatMonth(iso: string, lang: Lang): string {
+  return new Intl.DateTimeFormat(lang === "tr" ? "tr-TR" : "en-CA", {
+    month: "long", year: "numeric", timeZone: "UTC",
+  }).format(new Date(`${iso}T12:00:00Z`));
 }
-
-/** Dropdown label: "Week of Jul 6, 2026 (Jul 6 – 12)" — range without the year. */
-export function weekLabel(iso: string, lang: Lang): string {
-  const [, sm, sd] = ymd(iso);
-  const [, em, ed] = weekEnd(iso);
-  const sMon = MONTHS_SHORT[lang][sm - 1];
-  const eMon = MONTHS_SHORT[lang][em - 1];
-  let range: string;
-  if (lang === "tr") {
-    range = sm !== em ? `${sd} ${sMon} – ${ed} ${eMon}` : `${sd} – ${ed} ${sMon}`;
-  } else {
-    range = sm !== em ? `${sMon} ${sd} – ${eMon} ${ed}` : `${sMon} ${sd} – ${ed}`;
-  }
-  return `${weekTitle(iso, lang)} (${range})`;
-}
+export const monthTitle = formatMonth;
+export const monthLabel = formatMonth;

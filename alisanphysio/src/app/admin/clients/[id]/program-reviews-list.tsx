@@ -1,15 +1,15 @@
-import { daysCount, formatWeekRange, t, type Lang } from "@/lib/i18n";
-import type { WeeklyReview } from "@/lib/types";
+import { daysCount, formatMonth, t, type Lang } from "@/lib/i18n";
+import type { ProgramReview } from "@/lib/types";
 
 /**
- * Read-only staff view of a user's submitted weekly reviews (newest first).
+ * Read-only staff view of a user's submitted monthly reviews (newest first).
  * Pure presentational — renders inside the admin detail server component.
  */
-export default function WeeklyReviewsList({
+export default function ProgramReviewsList({
   reviews,
   lang,
 }: {
-  reviews: WeeklyReview[];
+  reviews: ProgramReview[];
   lang: Lang;
 }) {
   if (reviews.length === 0) {
@@ -32,7 +32,7 @@ export default function WeeklyReviewsList({
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="font-display text-sm font-bold text-foreground">
-                {formatWeekRange(r.week_start, lang)}
+                {r.programs ? formatMonth(r.programs.month_start_date, lang) : t(lang, "review.heading")}
               </p>
               {r.days_attended != null && (
                 <span className="rounded-full bg-brand-tint px-2.5 py-0.5 text-xs font-semibold text-brand">

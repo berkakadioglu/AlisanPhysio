@@ -34,7 +34,9 @@ export async function loadFoodLibrary(
 export async function loadNutritionPlan(
   supabase: SupabaseClient,
   clientId: string,
+  staffEditing = false,
 ): Promise<NutritionPlanWithMeals | null> {
+  if (!await canLoadNutrition(supabase, clientId, staffEditing)) return null;
   const { data: plan } = await supabase
     .from("nutrition_plans")
     .select(
@@ -83,6 +85,7 @@ export async function nutritionPlanSummary(
   supabase: SupabaseClient,
   clientId: string,
 ): Promise<{ hasPlan: boolean; mealCount: number }> {
+  if (!await nutritionEnabled(supabase, clientId)) return { hasPlan: false, mealCount: 0 };
   const { data: plan } = await supabase
     .from("nutrition_plans")
     .select("id")
@@ -96,4 +99,19 @@ export async function nutritionPlanSummary(
     .eq("plan_id", plan.id);
 
   return { hasPlan: true, mealCount: count ?? 0 };
+}
+
+/** Always fail closed when a profile is missing or the flag cannot be read. */
+export async function nutritionEnabled(supabase: SupabaseClient, clientId: string): Promise<boolean> {
+  const { data, error } = await supabase.from("profiles").select("nutrition_enabled").eq("id", clientId).maybeSingle();
+  return !error && data?.nutrition_enabled === true;
+}
+async function canLoadNutrition(supabase: SupabaseClient, clientId: string, staffEditing: boolean) {
+  if (staffEditing) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return false;
+    const { data } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+    if (data?.role === "admin" || data?.role === "manager") return true;
+  }
+  return nutritionEnabled(supabase, clientId);
 }

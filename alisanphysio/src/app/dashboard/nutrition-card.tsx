@@ -8,14 +8,17 @@ import { mealsCount, t, type Lang } from "@/lib/i18n";
  * plan, so the empty state stays muted and quiet rather than a big empty hero.
  */
 export default function NutritionCard({
+  enabled = false,
   hasPlan,
   mealCount,
   lang,
 }: {
+  enabled?: boolean;
   hasPlan: boolean;
   mealCount: number;
   lang: Lang;
 }) {
+  if (!enabled) return null;
   if (!hasPlan) {
     // Muted, dimmed "no plan yet" state — present but doesn't draw attention.
     return (

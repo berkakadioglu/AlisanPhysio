@@ -4,8 +4,8 @@ import { notFound } from "next/navigation";
 import { requireStaff } from "@/lib/admin-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { BRAND_NAME } from "@/lib/constants";
-import type { Profile, Program, WeeklyReview } from "@/lib/types";
-import { bucketForWeekStart, type Bucket } from "@/lib/week";
+import type { Profile, ClientProgram, ProgramReview } from "@/lib/types";
+import { bucketForMonthStart, type Bucket } from "@/lib/month";
 import { formatDay, isLang, t, type Lang } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n-server";
 import AdminHeader from "@/app/admin/admin-header";
@@ -14,15 +14,16 @@ import ProgramExportButton from "@/components/program-export-button";
 import ProgramCard from "@/app/dashboard/program-card";
 import NewProgramMenu from "./new-program-menu";
 import ResetPasswordButton from "./reset-password-button";
+import NutritionToggle from "./nutrition-toggle";
 import ManageClientButton from "./manage-client-button";
 import SendNotificationButton from "./send-notification-button";
-import WeeklyReviewsList from "./weekly-reviews-list";
+import ProgramReviewsList from "./program-reviews-list";
 
 export const metadata: Metadata = {
   title: `Client · ${BRAND_NAME}`,
 };
 
-type ProgramWithCount = Program & {
+type ProgramWithCount = ClientProgram & {
   exercises: { count: number }[];
   program_days: { title: string | null; order_index: number }[];
 };
@@ -34,7 +35,7 @@ function dayTitlesOf(p: ProgramWithCount): string[] {
 }
 
 const SECTIONS: { key: Bucket; labelKey: string; emptyKey: string }[] = [
-  { key: "current", labelKey: "dash.thisWeek", emptyKey: "admin.emptyCurrent" },
+  { key: "current", labelKey: "dash.thisMonth", emptyKey: "admin.emptyCurrent" },
   { key: "upcoming", labelKey: "bucket.upcoming", emptyKey: "admin.emptyUpcoming" },
   { key: "past", labelKey: "bucket.past", emptyKey: "admin.emptyPast" },
 ];
@@ -54,7 +55,7 @@ export default async function AdminClientDetailPage({
 
   const { data: client } = await supabase
     .from("profiles")
-    .select("id, full_name, role, created_at, height_cm, membership, membership_end_date")
+    .select("id, full_name, role, created_at, timezone, height_cm, membership, membership_end_date, nutrition_enabled")
     .eq("id", id)
     .maybeSingle<Profile>();
 
@@ -77,19 +78,21 @@ export default async function AdminClientDetailPage({
   const { data: programs } = await supabase
     .from("programs")
     .select(
-      "id, client_id, title, week_start_date, notes, created_at, exercises(count), program_days(title, order_index)",
+      "id, kind, client_id, title, month_start_date, notes, created_at, exercises(count), program_days(title, order_index)",
     )
+    .eq("kind", "client")
     .eq("client_id", id)
-    .order("week_start_date", { ascending: false })
+    .order("month_start_date", { ascending: false })
     .returns<ProgramWithCount[]>();
 
-  // This user's submitted weekly reviews (staff read via RLS).
+  // This user's submitted monthly reviews (staff read via RLS).
   const { data: reviews } = await supabase
-    .from("weekly_reviews")
-    .select("id, user_id, week_start, days_attended, programs_done, hard_exercises, note, created_at")
-    .eq("user_id", id)
-    .order("week_start", { ascending: false })
-    .returns<WeeklyReview[]>();
+    .from("program_reviews")
+    .select("id, client_id, program_id, days_attended, programs_done, hard_exercises, note, created_at, programs!inner(title, month_start_date, kind)")
+    .eq("client_id", id)
+    .eq("programs.kind", "client")
+    .order("created_at", { ascending: false })
+    .returns<ProgramReview[]>();
 
   const rows = programs ?? [];
   const buckets: Record<Bucket, ProgramWithCount[]> = {
@@ -97,14 +100,14 @@ export default async function AdminClientDetailPage({
     current: [],
     upcoming: [],
   };
-  for (const p of rows) buckets[bucketForWeekStart(p.week_start_date)].push(p);
+  for (const p of rows) buckets[bucketForMonthStart(p.month_start_date, new Date(), client.timezone)].push(p);
   buckets.upcoming.reverse();
 
   // Summaries (most recent first) for the "copy from previous" picker.
   const programSummaries = rows.map((p) => ({
     id: p.id,
     title: p.title,
-    weekStartDate: p.week_start_date,
+    monthStartDate: p.month_start_date,
     dayTitles: dayTitlesOf(p),
     exerciseCount: p.exercises[0]?.count ?? 0,
   }));
@@ -166,6 +169,7 @@ export default async function AdminClientDetailPage({
             >
               {t(lang, "nutri.managePlan")}
             </Link>
+            <NutritionToggle clientId={id} enabled={client.nutrition_enabled} />
             <ManageClientButton
               clientId={id}
               fullName={client.full_name ?? ""}
@@ -181,7 +185,7 @@ export default async function AdminClientDetailPage({
             />
             <ResetPasswordButton clientId={id} />
             <SendNotificationButton userId={id} userName={displayName} />
-            <NewProgramMenu clientId={id} programs={programSummaries} />
+            <NewProgramMenu clientId={id} programs={programSummaries} allowCatalogue={client.role === "client"} />
           </div>
         </div>
 
@@ -207,7 +211,7 @@ export default async function AdminClientDetailPage({
                       <ProgramCard
                         id={program.id}
                         title={program.title}
-                        weekStartDate={program.week_start_date}
+                        monthStartDate={program.month_start_date}
                         notes={program.notes}
                         exerciseCount={program.exercises[0]?.count ?? 0}
                         dayTitles={dayTitlesOf(program)}
@@ -239,7 +243,7 @@ export default async function AdminClientDetailPage({
             </section>
           ))}
 
-          {/* Weekly reviews the user submitted (read-only for staff). */}
+          {/* Monthly reviews the user submitted (read-only for staff). */}
           <section aria-labelledby="sec-reviews">
             <div className="mb-4 flex items-center gap-2.5 px-1">
               <h2
@@ -252,7 +256,7 @@ export default async function AdminClientDetailPage({
                 {reviews?.length ?? 0}
               </span>
             </div>
-            <WeeklyReviewsList reviews={reviews ?? []} lang={lang} />
+            <ProgramReviewsList reviews={reviews ?? []} lang={lang} />
           </section>
         </div>
       </main>

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { BRAND_NAME } from "@/lib/constants";
 import { loadDashboardData } from "@/lib/dashboard-data";
-import { reviewedWeekSet } from "@/lib/reviews";
+import { reviewedProgramSet } from "@/lib/reviews";
 import { t } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n-server";
 import DashboardSectionIntro from "@/components/dashboard-section-intro";
@@ -14,15 +14,15 @@ export const metadata: Metadata = {
 export default async function ProgrammePage() {
   const { buckets } = await loadDashboardData();
   const lang = await getLang();
-  const reviewedWeeks = await reviewedWeekSet();
+  const reviewedPrograms = await reviewedProgramSet();
 
   const groups = [
     {
       id: "current-programmes",
-      label: t(lang, "dash.thisWeek"),
+      label: t(lang, "dash.thisMonth"),
       programs: buckets.current,
-      empty: t(lang, "dash.noThisWeekBody"),
-      review: { lang, reviewedWeeks },
+      empty: t(lang, "dash.noThisMonthBody"),
+      review: { lang, reviewedPrograms },
     },
     {
       id: "upcoming-programmes",
@@ -36,7 +36,7 @@ export default async function ProgrammePage() {
       label: t(lang, "list.pastTitle"),
       programs: buckets.past,
       empty: t(lang, "list.emptyPast"),
-      review: { lang, reviewedWeeks },
+      review: { lang, reviewedPrograms },
     },
   ];
 

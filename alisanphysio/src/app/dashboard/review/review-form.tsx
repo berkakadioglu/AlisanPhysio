@@ -19,7 +19,8 @@ const primaryBtn =
   "rounded-xl bg-brand-solid px-5 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:bg-brand-solid-hover disabled:cursor-not-allowed disabled:opacity-60";
 
 export default function ReviewForm({
-  weekStart,
+  programId,
+  maxDays,
   programs,
   initialDays,
   initialDone,
@@ -27,7 +28,8 @@ export default function ReviewForm({
   initialNote,
   isEdit,
 }: {
-  weekStart: string;
+  programId: string;
+  maxDays: number;
   programs: ReviewProgram[];
   initialDays: string;
   initialDone: string[];
@@ -67,7 +69,7 @@ export default function ReviewForm({
     setError(null);
     setPending(true);
     const res = await submitReview({
-      weekStart,
+      programId,
       daysAttended: days,
       programsDone: [...done].map((id) => ({ id, title: programTitle.get(id) ?? "" })),
       hardExercises: [...hard].map((id) => ({ id, name: exerciseName.get(id) ?? "" })),
@@ -84,7 +86,8 @@ export default function ReviewForm({
   }
 
   return (
-    <form onSubmit={submit} className="space-y-6">
+    <form onSubmit={submit}>
+      <fieldset disabled={isEdit || pending} className="min-w-0 space-y-6">
       {/* Days attended */}
       <section className={card}>
         <label htmlFor="rv-days" className="block text-sm font-medium text-foreground">
@@ -95,7 +98,7 @@ export default function ReviewForm({
           type="number"
           inputMode="numeric"
           min="0"
-          max="7"
+          max={maxDays}
           value={days}
           onChange={(e) => setDays(e.target.value)}
           className="mt-2 w-24 rounded-xl border border-border bg-surface px-3.5 py-2.5 text-sm text-foreground shadow-sm outline-none transition focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
@@ -185,7 +188,7 @@ export default function ReviewForm({
         </p>
       )}
 
-      <div className="flex justify-end">
+      {!isEdit && <div className="flex justify-end">
         <button type="submit" disabled={pending} className={primaryBtn}>
           {pending
             ? t("common.saving")
@@ -193,7 +196,8 @@ export default function ReviewForm({
               ? t("review.update")
               : t("review.submit")}
         </button>
-      </div>
+      </div>}
+      </fieldset>
     </form>
   );
 }

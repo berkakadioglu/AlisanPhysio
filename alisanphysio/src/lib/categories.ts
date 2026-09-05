@@ -6,28 +6,9 @@ import type {
   LibraryExercise,
 } from "@/lib/types";
 
-/** Seed order for the default categories (matches migration 0010). */
-const DEFAULT_ORDER = [
-  "Chest",
-  "Back",
-  "Legs",
-  "Shoulders",
-  "Arms",
-  "Core",
-  "Full Body",
-  "Mobility",
-  "Rehab",
-];
-
-/** Defaults first (in seed order), then custom categories alphabetically. */
+/** Categories are table-driven and sorted by their stored names. */
 export function sortCategories<T extends ExerciseCategory>(cats: T[]): T[] {
-  return [...cats].sort((a, b) => {
-    if (a.is_default !== b.is_default) return a.is_default ? -1 : 1;
-    if (a.is_default && b.is_default) {
-      return DEFAULT_ORDER.indexOf(a.name) - DEFAULT_ORDER.indexOf(b.name);
-    }
-    return a.name.localeCompare(b.name);
-  });
+  return [...cats].sort((a, b) => a.name.localeCompare(b.name));
 }
 
 /**

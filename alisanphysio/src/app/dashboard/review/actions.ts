@@ -1,65 +1,47 @@
 "use server";
-
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import type { ReviewExerciseRef, ReviewProgramRef } from "@/lib/types";
-import type { SupabaseClient } from "@supabase/supabase-js";
-
-type ActionResult = { ok: true } | { ok: false; error: string };
-
-/** Runs as the signed-in user; RLS scopes every write to their own rows. */
-async function requireUser(): Promise<{ supabase: SupabaseClient; userId: string }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-  return { supabase, userId: user.id };
-}
-
-/** Upsert the signed-in user's review for one week (one row per user+week). */
+import { getLang } from "@/lib/i18n-server";
+import { t } from "@/lib/i18n";
+import { isReviewDue, daysInMonth } from "@/lib/month";
+import type { ReviewExerciseRef, ReviewProgramRef, ClientProgram } from "@/lib/types";
 export async function submitReview(input: {
-  weekStart: string;
-  daysAttended: string;
-  programsDone: ReviewProgramRef[];
-  hardExercises: ReviewExerciseRef[];
-  note: string;
-}): Promise<ActionResult> {
-  const { supabase, userId } = await requireUser();
-
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(input.weekStart)) {
-    return { ok: false, error: "Invalid week." };
-  }
-
-  const daysRaw = input.daysAttended.trim();
-  let daysAttended: number | null = null;
-  if (daysRaw !== "") {
-    const n = Number(daysRaw);
-    if (Number.isFinite(n)) daysAttended = Math.max(0, Math.min(7, Math.round(n)));
-  }
-
-  const { error } = await supabase.from("weekly_reviews").upsert(
-    {
-      user_id: userId,
-      week_start: input.weekStart,
-      days_attended: daysAttended,
-      programs_done: input.programsDone,
-      hard_exercises: input.hardExercises,
-      note: input.note.trim() || null,
-    },
-    { onConflict: "user_id,week_start" },
-  );
-  if (error) return { ok: false, error: error.message };
-
-  // Resolve the "weekly review is ready" nudge for that week.
-  await supabase
-    .from("notifications")
-    .update({ read: true })
-    .eq("user_id", userId)
-    .eq("dedupe_key", `weekly_review:${input.weekStart}`);
-
-  revalidatePath("/dashboard/review");
-  revalidatePath("/dashboard");
+  programId: string; daysAttended: string; programsDone: ReviewProgramRef[];
+  hardExercises: ReviewExerciseRef[]; note: string;
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  const [supabase, lang] = await Promise.all([createClient(), getLang()]);
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+  const fail = (key: string) => ({ ok: false as const, error: t(lang, key) });
+  if (!/^[0-9a-f-]{36}$/i.test(input.programId)) return fail("err.reviewNoPrograms");
+  const [programResult, profile, existing] = await Promise.all([
+    supabase.from("programs").select("*").eq("kind", "client").eq("client_id", user.id).eq("id", input.programId).maybeSingle<ClientProgram>(),
+    supabase.from("profiles").select("timezone").eq("id", user.id).maybeSingle(),
+    supabase.from("program_reviews").select("id").eq("client_id", user.id).eq("program_id", input.programId).maybeSingle(),
+  ]);
+  if (programResult.error || profile.error || existing.error) return fail("err.reviewSave");
+  const program = programResult.data;
+  if (!program) return fail("err.reviewNoPrograms");
+  if (existing.data) return fail("err.reviewAlreadySubmitted");
+  if (!isReviewDue(program.month_start_date, new Date(), profile.data?.timezone)) return fail("review.notDue");
+  const days = input.daysAttended.trim() === "" ? null : Number(input.daysAttended);
+  if (days !== null && (!Number.isInteger(days) || days < 0 || days > daysInMonth(program.month_start_date))) return fail("err.reviewDays");
+  if (input.note.length > 4000 || !Array.isArray(input.programsDone) || !Array.isArray(input.hardExercises)) return fail("err.reviewSave");
+  // Resolve selected labels server-side: callers cannot invent foreign snapshots.
+  const { data: exercises, error: exerciseError } = await supabase.from("exercises").select("id, name").eq("program_id", program.id);
+  if (exerciseError) return fail("err.reviewSave");
+  const names = new Map((exercises ?? []).map((ex) => [ex.id as string, ex.name as string]));
+  if (input.programsDone.some((p) => p.id !== program.id) || input.hardExercises.some((ex) => !names.has(ex.id))) return fail("err.reviewSelection");
+  const { error } = await supabase.from("program_reviews").insert({
+    client_id: user.id, program_id: program.id, days_attended: days,
+    programs_done: input.programsDone.length ? [{ id: program.id, title: program.title }] : [],
+    hard_exercises: [...new Set(input.hardExercises.map((ex) => ex.id))].map((id) => ({ id, name: names.get(id) })),
+    note: input.note.trim() || null,
+  });
+  if (error) return fail(error.code === "23505" ? "err.reviewAlreadySubmitted" : error.message.includes("review_not_due") ? "review.notDue" : "err.reviewSave");
+  await supabase.from("notifications").update({ read: true }).eq("user_id", user.id).eq("dedupe_key", `program_review:${program.id}`);
+  revalidatePath("/dashboard", "layout");
+  revalidatePath(`/admin/clients/${user.id}`);
   return { ok: true };
 }

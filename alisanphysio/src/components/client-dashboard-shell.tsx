@@ -71,11 +71,13 @@ export default function ClientDashboardShell({
   identity,
   tabs,
   navigationLabel,
+  footer,
   children,
 }: {
   identity: DashboardIdentity;
   tabs: DashboardTab[];
   navigationLabel: string;
+  footer: React.ReactNode;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -135,6 +137,7 @@ export default function ClientDashboardShell({
 
         <div className="min-w-0 p-4 sm:p-6 lg:p-8">{children}</div>
       </div>
+      <footer className="studio-shell-footer">{footer}</footer>
     </div>
   );
 }

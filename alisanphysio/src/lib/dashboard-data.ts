@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import type { Profile, Program } from "@/lib/types";
-import { bucketForWeekStart, type Bucket } from "@/lib/week";
+import type { Profile, ClientProgram } from "@/lib/types";
+import { bucketForMonthStart, type Bucket } from "@/lib/month";
 
 /** Program row plus embedded exercise count and its days (for the summary). */
-export type ProgramWithCount = Program & {
+export type ProgramWithCount = ClientProgram & {
   exercises: { count: number }[];
   program_days: { title: string | null; order_index: number }[];
 };
@@ -22,7 +22,7 @@ export interface DashboardData {
 }
 
 /**
- * Shared loader for the dashboard family of pages (This week / Past / Upcoming).
+ * Shared loader for the dashboard family of pages (This month / Past / Upcoming).
  * Auth guard + data fetching + bucketing are identical to what the single
  * dashboard page used before — just extracted so the three routes reuse it.
  * RLS still scopes every row to the signed-in client.
@@ -41,22 +41,24 @@ export async function loadDashboardData(): Promise<DashboardData> {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, full_name, role, created_at")
+    .select("id, full_name, role, created_at, timezone, nutrition_enabled")
     .eq("id", user.id)
     .single<Profile>();
 
   // Scope to the signed-in user's OWN programs. Staff (admin/manager) can read
   // every program via RLS, so the client-facing dashboard MUST filter explicitly
   // — otherwise a staff member's own dashboard would show everyone's programs.
-  const { data: programs } = await supabase
+  const { data: programs, error: programsError } = await supabase
     .from("programs")
     .select(
-      "id, client_id, title, week_start_date, notes, created_at, exercises(count), program_days(title, order_index)",
+      "id, kind, client_id, title, month_start_date, notes, created_at, exercises(count), program_days(title, order_index)",
     )
+    .eq("kind", "client")
     .eq("client_id", user.id)
-    .order("week_start_date", { ascending: false })
+    .order("month_start_date", { ascending: false })
     .returns<ProgramWithCount[]>();
 
+  if (programsError) throw new Error("Could not load programmes");
   const rows = programs ?? [];
 
   const buckets: Record<Bucket, ProgramWithCount[]> = {
@@ -65,7 +67,7 @@ export async function loadDashboardData(): Promise<DashboardData> {
     upcoming: [],
   };
   for (const program of rows) {
-    buckets[bucketForWeekStart(program.week_start_date)].push(program);
+    buckets[bucketForMonthStart(program.month_start_date, new Date(), profile?.timezone)].push(program);
   }
   // Upcoming reads best soonest-first; past/current stay most-recent-first.
   buckets.upcoming.reverse();

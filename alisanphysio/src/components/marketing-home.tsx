@@ -12,18 +12,15 @@ import {
   Play,
   Plus,
   RefreshCw,
-  Star,
   Stethoscope,
   type LucideIcon,
 } from "lucide-react";
 import type { Lang } from "@/lib/i18n";
 import {
   MARKETING,
-  marketingTemplate,
   marketingText,
 } from "@/lib/marketing-content";
 import { youtubeEmbedUrl } from "@/lib/youtube";
-import { MarketingPricingPlans } from "@/components/marketing-pricing";
 
 const benefitIcons: Record<string, LucideIcon> = {
   stethoscope: Stethoscope,
@@ -80,9 +77,7 @@ export default function MarketingHome({ lang }: { lang: Lang }) {
   const about = MARKETING.about;
   const why = MARKETING.why;
   const demoEntry = MARKETING.demoEntry;
-  const reviews = MARKETING.reviews;
-  const pricing = MARKETING.pricing;
-  const cta = MARKETING.cta;
+  const next = MARKETING.next;
   const headlineLines = marketingText(lang, hero.headline);
 
   return (
@@ -251,6 +246,7 @@ export default function MarketingHome({ lang }: { lang: Lang }) {
       </section>
 
       <div
+        id="ticker"
         className="marketing-ticker"
         aria-label={marketingText(lang, MARKETING.ticker.label)}
       >
@@ -268,92 +264,23 @@ export default function MarketingHome({ lang }: { lang: Lang }) {
         </div>
       </div>
 
-      <section id="reviews" className="marketing-reviews" aria-labelledby="reviews-heading">
-        <div className="marketing-container">
-          <div className="marketing-section-heading">
-            <div className="marketing-section-kicker" data-marketing-reveal>
-              <SectionIndex value={4} />
-              <p>{marketingText(lang, reviews.eyebrow)}</p>
-            </div>
-            <h2 id="reviews-heading" data-marketing-reveal>
-              {marketingText(lang, reviews.title)}
-            </h2>
-            <p data-marketing-reveal>{marketingText(lang, reviews.intro)}</p>
+      <section id="next" className="marketing-next" aria-labelledby="next-heading">
+        <div className="marketing-container marketing-next__inner">
+          <div className="marketing-section-kicker" data-marketing-reveal>
+            <SectionIndex value={4} />
+            <p>{marketingText(lang, next.eyebrow)}</p>
           </div>
-          <div className="marketing-review-grid">
-            {reviews.items.map((review, index) => (
-              <figure
-                key={review.name.en}
-                className={`marketing-review marketing-review--${index + 1}`}
-                data-marketing-reveal
-              >
-                <div
-                  className="marketing-review__rating"
-                  aria-label={marketingTemplate(
-                    marketingText(lang, reviews.ratingLabel),
-                    { rating: review.rating },
-                  )}
-                >
-                  {Array.from({ length: review.rating }).map((_, star) => (
-                    <Star key={star} fill="currentColor" aria-hidden />
-                  ))}
-                </div>
-                <blockquote>“{marketingText(lang, review.quote)}”</blockquote>
-                <figcaption>
-                  <Image
-                    src={reviews.avatar}
-                    alt={marketingText(lang, reviews.avatarAlt)}
-                    width={48}
-                    height={48}
-                  />
-                  <span>
-                    <strong>{marketingText(lang, review.name)}</strong>
-                    <small>{marketingText(lang, review.descriptor)}</small>
-                  </span>
-                </figcaption>
-              </figure>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="pricing" className="marketing-pricing" aria-labelledby="pricing-heading">
-        <div className="marketing-container">
-          <div className="marketing-section-heading marketing-section-heading--split">
-            <div className="marketing-section-kicker" data-marketing-reveal>
-              <SectionIndex value={5} />
-              <p>{marketingText(lang, pricing.eyebrow)}</p>
-            </div>
-            <h2 id="pricing-heading" data-marketing-reveal>
-              {marketingText(lang, pricing.title)}
-            </h2>
-            <p data-marketing-reveal>{marketingText(lang, pricing.intro)}</p>
-          </div>
-          <MarketingPricingPlans lang={lang} />
-          <div className="marketing-pricing__foot" data-marketing-reveal>
-            <p>{marketingText(lang, pricing.gettingStartedNote)}</p>
-            <Link href="/pricing" className="marketing-text-link">
-              {marketingText(lang, pricing.viewAllCta)}
+          <h2 id="next-heading" data-marketing-reveal>
+            {marketingText(lang, next.title)}
+          </h2>
+          <p data-marketing-reveal>{marketingText(lang, next.body)}</p>
+          <div className="marketing-button-row" data-marketing-reveal>
+            <Link href="/pricing" className="marketing-button marketing-button--primary">
+              {marketingText(lang, next.primaryCta)}
               <ArrowUpRight aria-hidden />
             </Link>
-          </div>
-        </div>
-      </section>
-
-      <section id="cta" className="marketing-cta" aria-labelledby="cta-heading">
-        <div className="marketing-container marketing-cta__inner">
-          <div className="marketing-section-kicker" data-marketing-reveal>
-            <SectionIndex value={6} />
-            <p>{marketingText(lang, cta.eyebrow)}</p>
-          </div>
-          <h2 id="cta-heading" data-marketing-reveal>
-            {marketingText(lang, cta.title)}
-          </h2>
-          <div data-marketing-reveal>
-            <p>{marketingText(lang, cta.body)}</p>
-            <Link href="/pricing" className="marketing-button marketing-button--light">
-              {marketingText(lang, cta.button)}
-              <ArrowUpRight aria-hidden />
+            <Link href="/fms" className="marketing-button marketing-button--secondary">
+              {marketingText(lang, next.secondaryCta)}
             </Link>
           </div>
         </div>

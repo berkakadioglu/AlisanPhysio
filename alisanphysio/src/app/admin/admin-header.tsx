@@ -37,6 +37,7 @@ export default async function AdminHeader({
     { count: pendingAppointmentCount },
     { count: pendingProposalCount },
     requestResult,
+    fmsResult,
   ] = await Promise.all([
     generateDueAppointmentReminders(supabase),
     supabase
@@ -53,6 +54,7 @@ export default async function AdminHeader({
           .select("id", { count: "exact", head: true })
           .eq("status", "new")
       : Promise.resolve({ count: 0 }),
+    supabase.from("fms_bookings").select("id", { count: "exact", head: true }).eq("status", "booked").gte("starts_at", new Date().toISOString()),
   ]);
   const schedulingPendingCount =
     (pendingAppointmentCount ?? 0) + (pendingProposalCount ?? 0);
@@ -63,6 +65,7 @@ export default async function AdminHeader({
   // Mobile drawer: top-level links + the "Content" and "Me" grouped sections.
   const mobileLinks: MobileNavLink[] = [
     { href: "/admin", label: t(lang, "admin.clients") },
+    { href: "/admin/fms", label: t(lang, "fms.nav"), badge: fmsResult.count ?? 0 },
     ...(isAdmin
       ? [
           {
@@ -81,6 +84,7 @@ export default async function AdminHeader({
   const contentGroup: MobileNavGroup = {
     label: t(lang, "nav.content"),
     items: [
+      { href: "/admin/programs", label: t(lang, "catalog.heading") },
       { href: "/admin/library", label: t(lang, "nav.exerciseLibrary") },
       { href: "/admin/food-library", label: t(lang, "nav.foodLibrary") },
       { href: "/admin/templates", label: t(lang, "nav.dayTemplates") },
@@ -124,6 +128,10 @@ export default async function AdminHeader({
                 )}
               </Link>
             )}
+            <Link href="/admin/fms" className={`${navLink} inline-flex items-center gap-1.5`}>
+              {t(lang, "fms.nav")}
+              {(fmsResult.count ?? 0) > 0 && <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-solid px-1.5 text-[10px] font-bold text-white">{(fmsResult.count ?? 0) > 99 ? "99+" : fmsResult.count}</span>}
+            </Link>
             <ContentNav />
             <Link
               href="/admin/availability"

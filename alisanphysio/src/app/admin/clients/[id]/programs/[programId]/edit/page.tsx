@@ -1,108 +1,24 @@
-import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requireStaff } from "@/lib/admin-auth";
-import { BRAND_NAME } from "@/lib/constants";
-import type { Exercise, Program, ProgramDay } from "@/lib/types";
 import { loadLibrary } from "@/lib/categories";
 import { loadTemplatesForPicker } from "@/lib/templates";
+import { loadEditorDays } from "@/lib/program-editor-loader";
+import { getLang } from "@/lib/i18n-server";
+import { t } from "@/lib/i18n";
+import type { ClientProgram } from "@/lib/types";
 import AdminHeader from "@/app/admin/admin-header";
-import ProgramEditor, {
-  type EditorDay,
-  type EditorInitial,
-} from "@/app/admin/program-editor";
-
-export const metadata: Metadata = {
-  title: `Edit program · ${BRAND_NAME}`,
-};
-
-export default async function EditProgramPage({
-  params,
-}: {
-  params: Promise<{ id: string; programId: string }>;
-}) {
-  const { id, programId } = await params;
-  const { supabase } = await requireStaff();
-
-  const { data: program } = await supabase
-    .from("programs")
-    .select("id, client_id, title, week_start_date, notes, created_at")
-    .eq("id", programId)
-    .maybeSingle<Program>();
-
-  if (!program || program.client_id !== id) {
-    notFound();
-  }
-
-  const [
-    { data: exercises },
-    { data: dayRows },
-    { exercises: library, categories },
-    templates,
-    { data: usedRows },
-  ] = await Promise.all([
-    supabase
-      .from("exercises")
-      .select("id, program_id, name, sets, reps, instructions, media_url, order_index, library_id, day_id")
-      .eq("program_id", programId)
-      .order("order_index", { ascending: true })
-      .returns<Exercise[]>(),
-    supabase
-      .from("program_days")
-      .select("id, program_id, title, order_index, created_at")
-      .eq("program_id", programId)
-      .order("order_index", { ascending: true })
-      .returns<ProgramDay[]>(),
-    loadLibrary(supabase),
-    loadTemplatesForPicker(supabase),
-    supabase
-      .from("programs")
-      .select("week_start_date")
-      .eq("client_id", id)
-      .returns<{ week_start_date: string }[]>(),
+import ProgramEditor from "@/app/admin/program-editor";
+export default async function EditProgramPage({ params }: { params: Promise<{ id: string; programId: string }> }) {
+  const [{ id, programId }, { supabase }, lang] = await Promise.all([params, requireStaff(), getLang()]);
+  const { data: program } = await supabase.from("programs").select("*").eq("kind", "client").eq("client_id", id).eq("id", programId).maybeSingle<ClientProgram>();
+  if (!program) notFound();
+  const [days, { exercises: library, categories }, templates, used, client] = await Promise.all([
+    loadEditorDays(supabase, programId, t(lang, "editor.ungrouped")), loadLibrary(supabase), loadTemplatesForPicker(supabase),
+    supabase.from("programs").select("month_start_date").eq("kind", "client").eq("client_id", id),
+    supabase.from("profiles").select("timezone").eq("id", id).maybeSingle(),
   ]);
-  const usedWeeks = (usedRows ?? []).map((r) => r.week_start_date);
-
-  const allExercises = exercises ?? [];
-  const toEditor = (e: Exercise) => ({
-    name: e.name,
-    sets: e.sets,
-    reps: e.reps,
-    instructions: e.instructions,
-    media_url: e.media_url,
-    library_id: e.library_id,
-  });
-
-  let days: EditorDay[];
-  if (dayRows && dayRows.length > 0) {
-    days = dayRows.map((d) => ({
-      title: d.title ?? "",
-      exercises: allExercises.filter((e) => e.day_id === d.id).map(toEditor),
-    }));
-  } else {
-    days = [{ title: "", exercises: allExercises.map(toEditor) }];
-  }
-
-  const initial: EditorInitial = {
-    title: program.title,
-    weekStartDate: program.week_start_date,
-    notes: program.notes ?? "",
-    days,
-  };
-
-  return (
-    <div className="min-h-screen">
-      <AdminHeader container="max-w-3xl" />
-      <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8 sm:py-14">
-        <ProgramEditor
-          clientId={id}
-          programId={programId}
-          initial={initial}
-          library={library}
-          categories={categories}
-          templates={templates}
-          usedWeeks={usedWeeks}
-        />
-      </main>
-    </div>
-  );
+  if (used.error) throw new Error("Could not load programme months");
+  return <div className="min-h-screen"><AdminHeader container="max-w-3xl" /><main className="mx-auto max-w-3xl px-5 py-10 sm:px-8 sm:py-14">
+    <ProgramEditor clientId={id} timeZone={client.data?.timezone} programId={programId} initial={{ title: program.title, monthStartDate: program.month_start_date, notes: program.notes ?? "", days }} library={library} categories={categories} templates={templates} usedMonths={(used.data ?? []).map((p) => p.month_start_date)} />
+  </main></div>;
 }

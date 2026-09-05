@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, CalendarClock, Mail } from "lucide-react";
-import type { AssessmentRequest } from "@/lib/assessment";
+import { assessmentPlanLabel, type AssessmentRequest } from "@/lib/assessment";
 import { requireAdmin } from "@/lib/admin-auth";
 import { bmiCategory, computeBmi } from "@/lib/bmi";
 import { BRAND_NAME } from "@/lib/constants";
@@ -69,7 +69,7 @@ export default async function AdminRequestDetailPage({
   const { data } = await supabase
     .from("assessment_requests")
     .select(
-      "id, created_at, full_name, email, phone, country, city, preferred_language, birth_year, sex, height_cm, weight_kg, primary_goal, training_experience, days_per_week, equipment_access, injury_history, medical_notes, selected_plan, message, status, admin_note, reviewed_at",
+      "id, created_at, full_name, email, phone, country, city, preferred_language, birth_year, sex, height_cm, weight_kg, primary_goal, biggest_expectation, training_experience, days_per_week, equipment_access, injury_history, medical_notes, selected_plan, message, status, admin_note, reviewed_at",
     )
     .eq("id", id)
     .maybeSingle<AssessmentRequest>();
@@ -89,10 +89,7 @@ export default async function AdminRequestDetailPage({
     const match = options.find((option) => option.value === value);
     return match ? marketingText(lang, match.label) : clean(value);
   };
-  const plan = MARKETING.pricing.plans.find(
-    (item) => item.id === data.selected_plan,
-  );
-  const planLabel = plan ? marketingText(lang, plan.name) : empty;
+  const planLabel = assessmentPlanLabel(lang, data.selected_plan);
   const approximateAge = data.birth_year
     ? new Date().getUTCFullYear() - data.birth_year
     : null;
@@ -172,6 +169,7 @@ export default async function AdminRequestDetailPage({
                 { label: t(lang, "requests.weight"), value: data.weight_kg == null ? empty : `${data.weight_kg} kg` },
                 { label: t(lang, "requests.bmi"), value: bmiLabel, long: true },
                 { label: t(lang, "requests.primaryGoal"), value: data.primary_goal, long: true },
+                { label: t(lang, "requests.biggestExpectation"), value: clean(data.biggest_expectation), long: true },
               ]}
             />
             <DetailGroup

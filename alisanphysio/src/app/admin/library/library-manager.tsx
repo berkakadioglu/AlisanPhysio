@@ -204,7 +204,6 @@ function CategorySidebar({
           lang,
           categories.find((c) => c.id === activeCat) ?? {
             name: "",
-            is_default: false,
           },
         );
   const handleSelect = (id: string | null) => {
@@ -226,7 +225,7 @@ function CategorySidebar({
     }`;
 
   return (
-    <aside className="w-full flex-none rounded-2xl border border-border bg-surface p-3 shadow-soft lg:w-64">
+    <aside className="w-full flex-none rounded-2xl border border-border bg-surface p-3 shadow-soft lg:w-80">
       {/* Mobile: compact toggle showing the active category */}
       <button
         type="button"
@@ -238,7 +237,7 @@ function CategorySidebar({
           {t("cat.heading")}
         </span>
         <span className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-foreground">
-          <span className="truncate">{activeLabel}</span>
+          <span className="min-w-0 whitespace-normal break-words">{activeLabel}</span>
           <ChevronDown
             className={`h-4 w-4 flex-none transition ${catOpen ? "rotate-180" : ""}`}
             aria-hidden
@@ -258,7 +257,7 @@ function CategorySidebar({
             onClick={() => handleSelect(null)}
             className={filterBtn(activeCat === null)}
           >
-          <span className="truncate">{t("cat.all")}</span>
+          <span className="min-w-0 whitespace-normal break-words">{t("cat.all")}</span>
           <span className={countPill(activeCat === null)}>{total}</span>
         </button>
 
@@ -282,10 +281,10 @@ function CategorySidebar({
                 onClick={() => handleSelect(c.id)}
                 className={filterBtn(activeCat === c.id)}
               >
-                <span className="truncate">{categoryLabel(lang, c)}</span>
+                <span className="min-w-0 whitespace-normal break-words">{categoryLabel(lang, c)}</span>
                 <span className={countPill(activeCat === c.id)}>{c.count}</span>
               </button>
-              {!c.is_default && (
+              {
                 <span className="flex flex-none items-center opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100">
                   <button
                     type="button"
@@ -310,7 +309,7 @@ function CategorySidebar({
                     <Trash2 className="h-3.5 w-3.5" aria-hidden />
                   </button>
                 </span>
-              )}
+              }
             </div>
           ),
         )}
@@ -422,9 +421,9 @@ function ExerciseCard({
 }) {
   const { t } = useI18n();
   return (
-    <div className="flex flex-col rounded-2xl bg-surface p-4 shadow-soft sm:p-5">
+    <div className="flex h-full min-w-0 flex-col rounded-2xl bg-surface p-4 shadow-soft sm:p-5">
       <div className="flex items-start justify-between gap-3">
-        <h3 className="min-w-0 font-semibold text-foreground">{item.name}</h3>
+        <h3 className="min-w-0 break-words font-semibold text-foreground">{item.name}</h3>
         {item.youtube_url ? (
           <span className="flex flex-none items-center gap-1 rounded-full bg-brand-tint px-2 py-0.5 text-xs font-medium text-brand">
             <Play className="h-3 w-3" fill="currentColor" strokeWidth={0} aria-hidden />
@@ -450,13 +449,11 @@ function ExerciseCard({
         </div>
       )}
 
-      {item.default_instructions && (
-        <p className="mt-2.5 line-clamp-2 text-sm text-muted-foreground">
-          {item.default_instructions}
-        </p>
-      )}
+      <div className="mb-4 mt-2.5 h-[4.5rem] text-sm leading-6 text-muted-foreground">
+        <p className="line-clamp-3 break-words">{item.default_instructions || t("lib.noInstructions")}</p>
+      </div>
 
-      <div className="mt-4 flex items-center gap-2 border-t border-border pt-3">
+      <div className="mt-auto flex items-center gap-2 border-t border-border pt-3">
         <button
           type="button"
           onClick={onEdit}
@@ -469,9 +466,9 @@ function ExerciseCard({
             type="button"
             onClick={onPreview}
             aria-label={t("lib.previewAria", { name: item.name })}
-            className="rounded-lg px-3 py-1.5 text-sm font-medium text-brand transition hover:bg-brand-tint"
+            className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-brand transition hover:bg-brand-tint"
           >
-            {t("lib.preview")}
+            <Play className="h-3.5 w-3.5" aria-hidden />{t("lib.preview")}
           </button>
         )}
       </div>

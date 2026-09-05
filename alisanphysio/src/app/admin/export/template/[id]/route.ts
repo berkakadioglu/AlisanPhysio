@@ -54,7 +54,7 @@ export async function GET(
   const doc: ProgramDoc = {
     title: template.title,
     notes: null,
-    weekStart: null,
+    monthStart: null,
     clientName: null,
     days: singleDay(exercises),
   };

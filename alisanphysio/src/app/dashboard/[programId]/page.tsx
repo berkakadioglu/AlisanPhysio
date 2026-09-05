@@ -3,10 +3,10 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { BRAND_NAME } from "@/lib/constants";
-import type { Exercise, Program, ProgramDay } from "@/lib/types";
-import { bucketForWeekStart, type Bucket } from "@/lib/week";
-import { isReviewableWeek } from "@/lib/reviews";
-import { formatWeekRange, t, type Lang } from "@/lib/i18n";
+import type { Exercise, ClientProgram, ProgramDay } from "@/lib/types";
+import { bucketForMonthStart, type Bucket } from "@/lib/month";
+import { isReviewDue, reviewContext } from "@/lib/reviews";
+import { formatMonth, t, type Lang } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n-server";
 import { parseYouTubeId } from "@/lib/youtube";
 import ReviewAction from "../review-action";
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 };
 
 const BADGE: Record<Bucket, { key: string; className: string }> = {
-  current: { key: "dash.thisWeek", className: "bg-brand-tint text-brand" },
+  current: { key: "dash.thisMonth", className: "bg-brand-tint text-brand" },
   upcoming: { key: "bucket.upcoming", className: "bg-pill text-muted-foreground" },
   past: { key: "bucket.past", className: "bg-pill text-subtle-foreground" },
 };
@@ -113,9 +113,11 @@ export default async function ProgramDetailPage({
   // else comes back empty → 404.
   const { data: program } = await supabase
     .from("programs")
-    .select("id, client_id, title, week_start_date, notes, created_at")
+    .select("id, kind, client_id, title, month_start_date, notes, created_at")
+    .eq("kind", "client")
     .eq("id", programId)
-    .maybeSingle<Program>();
+    .eq("client_id", user.id)
+    .maybeSingle<ClientProgram>();
 
   if (!program) {
     notFound();
@@ -138,22 +140,13 @@ export default async function ProgramDetailPage({
       .returns<ProgramDay[]>(),
   ]);
 
-  const badge = BADGE[bucketForWeekStart(program.week_start_date)];
+  const context = await reviewContext();
+  const badge = BADGE[bucketForMonthStart(program.month_start_date, context.now, context.timeZone)];
   const items = exercises ?? [];
   const dayList = dayRows ?? [];
 
-  // Inline review affordance: current/past weeks are reviewable, future aren't.
-  const reviewable = isReviewableWeek(program.week_start_date);
-  let reviewed = false;
-  if (reviewable) {
-    const { data: rev } = await supabase
-      .from("weekly_reviews")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("week_start", program.week_start_date)
-      .maybeSingle();
-    reviewed = !!rev;
-  }
+  const reviewed = context.reviewedPrograms.has(program.id);
+  const reviewable = reviewed || isReviewDue(program.month_start_date, context.now, context.timeZone);
 
   // Flat when there are no days, or a single untitled day. Grouped otherwise.
   const grouped =
@@ -196,7 +189,7 @@ export default async function ProgramDetailPage({
           </span>
         </div>
         <p className="mt-2 text-base text-muted-foreground">
-          {formatWeekRange(program.week_start_date, lang)}
+          {formatMonth(program.month_start_date, lang)}
         </p>
 
         {program.notes && (
@@ -213,7 +206,8 @@ export default async function ProgramDetailPage({
         {reviewable && items.length > 0 && (
           <div className="mt-8">
             <ReviewAction
-              weekStart={program.week_start_date}
+              programId={program.id}
+              monthStartDate={program.month_start_date}
               reviewed={reviewed}
               lang={lang}
               block

@@ -1,14 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { formatWeekRange } from "@/lib/i18n";
+import { formatMonth } from "@/lib/i18n";
 import { countLabel, dayLabel } from "@/lib/program-summary";
 import { useI18n } from "@/app/i18n-provider";
 
 interface ProgramCardProps {
   id: string;
   title: string;
-  weekStartDate: string;
+  monthStartDate: string;
   notes: string | null;
   exerciseCount: number;
   dayTitles?: string[];
@@ -20,7 +20,7 @@ interface ProgramCardProps {
 export default function ProgramCard({
   id,
   title,
-  weekStartDate,
+  monthStartDate,
   notes,
   exerciseCount,
   dayTitles = [],
@@ -46,7 +46,7 @@ export default function ProgramCard({
       ].join(" ")}
     >
       <p className="text-xs font-medium uppercase tracking-widest text-subtle-foreground">
-        {formatWeekRange(weekStartDate, lang)}
+        {formatMonth(monthStartDate, lang)}
       </p>
       <h3
         className={[

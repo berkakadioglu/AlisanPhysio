@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { formatDay, programsCount, reviewsCount, type Lang } from "@/lib/i18n";
+import { formatDay, reviewsCount, type Lang } from "@/lib/i18n";
 import type { Membership } from "@/lib/membership";
 import type { Role } from "@/lib/types";
 import { useI18n } from "@/app/i18n-provider";
@@ -17,7 +17,6 @@ export interface AdminUser {
   name: string | null;
   email: string;
   role: Role;
-  programCount: number;
   reviewCount: number;
   membership: Membership | null;
   membershipEndDate: string | null;
@@ -148,9 +147,6 @@ export default function AdminUsersView({ users }: { users: AdminUser[] }) {
                       {reviewsCount(lang, u.reviewCount)}
                     </span>
                   )}
-                  <span className="rounded-full bg-pill px-2.5 py-0.5 text-xs font-medium text-muted-foreground tabular-nums">
-                    {programsCount(lang, u.programCount)}
-                  </span>
                 </div>
               </div>
 
@@ -171,9 +167,6 @@ export default function AdminUsersView({ users }: { users: AdminUser[] }) {
                     {reviewsCount(lang, u.reviewCount)}
                   </span>
                 )}
-                <span className="rounded-full bg-pill px-2.5 py-0.5 text-xs font-medium text-muted-foreground tabular-nums">
-                  {programsCount(lang, u.programCount)}
-                </span>
               </div>
 
               <span

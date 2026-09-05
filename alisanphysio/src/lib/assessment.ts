@@ -1,4 +1,4 @@
-import type { Lang } from "@/lib/i18n";
+import { t, type Lang } from "@/lib/i18n";
 
 export const ASSESSMENT_STATUSES = [
   "new",
@@ -8,7 +8,20 @@ export const ASSESSMENT_STATUSES = [
 ] as const;
 
 export type AssessmentStatus = (typeof ASSESSMENT_STATUSES)[number];
-export type AssessmentPlan = "monthly" | "quarterly";
+export type AssessmentPlan = "monthly";
+export type HistoricalAssessmentPlan = AssessmentPlan | "quarterly";
+
+/** Unknown and retired plans are ignored for new requests. */
+export function normalizeAssessmentPlan(value: unknown): AssessmentPlan | null {
+  return value === "monthly" ? value : null;
+}
+
+/** Kept separate from the public offer so retired plans remain readable. */
+export function assessmentPlanLabel(lang: Lang, value: string | null): string {
+  if (value === "monthly") return t(lang, "requests.planMonthly");
+  if (value === "quarterly") return t(lang, "requests.planQuarterly");
+  return t(lang, "requests.notProvided");
+}
 
 export const TRAINING_EXPERIENCE_VALUES = [
   "none",
@@ -42,6 +55,7 @@ export interface AssessmentFormValues {
   height_cm: string;
   weight_kg: string;
   primary_goal: string;
+  biggest_expectation: string;
   training_experience: string;
   days_per_week: string;
   equipment_access: string;
@@ -75,6 +89,7 @@ export interface AssessmentInsert {
   height_cm: number | null;
   weight_kg: number | null;
   primary_goal: string;
+  biggest_expectation: string;
   training_experience: string | null;
   days_per_week: number | null;
   equipment_access: string | null;
@@ -84,7 +99,9 @@ export interface AssessmentInsert {
   message: string | null;
 }
 
-export interface AssessmentRequest extends AssessmentInsert {
+export interface AssessmentRequest extends Omit<AssessmentInsert, "biggest_expectation" | "selected_plan"> {
+  biggest_expectation: string | null;
+  selected_plan: HistoricalAssessmentPlan | null;
   id: string;
   created_at: string;
   status: AssessmentStatus;

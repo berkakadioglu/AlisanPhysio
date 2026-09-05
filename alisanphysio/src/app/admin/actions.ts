@@ -5,6 +5,7 @@ import { requireAdmin, requireStaff } from "@/lib/admin-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isLang, t, type Lang } from "@/lib/i18n";
 import { isMembership, type Membership } from "@/lib/membership";
+import { isMonthStart } from "@/lib/month";
 import { getLang } from "@/lib/i18n-server";
 import type { Role } from "@/lib/types";
 
@@ -28,9 +29,10 @@ interface DayInput {
 
 interface SaveProgramInput {
   id?: string; // present when editing
-  clientId: string;
+  kind: "client" | "catalog";
+  clientId: string | null;
   title: string;
-  weekStartDate: string; // YYYY-MM-DD
+  monthStartDate: string | null;
   notes: string;
   days: DayInput[];
 }
@@ -92,138 +94,43 @@ export async function createClientAccount(input: {
   return { ok: true };
 }
 
-/** Create or update a program with its optional days and exercises. Uses the
- *  admin's own session (RLS *_admin_all policies authorize it) — no service
- *  role needed. Days + exercises are replaced wholesale on edit, which cleanly
- *  handles add/remove/reorder at both levels. */
-export async function saveProgram(
-  input: SaveProgramInput,
-): Promise<ActionResult<{ programId: string }>> {
+/** One RPC transaction replaces the programme, including optional library inserts. */
+export async function saveProgram(input: SaveProgramInput): Promise<ActionResult<{ programId: string }>> {
   const { supabase } = await requireStaff();
   const lang = await getLang();
-
-  const title = input.title.trim();
-  const weekStartDate = input.weekStartDate;
-  if (!title) return { ok: false, error: t(lang, "err.giveTitle") };
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(weekStartDate))
+  if (!input.title.trim() || input.title.length > 300) return { ok: false, error: t(lang, "err.giveTitle") };
+  if (input.kind === "client" && (!input.clientId || !isMonthStart(input.monthStartDate)))
     return { ok: false, error: t(lang, "err.pickDate") };
-
-  // Keep days that have a title or at least one named exercise.
-  const days = input.days
-    .map((d) => ({
-      title: d.title.trim(),
-      exercises: d.exercises.filter((e) => e.name.trim() !== ""),
-    }))
-    .filter((d) => d.title !== "" || d.exercises.length > 0);
-
-  let programId = input.id;
-
-  if (programId) {
-    const { error } = await supabase
-      .from("programs")
-      .update({ title, week_start_date: weekStartDate, notes: input.notes.trim() || null })
-      .eq("id", programId);
-    if (error) return { ok: false, error: error.message };
-
-    // Replace exercises then days (exercises reference days).
-    const { error: exDelErr } = await supabase
-      .from("exercises")
-      .delete()
-      .eq("program_id", programId);
-    if (exDelErr) return { ok: false, error: exDelErr.message };
-    const { error: dayDelErr } = await supabase
-      .from("program_days")
-      .delete()
-      .eq("program_id", programId);
-    if (dayDelErr) return { ok: false, error: dayDelErr.message };
-  } else {
-    const { data, error } = await supabase
-      .from("programs")
-      .insert({
-        client_id: input.clientId,
-        title,
-        week_start_date: weekStartDate,
-        notes: input.notes.trim() || null,
-      })
-      .select("id")
-      .single();
-    if (error || !data) {
-      return { ok: false, error: error?.message ?? "Could not create program." };
-    }
-    programId = data.id as string;
+  if (input.kind === "catalog" && (input.clientId !== null || input.monthStartDate !== null))
+    return { ok: false, error: t(lang, "err.programShape") };
+  const days = input.days.map((day) => ({
+    title: day.title.trim(),
+    exercises: day.exercises.filter((ex) => ex.name.trim()).map((ex) => ({ ...ex, name: ex.name.trim() })),
+  })).filter((day) => day.title || day.exercises.length);
+  if (days.some((day) => day.exercises.some((ex) => ex.sets !== null && (!Number.isInteger(ex.sets) || ex.sets < 0))))
+    return { ok: false, error: t(lang, "err.programSets") };
+  const { data, error } = await supabase.rpc("save_program", {
+    p_id: input.id ?? null, p_kind: input.kind, p_client_id: input.clientId,
+    p_month_start_date: input.monthStartDate, p_title: input.title, p_notes: input.notes, p_days: days,
+  });
+  if (error) {
+    const key = error.code === "23505" ? "err.programMonthTaken"
+      : error.message.includes("program_reviewed_month_locked") ? "err.programMonthLocked"
+      : error.code === "23514" ? "err.programShape" : "err.programSave";
+    return { ok: false, error: t(lang, key) };
   }
-
-  // Insert days, then their exercises (with the new day_id + ordering).
-  const exerciseRows: Array<Record<string, unknown>> = [];
-
-  for (let di = 0; di < days.length; di++) {
-    const day = days[di];
-    const { data: dayRow, error: dayErr } = await supabase
-      .from("program_days")
-      .insert({
-        program_id: programId,
-        title: day.title || null,
-        order_index: di,
-      })
-      .select("id")
-      .single();
-    if (dayErr || !dayRow) {
-      return { ok: false, error: dayErr?.message ?? "Could not save a day." };
-    }
-    const dayId = dayRow.id as string;
-
-    for (let ei = 0; ei < day.exercises.length; ei++) {
-      const e = day.exercises[ei];
-      const name = e.name.trim();
-      const instructions = e.instructions?.trim() || null;
-      let libraryId = e.library_id;
-
-      // "Save to library" for a custom exercise → resolve/create the entry.
-      if (!libraryId && e.saveToLibrary) {
-        const { data: existing } = await supabase
-          .from("exercise_library")
-          .select("id")
-          .eq("name", name)
-          .maybeSingle();
-        if (existing) {
-          libraryId = existing.id as string;
-        } else {
-          const { data: created } = await supabase
-            .from("exercise_library")
-            .insert({ name, default_instructions: instructions })
-            .select("id")
-            .single();
-          if (created) libraryId = created.id as string;
-        }
-      }
-
-      exerciseRows.push({
-        program_id: programId,
-        day_id: dayId,
-        name,
-        sets: e.sets,
-        reps: e.reps?.trim() || null,
-        instructions,
-        media_url: e.media_url?.trim() || null,
-        library_id: libraryId ?? null,
-        order_index: ei,
-      });
-    }
-  }
-
-  if (exerciseRows.length > 0) {
-    const { error } = await supabase.from("exercises").insert(exerciseRows);
-    if (error) return { ok: false, error: error.message };
-  }
-
-  revalidatePath(`/admin/clients/${input.clientId}`);
-  return { ok: true, programId: programId! };
+  revalidatePath("/dashboard", "layout");
+  revalidatePath("/admin");
+  revalidatePath("/admin/programs");
+  if (input.clientId) revalidatePath(`/admin/clients/${input.clientId}`);
+  else revalidatePath(`/admin/programs/${data}/edit`);
+  return { ok: true, programId: data as string };
 }
 
 /** Delete a program (days + exercises cascade). */
 export async function deleteProgram(input: {
   programId: string;
-  clientId: string;
+  clientId: string | null;
 }): Promise<ActionResult> {
   const { supabase } = await requireStaff();
 
@@ -233,7 +140,9 @@ export async function deleteProgram(input: {
     .eq("id", input.programId);
   if (error) return { ok: false, error: error.message };
 
-  revalidatePath(`/admin/clients/${input.clientId}`);
+  if (input.clientId) revalidatePath(`/admin/clients/${input.clientId}`);
+  revalidatePath("/dashboard", "layout");
+  revalidatePath("/admin");
   return { ok: true };
 }
 

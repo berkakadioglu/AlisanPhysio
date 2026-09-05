@@ -11,7 +11,7 @@ import {
   renderToBuffer,
 } from "@react-pdf/renderer";
 import { BRAND_NAME, PDF_AUTHOR } from "@/lib/constants";
-import { formatWeekRange, t, type Lang } from "@/lib/i18n";
+import { formatMonth, t, type Lang } from "@/lib/i18n";
 import { registerPdfFonts } from "./fonts";
 
 // ---------------------------------------------------------------------------
@@ -34,8 +34,8 @@ export interface PdfDay {
 export interface ProgramDoc {
   title: string;
   notes: string | null;
-  /** ISO Monday for a program week (shows a date range on the cover); null for templates. */
-  weekStart: string | null;
+  /** First date of the programme month; null for catalogues and templates. */
+  monthStart: string | null;
   clientName: string | null;
   days: PdfDay[];
 }
@@ -278,7 +278,7 @@ function ExerciseBlock({
 }
 
 function ProgramDocument({ doc, lang }: { doc: ProgramDoc; lang: Lang }) {
-  const dateLine = doc.weekStart ? formatWeekRange(doc.weekStart, lang) : null;
+  const dateLine = doc.monthStart ? formatMonth(doc.monthStart, lang) : null;
   // A single unnamed day (e.g. a template, or a flat program) reads as one plain
   // list — no "Day 1" heading. Multiple days or any named day get headings.
   const showDayHeadings =
@@ -316,7 +316,7 @@ function ProgramDocument({ doc, lang }: { doc: ProgramDoc; lang: Lang }) {
       <Page size="A4" style={styles.page}>
         {doc.notes && doc.notes.trim() !== "" && (
           <View style={styles.notesBox} wrap={false}>
-            <Text style={styles.notesHeading}>{t(lang, "prog.notesFrom")}</Text>
+            <Text style={styles.notesHeading}>{t(lang, "pdf.notesFrom")}</Text>
             <Text style={styles.notesBody}>{doc.notes.trim()}</Text>
           </View>
         )}

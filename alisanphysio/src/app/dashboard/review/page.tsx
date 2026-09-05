@@ -3,36 +3,36 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { BRAND_NAME } from "@/lib/constants";
-import { formatWeekRange, t } from "@/lib/i18n";
+import { formatMonth, t } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n-server";
-import { prevMondayISO } from "@/lib/program-dates";
-import { bucketForWeekStart } from "@/lib/week";
+import { thisMonthISO, isReviewDue, daysInMonth } from "@/lib/month";
+import { reviewContext } from "@/lib/reviews";
 import ReviewForm, { type ReviewProgram } from "./review-form";
 
 export const metadata: Metadata = {
-  title: `Weekly review · ${BRAND_NAME}`,
+  title: `Monthly review · ${BRAND_NAME}`,
 };
 
 type ProgramRow = {
   id: string;
   title: string;
+  month_start_date: string;
   program_days: { id: string; title: string | null; order_index: number }[];
   exercises: { id: string; name: string; order_index: number; day_id: string | null }[];
 };
 
 type ReviewRow = {
   days_attended: number | null;
-  programs_done: { id: string }[];
-  hard_exercises: { id: string }[];
+  programs_done: { id: string; title: string }[];
+  hard_exercises: { id: string; name: string }[];
   note: string | null;
 };
 
-const WEEK_RE = /^\d{4}-\d{2}-\d{2}$/;
 
-export default async function WeeklyReviewPage({
+export default async function ProgramReviewPage({
   searchParams,
 }: {
-  searchParams: Promise<{ week?: string }>;
+  searchParams: Promise<{ program?: string }>;
 }) {
   const supabase = await createClient();
   const lang = await getLang();
@@ -42,26 +42,17 @@ export default async function WeeklyReviewPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // Review a specific week via ?week=YYYY-MM-DD (the inline "Add review" button
-  // passes the program's week). Only the current week or a past week is
-  // reviewable — never a future one. Falls back to last week (the default nudge).
-  const { week } = await searchParams;
-  const weekStart =
-    week && WEEK_RE.test(week) && bucketForWeekStart(week) !== "upcoming"
-      ? week
-      : prevMondayISO();
-
-  // Last week's programs for THIS user (own only — explicit filter; RLS would
-  // let staff read all otherwise).
-  const { data: rows } = await supabase
-    .from("programs")
-    .select(
-      "id, title, program_days(id, title, order_index), exercises(id, name, order_index, day_id)",
-    )
-    .eq("client_id", user.id)
-    .eq("week_start_date", weekStart)
-    .returns<ProgramRow[]>();
-
+  const { program: requestedId } = await searchParams;
+  const context = await reviewContext();
+  let query = supabase.from("programs")
+    .select("id, title, month_start_date, program_days(id, title, order_index), exercises(id, name, order_index, day_id)")
+    .eq("kind", "client").eq("client_id", user.id);
+  query = requestedId ? query.eq("id", requestedId) : query.eq("month_start_date", thisMonthISO(context.now, context.timeZone));
+  const { data: rows, error } = await query.returns<ProgramRow[]>();
+  if (error) throw new Error("Could not load review programme");
+  const selected = rows?.[0];
+  const month = selected?.month_start_date ?? thisMonthISO(context.now, context.timeZone);
+  const due = !!selected && isReviewDue(month, context.now, context.timeZone);
   const programs: ReviewProgram[] = (rows ?? []).map((p) => {
     const days = [...(p.program_days ?? [])].sort(
       (a, b) => a.order_index - b.order_index,
@@ -83,12 +74,9 @@ export default async function WeeklyReviewPage({
     return { id: p.id, title: p.title, days: dayList };
   });
 
-  const { data: existing } = await supabase
-    .from("weekly_reviews")
+  const { data: existing } = selected ? await supabase.from("program_reviews")
     .select("days_attended, programs_done, hard_exercises, note")
-    .eq("user_id", user.id)
-    .eq("week_start", weekStart)
-    .maybeSingle<ReviewRow>();
+    .eq("client_id", user.id).eq("program_id", selected.id).maybeSingle<ReviewRow>() : { data: null };
 
   return (
       <main id="main-content" className="mx-auto min-w-0 max-w-4xl">
@@ -104,25 +92,29 @@ export default async function WeeklyReviewPage({
         </h1>
         <p className="mt-2 text-base text-muted-foreground">
           {t(lang, "review.subtitle", {
-            range: formatWeekRange(weekStart, lang),
+            range: formatMonth(month, lang),
           })}
         </p>
 
         <div className="mt-8">
-          {programs.length === 0 ? (
+          {!selected || (!due && !existing) ? (
             <p className="rounded-2xl border border-dashed border-border bg-surface/50 px-6 py-14 text-center text-sm text-subtle-foreground">
-              {t(lang, "review.none")}
+              {t(lang, selected ? "review.notDue" : "review.none")}
             </p>
           ) : (
+            <>
+            {existing && <p className="mb-4 font-semibold text-brand">{t(lang, "review.submitted")}</p>}
             <ReviewForm
-              weekStart={weekStart}
-              programs={programs}
+              programId={selected.id}
+              maxDays={daysInMonth(month)}
+              programs={existing ? [{ id: selected.id, title: existing.programs_done[0]?.title ?? selected.title, days: [{ title: null, exercises: existing.hard_exercises }] }] : programs}
               initialDays={existing?.days_attended != null ? String(existing.days_attended) : ""}
               initialDone={(existing?.programs_done ?? []).map((p) => p.id)}
               initialHard={(existing?.hard_exercises ?? []).map((e) => e.id)}
               initialNote={existing?.note ?? ""}
               isEdit={!!existing}
             />
+            </>
           )}
         </div>
       </main>

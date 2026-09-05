@@ -19,6 +19,7 @@ export interface Profile {
   height_cm: number | null;
   /** Membership tier (admin-set). Null = no membership. */
   membership: Membership | null;
+  nutrition_enabled: boolean;
   /** ISO date (YYYY-MM-DD) the membership lapses; null = no expiry. Admin-set. */
   membership_end_date: string | null;
 }
@@ -45,15 +46,26 @@ export interface Complaint {
   created_at: string;
 }
 
-export interface Program {
+interface ProgramBase {
   id: string;
-  client_id: string;
+  /** Informational origin of an independent copy; never used to resolve content. */
+  source_program_id?: string | null;
+  updated_at?: string;
   title: string;
-  /** ISO date (YYYY-MM-DD) — the Monday of the program week. */
-  week_start_date: string;
   notes: string | null;
   created_at: string;
 }
+export interface ClientProgram extends ProgramBase {
+  kind: "client";
+  client_id: string;
+  month_start_date: string;
+}
+export interface CatalogProgram extends ProgramBase {
+  kind: "catalog";
+  client_id: null;
+  month_start_date: null;
+}
+export type Program = ClientProgram | CatalogProgram;
 
 export interface Exercise {
   id: string;
@@ -80,9 +92,7 @@ export interface ProgramDay {
 }
 
 /** A program with its ordered exercises attached. */
-export interface ProgramWithExercises extends Program {
-  exercises: Exercise[];
-}
+export type ProgramWithExercises = Program & { exercises: Exercise[] };
 
 /** A reusable exercise Alişan picks from, optionally with a demo video. */
 export interface ExerciseLibrary {
@@ -97,7 +107,7 @@ export interface ExerciseLibrary {
 export interface ExerciseCategory {
   id: string;
   name: string;
-  /** Seeded defaults (translated for display); custom ones show as typed. */
+  /** Legacy metadata only; it does not change category display or editing. */
   is_default: boolean;
   created_at: string;
 }
@@ -247,7 +257,7 @@ export interface NutritionPlanWithMeals extends NutritionPlan {
 export type NotificationType =
   | "membership_expiry"
   | "missing_info"
-  | "weekly_review"
+  | "program_review"
   | "manual"
   | "availability"
   | "appointment_reminder"
@@ -393,15 +403,15 @@ export interface ReviewExerciseRef {
   name: string;
 }
 
-/** A client's self-reported review of one completed week. */
-export interface WeeklyReview {
+/** A single submitted monthly review, tied to its client programme. */
+export interface ProgramReview {
   id: string;
-  user_id: string;
-  /** ISO date (YYYY-MM-DD) — the Monday of the reviewed week. */
-  week_start: string;
+  client_id: string;
+  program_id: string;
   days_attended: number | null;
   programs_done: ReviewProgramRef[];
   hard_exercises: ReviewExerciseRef[];
   note: string | null;
   created_at: string;
+  programs?: { title: string; month_start_date: string } | null;
 }

@@ -18,7 +18,7 @@ export interface ExportExercise {
 export interface ExportDoc {
   title: string;
   notes: string | null;
-  weekStart: string | null;
+  monthStart: string | null;
   clientName: string | null;
   days: { title: string; exercises: ExportExercise[] }[];
 }

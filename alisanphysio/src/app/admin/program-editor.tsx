@@ -8,11 +8,12 @@ import type {
   LibraryExercise,
   TemplateWithExercises,
 } from "@/lib/types";
-import { listWeekMondays } from "@/lib/program-dates";
-import { weekLabel, weekTitle } from "@/lib/i18n";
+import { listMonthStarts } from "@/lib/month";
+import { monthLabel, monthTitle } from "@/lib/i18n";
 import { useI18n } from "@/app/i18n-provider";
 import { useToast } from "@/app/toast";
 import { saveProgram, deleteProgram } from "./actions";
+import { deleteCatalogProgram } from "./programs/actions";
 import ExerciseRowsEditor, {
   IconBtn,
   blankRow,
@@ -41,7 +42,7 @@ export interface EditorDay {
 
 export interface EditorInitial {
   title: string;
-  weekStartDate: string;
+  monthStartDate: string;
   notes: string;
   days: EditorDay[];
 }
@@ -70,28 +71,33 @@ const inputClass =
 
 export default function ProgramEditor({
   clientId,
+  kind = "client",
+  timeZone,
   programId,
   initial,
   library,
   categories = [],
   templates = [],
-  usedWeeks = [],
+  usedMonths = [],
 }: {
-  clientId: string;
+  clientId: string | null;
+  kind?: "client" | "catalog";
+  timeZone?: string | null;
   programId?: string;
   initial: EditorInitial;
   library: LibraryExercise[];
   categories?: ExerciseCategory[];
   templates?: TemplateWithExercises[];
-  usedWeeks?: string[];
+  usedMonths?: string[];
 }) {
   const router = useRouter();
   const toast = useToast();
   const { t, lang } = useI18n();
   const isEdit = Boolean(programId);
+  const backHref = clientId ? `/admin/clients/${clientId}` : "/admin/programs";
 
   const [title, setTitle] = useState(initial.title);
-  const [weekStartDate, setWeekStartDate] = useState(initial.weekStartDate);
+  const [monthStartDate, setMonthStartDate] = useState(initial.monthStartDate);
   const [notes, setNotes] = useState(initial.notes);
   const [days, setDays] = useState<DayRow[]>(toDays(initial.days));
   const [error, setError] = useState<string | null>(null);
@@ -102,18 +108,18 @@ export default function ProgramEditor({
     { dayKey: string; tpl: TemplateWithExercises } | null
   >(null);
 
-  // Week dropdown options: a few weeks back to ~8 ahead, plus the current one
+  // Month options include the original date and a few months either side.
   // (in case we're editing an older program outside that window).
-  const weekOptions = useMemo(() => {
-    const set = new Set(listWeekMondays(3, 8));
-    if (weekStartDate) set.add(weekStartDate);
+  const monthOptions = useMemo(() => {
+    const set = new Set(listMonthStarts(3, 8, new Date(), timeZone));
+    if (monthStartDate) set.add(monthStartDate);
     return [...set].sort();
-  }, [weekStartDate]);
-  const usedSet = useMemo(() => new Set(usedWeeks), [usedWeeks]);
+  }, [monthStartDate, timeZone]);
+  const usedSet = useMemo(() => new Set(usedMonths), [usedMonths]);
 
-  function selectWeek(monday: string) {
-    setWeekStartDate(monday);
-    setTitle(weekTitle(monday, lang));
+  function selectMonth(month: string) {
+    setMonthStartDate(month);
+    setTitle(monthTitle(month, lang));
   }
 
   // ---- day mutations ----
@@ -182,8 +188,9 @@ export default function ProgramEditor({
     const res = await saveProgram({
       id: programId,
       clientId,
+      kind,
       title,
-      weekStartDate,
+      monthStartDate: kind === "client" ? monthStartDate : null,
       notes,
       days: days.map((d) => ({
         title: d.title,
@@ -199,8 +206,9 @@ export default function ProgramEditor({
       })),
     });
     if (res.ok) {
+      setSaving(false);
       toast(t("toast.programSaved"));
-      router.push(`/admin/clients/${clientId}`);
+      router.push(kind === "catalog" ? `/admin/programs/${res.programId}/edit` : backHref);
       router.refresh();
     } else {
       setError(res.error);
@@ -210,12 +218,12 @@ export default function ProgramEditor({
 
   async function onDelete() {
     if (!programId) return;
-    if (!confirm(t("editor.confirmDeleteProgram"))) return;
+    if (!confirm(kind === "catalog" ? t("catalog.confirmDelete", { title }) : t("editor.confirmDeleteProgram"))) return;
     setSaving(true);
-    const res = await deleteProgram({ programId, clientId });
+    const res = kind === "catalog" ? await deleteCatalogProgram(programId) : await deleteProgram({ programId, clientId });
     if (res.ok) {
       toast(t("toast.programDeleted"));
-      router.push(`/admin/clients/${clientId}`);
+      router.push(backHref);
       router.refresh();
     } else {
       setError(res.error);
@@ -228,7 +236,7 @@ export default function ProgramEditor({
   const getExportDoc = (): ExportDoc => ({
     title: title.trim() || "Program",
     notes: notes.trim() || null,
-    weekStart: weekStartDate || null,
+    monthStart: kind === "client" ? monthStartDate || null : null,
     clientName: null,
     days: days.map((d) => ({
       title: d.title,
@@ -246,10 +254,10 @@ export default function ProgramEditor({
   return (
     <>
       <Link
-        href={`/admin/clients/${clientId}`}
+        href={backHref}
         className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition hover:text-brand"
       >
-        <span aria-hidden>←</span> {t("editor.backToClient")}
+        <span aria-hidden>←</span> {t(clientId ? "editor.backToClient" : "catalog.back")}
       </Link>
 
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
@@ -261,37 +269,40 @@ export default function ProgramEditor({
 
       {/* Program fields */}
       <div className="mt-8 space-y-5 rounded-2xl bg-surface p-5 shadow-soft sm:p-6">
+        {kind === "client" && (
         <div className="space-y-1.5">
           <label className="block text-sm font-medium text-foreground">
-            {t("editor.week")}
+            {t("editor.month")}
           </label>
           <select
-            value={weekStartDate}
-            onChange={(e) => selectWeek(e.target.value)}
+            value={monthStartDate}
+            onChange={(e) => selectMonth(e.target.value)}
             className={`${inputClass} max-w-md`}
           >
-            {weekOptions.map((m) => (
+            {monthOptions.map((m) => (
               <option key={m} value={m}>
-                {weekLabel(m, lang)}
-                {usedSet.has(m) && m !== weekStartDate
+                {monthLabel(m, lang)}
+                {usedSet.has(m) && (!programId || m !== initial.monthStartDate)
                   ? ` ${t("editor.hasProgram")}`
                   : ""}
               </option>
             ))}
           </select>
         </div>
+        )}
 
         <div className="space-y-1.5">
-          <label className="block text-sm font-medium text-foreground">
-            {t("editor.title")}{" "}
-            <span className="text-subtle-foreground">{t("editor.titleHint")}</span>
+          <label htmlFor="program-title" className="block text-sm font-medium text-foreground">
+            {t(kind === "catalog" ? "catalog.productName" : "editor.title")}{" "}
+            {kind === "client" && <span className="text-subtle-foreground">{t("editor.titleHint")}</span>}
           </label>
           <input
+            id="program-title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             autoComplete="off"
             className={inputClass}
-            placeholder={t("editor.titlePlaceholder")}
+            placeholder={kind === "catalog" ? t("catalog.titlePlaceholder") : t("editor.titlePlaceholder")}
           />
         </div>
 
@@ -317,7 +328,7 @@ export default function ProgramEditor({
             key={day.key}
             className="space-y-4 rounded-2xl border border-border p-4 sm:p-5"
           >
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="flex-none rounded-full bg-pill px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 {t("editor.dayLabel", { n: di + 1 })}
               </span>
@@ -325,7 +336,8 @@ export default function ProgramEditor({
                 value={day.title}
                 onChange={(e) => setDayTitle(day.key, e.target.value)}
                 autoComplete="off"
-                className={`${inputClass} flex-1 font-medium`}
+                aria-label={t("editor.dayName")}
+                className={`${inputClass} min-w-0 flex-1 font-semibold`}
                 placeholder={t("editor.dayPlaceholder")}
               />
               <IconBtn label={t("editor.moveDayUp")} disabled={di === 0} onClick={() => moveDay(di, -1)}>
@@ -438,7 +450,7 @@ export default function ProgramEditor({
             {saving ? t("common.saving") : t("editor.saveProgram")}
           </button>
           <Link
-            href={`/admin/clients/${clientId}`}
+            href={backHref}
             className="rounded-xl px-5 py-2.5 text-sm font-medium text-muted-foreground transition hover:bg-pill hover:text-foreground"
           >
             {t("common.cancel")}

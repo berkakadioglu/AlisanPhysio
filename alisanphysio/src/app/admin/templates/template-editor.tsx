@@ -51,7 +51,7 @@ export default function TemplateEditor({
   const getExportDoc = (): ExportDoc => ({
     title: title.trim() || "Template",
     notes: null,
-    weekStart: null,
+    monthStart: null,
     clientName: null,
     days: [
       {

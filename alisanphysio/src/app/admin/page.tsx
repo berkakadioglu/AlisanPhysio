@@ -18,20 +18,19 @@ type ProfileRow = {
   created_at: string;
   membership: string | null;
   membership_end_date: string | null;
-  programs: { count: number }[];
-  weekly_reviews: { count: number }[];
+  program_reviews: { count: number }[];
 };
 
 export default async function AdminHomePage() {
   // Staff (admin OR manager) may view the user list.
   const { supabase } = await requireStaff();
 
-  // ALL users + their program counts. Staff read every profile via RLS
+  // ALL users + their review counts. Staff read every profile via RLS
   // (profiles_select_staff). Grouped into tabs client-side.
   const { data: profiles } = await supabase
     .from("profiles")
     .select(
-      "id, full_name, role, created_at, membership, membership_end_date, programs(count), weekly_reviews(count)",
+      "id, full_name, role, created_at, membership, membership_end_date, program_reviews(count)",
     )
     .order("created_at", { ascending: true })
     .returns<ProfileRow[]>();
@@ -47,8 +46,7 @@ export default async function AdminHomePage() {
     name: p.full_name?.trim() || null,
     email: emailById.get(p.id) ?? "",
     role: p.role,
-    programCount: p.programs[0]?.count ?? 0,
-    reviewCount: p.weekly_reviews[0]?.count ?? 0,
+    reviewCount: p.program_reviews[0]?.count ?? 0,
     membership: isMembership(p.membership) ? (p.membership as Membership) : null,
     membershipEndDate: p.membership_end_date,
   }));

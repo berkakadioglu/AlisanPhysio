@@ -490,3 +490,10 @@ export function dueAppointmentReminders(
 export function isActiveAppointmentStatus(status: AppointmentStatus): boolean {
   return status === "pending" || status === "confirmed";
 }
+
+/** Calendar week anchor used only by the scheduling grid. */
+export function mondayOfISO(iso: string): string {
+  const date = new Date(`${iso}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() - (date.getUTCDay() + 6) % 7);
+  return date.toISOString().slice(0, 10);
+}

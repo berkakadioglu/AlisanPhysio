@@ -1,3 +1,4 @@
+import StudioCredit from "@/components/studio-credit";
 import { redirect } from "next/navigation";
 import { BRAND } from "@/lib/brand";
 import { formatDay, t } from "@/lib/i18n";
@@ -34,9 +35,9 @@ export default async function DashboardLayout({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, created_at")
+    .select("full_name, created_at, nutrition_enabled")
     .eq("id", user.id)
-    .maybeSingle<{ full_name: string | null; created_at: string | null }>();
+    .maybeSingle<{ full_name: string | null; created_at: string | null; nutrition_enabled: boolean }>();
 
   const fallbackName = user.email?.split("@")[0] || t(lang, "dash.clientFallback");
   const name = profile?.full_name?.trim() || fallbackName;
@@ -66,11 +67,7 @@ export default async function DashboardLayout({
       href: "/dashboard/programme",
       label: t(lang, "dash.tab.programme"),
     },
-    {
-      id: "nutrition",
-      href: "/dashboard/nutrition",
-      label: t(lang, "dash.tab.nutrition"),
-    },
+    ...(profile?.nutrition_enabled ? [{ id: "nutrition" as const, href: "/dashboard/nutrition", label: t(lang, "dash.tab.nutrition") }] : []),
     {
       id: "progress",
       href: "/dashboard/progress",
@@ -90,6 +87,7 @@ export default async function DashboardLayout({
         identity={identity}
         tabs={tabs}
         navigationLabel={t(lang, "dash.navigationLabel")}
+        footer={<StudioCredit lang={lang} />}
       >
         {children}
       </ClientDashboardShell>

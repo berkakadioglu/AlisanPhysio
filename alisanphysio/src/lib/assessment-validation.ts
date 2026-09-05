@@ -4,7 +4,7 @@ import {
   TRAINING_EXPERIENCE_VALUES,
   type AssessmentField,
   type AssessmentInsert,
-  type AssessmentPlan,
+  normalizeAssessmentPlan,
   type AssessmentSubmissionInput,
 } from "@/lib/assessment";
 
@@ -12,6 +12,7 @@ export type AssessmentValidationCode =
   | "requiredName"
   | "invalidEmail"
   | "requiredGoal"
+  | "requiredExpectation"
   | "requiredConsent"
   | "invalidValue";
 
@@ -98,6 +99,8 @@ export function validateAssessmentInput(
 
   const primaryGoal = requiredText(input.primary_goal, 1_500);
   if (!primaryGoal) errors.primary_goal = "requiredGoal";
+  const expectation = requiredText(input.biggest_expectation, 1500);
+  if (!expectation) errors.biggest_expectation = "requiredExpectation";
 
   if (input.consent !== true) errors.consent = "requiredConsent";
 
@@ -150,14 +153,7 @@ export function validateAssessmentInput(
     errors.equipment_access = "invalidValue";
   }
 
-  const selectedPlan = optionalText(input.selected_plan, 20);
-  if (
-    selectedPlan !== null &&
-    selectedPlan !== "monthly" &&
-    selectedPlan !== "quarterly"
-  ) {
-    errors.selected_plan = "invalidValue";
-  }
+  const selectedPlan = normalizeAssessmentPlan(input.selected_plan);
 
   const preferredLanguage =
     input.preferred_language === "en" || input.preferred_language === "tr"
@@ -170,6 +166,7 @@ export function validateAssessmentInput(
     !fullName ||
     !email ||
     !primaryGoal ||
+    !expectation ||
     !preferredLanguage
   ) {
     return { ok: false, abuse: false, errors };
@@ -189,12 +186,13 @@ export function validateAssessmentInput(
       height_cm: heightCm ?? null,
       weight_kg: weightKg ?? null,
       primary_goal: primaryGoal,
+      biggest_expectation: expectation,
       training_experience: trainingExperience ?? null,
       days_per_week: daysPerWeek ?? null,
       equipment_access: equipmentAccess ?? null,
       injury_history: injuryHistory ?? null,
       medical_notes: medicalNotes ?? null,
-      selected_plan: (selectedPlan as AssessmentPlan | null) ?? null,
+      selected_plan: selectedPlan,
       message: message ?? null,
     },
   };

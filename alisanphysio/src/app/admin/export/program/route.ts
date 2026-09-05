@@ -32,7 +32,7 @@ interface InBody {
   lang?: string;
   title?: string;
   notes?: string | null;
-  weekStart?: string | null;
+  monthStart?: string | null;
   clientName?: string | null;
   days?: InDay[];
 }
@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
   const doc: ProgramDoc = {
     title,
     notes: (body.notes ?? "").trim() || null,
-    weekStart: body.weekStart ?? null,
+    monthStart: body.monthStart ?? null,
     clientName: (body.clientName ?? "").trim() || null,
     days,
   };
