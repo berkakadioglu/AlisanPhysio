@@ -125,14 +125,24 @@ export async function addMeasurement(input: {
   return { ok: true };
 }
 
-/** Delete one of the client's own measurements (RLS scopes it to them). */
+/**
+ * Delete one of the signed-in user's own measurements. Scoped to their id as
+ * well as by RLS, and checked by the returned row: a delete that matches
+ * nothing (already removed, or not theirs) is reported, never shown as done.
+ */
 export async function deleteMeasurement(input: { id: string }): Promise<ActionResult> {
-  const { supabase } = await requireUser();
-  const { error } = await supabase
+  const { supabase, userId } = await requireUser();
+  const lang = await getLang();
+  const { data, error } = await supabase
     .from("measurements")
     .delete()
-    .eq("id", input.id);
-  if (error) return { ok: false, error: error.message };
+    .eq("id", input.id)
+    .eq("client_id", userId)
+    .select("id");
+  if (error || !data?.length) {
+    if (error) console.error("[profile] measurement delete failed", error);
+    return { ok: false, error: t(lang, "err.measurementDelete") };
+  }
   revalidatePath("/dashboard/profile");
   return { ok: true };
 }
@@ -154,14 +164,20 @@ export async function addComplaint(input: { body: string }): Promise<ActionResul
   return { ok: true };
 }
 
-/** Delete one of the client's own complaints. */
+/** Delete one of the signed-in user's own complaints (same checks as above). */
 export async function deleteComplaint(input: { id: string }): Promise<ActionResult> {
-  const { supabase } = await requireUser();
-  const { error } = await supabase
+  const { supabase, userId } = await requireUser();
+  const lang = await getLang();
+  const { data, error } = await supabase
     .from("complaints")
     .delete()
-    .eq("id", input.id);
-  if (error) return { ok: false, error: error.message };
+    .eq("id", input.id)
+    .eq("client_id", userId)
+    .select("id");
+  if (error || !data?.length) {
+    if (error) console.error("[profile] note delete failed", error);
+    return { ok: false, error: t(lang, "err.noteDelete") };
+  }
   revalidatePath("/dashboard/profile");
   return { ok: true };
 }

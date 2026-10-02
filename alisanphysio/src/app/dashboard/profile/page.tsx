@@ -48,7 +48,6 @@ export default async function ProfilePage() {
       <DashboardSectionIntro
         eyebrow={t(lang, "profile.accountEyebrow")}
         title={t(lang, "profile.heading")}
-        body={t(lang, "profile.subtitle")}
       />
       <div className="mt-7">
         <ProfileView

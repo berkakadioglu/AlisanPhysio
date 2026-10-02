@@ -5,12 +5,10 @@ import PanelSectionIntro from "@/components/panel-section-intro";
 export default function DashboardSectionIntro({
   eyebrow,
   title,
-  body,
   action,
 }: {
   eyebrow: string;
   title: string;
-  body: string;
   action?: {
     label: string;
     href: string;
@@ -22,7 +20,6 @@ export default function DashboardSectionIntro({
     <PanelSectionIntro
       eyebrow={eyebrow}
       title={title}
-      body={body}
       headingLevel={1}
       action={
         action ? (

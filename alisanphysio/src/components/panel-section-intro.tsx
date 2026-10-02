@@ -7,7 +7,7 @@ export default function PanelSectionIntro({
 }: {
   eyebrow: string;
   title: string;
-  body: string;
+  body?: string;
   action?: React.ReactNode;
   headingLevel?: 1 | 2;
 }) {
@@ -22,9 +22,9 @@ export default function PanelSectionIntro({
         <Heading className="mt-2 text-balance font-display text-2xl font-extrabold leading-tight tracking-tight text-foreground sm:text-3xl">
           {title}
         </Heading>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
+        {body && <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
           {body}
-        </p>
+        </p>}
       </div>
       {action}
     </header>

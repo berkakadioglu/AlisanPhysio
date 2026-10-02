@@ -15,12 +15,15 @@ import { isActiveAppointmentStatus } from "@/lib/scheduling";
 import { createClient } from "@/lib/supabase/server";
 import { formatMonth, t } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n-server";
+import { isRichTextEmpty } from "@/lib/rich-text";
 import type { ClientAppointment } from "@/lib/types";
+import RichText from "@/components/rich-text";
 import DashboardSectionIntro, {
   DashboardEmptyState,
 } from "@/components/dashboard-section-intro";
 import ReviewAction from "./review-action";
 import AppointmentLocalTime from "./appointment-local-time";
+import DayChips from "./day-chips";
 
 export async function generateMetadata(): Promise<Metadata> {
   const lang = await getLang();
@@ -99,7 +102,7 @@ export default async function DashboardPage() {
     { value: numberOrDash(currentDays), label: t(lang, "dash.metric.trainingDays") },
     { value: numberOrDash(currentExercises), label: t(lang, "dash.metric.exercises") },
     ...(profile?.nutrition_enabled ? [{ value: numberOrDash(nutrition.mealCount), label: t(lang, "dash.metric.meals") }] : []),
-    { value: numberOrDash(measurementCount), label: t(lang, "dash.metric.measurements") },
+    { value: String(measurementCount), label: t(lang, "dash.metric.measurements"), href: "/dashboard/progress" },
   ];
 
   return (
@@ -110,11 +113,6 @@ export default async function DashboardPage() {
           firstName
             ? t(lang, "dash.welcomeName", { name: firstName })
             : t(lang, "dash.welcome")
-        }
-        body={
-          profile?.role === "admin"
-            ? t(lang, "dash.subtitleAdmin")
-            : t(lang, "dash.overviewBody")
         }
       />
 
@@ -128,7 +126,7 @@ export default async function DashboardPage() {
               {metric.value}
             </dd>
             <dt className="mt-1 text-xs leading-snug text-muted-foreground">
-              {metric.label}
+              {"href" in metric ? <Link href={metric.href!} className="underline decoration-border underline-offset-4 transition hover:text-brand focus-visible:outline-brand">{metric.label}</Link> : metric.label}
             </dt>
           </div>
         ))}
@@ -154,10 +152,7 @@ export default async function DashboardPage() {
               <p className="mt-3 text-sm font-semibold text-brand">
                 {formatMonth(current.month_start_date, lang)}
               </p>
-              <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">
-                {dayTitlesOf(current).filter(Boolean).join(" · ") ||
-                  t(lang, "dash.programmeReadyBody")}
-              </p>
+              <div className="mt-2 flex-1"><DayChips titles={dayTitlesOf(current)} lang={lang} /></div>
               <Link
                 href={`/dashboard/${current.id}`}
                 className="mt-5 inline-flex min-h-11 items-center gap-2 self-start rounded-full text-sm font-bold text-brand transition hover:text-brand-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
@@ -236,14 +231,12 @@ export default async function DashboardPage() {
               {t(lang, "dash.coachNoteEyebrow")}
             </p>
           </div>
-          {current?.notes ? (
+          {current && !isRichTextEmpty(current.notes) ? (
             <>
               <h2 className="mt-3 font-display text-lg font-bold text-foreground">
                 {t(lang, "dash.coachNoteTitle")}
               </h2>
-              <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-foreground/80">
-                {current.notes}
-              </p>
+              <RichText value={current.notes} className="mt-2 text-foreground/80" />
             </>
           ) : (
             <div className="mt-3">

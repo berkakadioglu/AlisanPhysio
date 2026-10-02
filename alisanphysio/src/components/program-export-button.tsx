@@ -76,7 +76,11 @@ export default function ProgramExportButton(props: Props) {
               body: JSON.stringify({ ...props.getDoc(), lang }),
             })
           : await fetch(`/admin/export/${props.mode}/${props.id}?lang=${lang}`);
-      if (!res.ok) throw new Error("export failed");
+      // An expired session is redirected to the login page (200 HTML) — that
+      // must not be saved as a .pdf.
+      const type = res.headers.get("content-type") ?? "";
+      if (!res.ok || res.redirected || !type.startsWith("application/pdf"))
+        throw new Error("export failed");
 
       const blob = await res.blob();
       const cd = res.headers.get("content-disposition") ?? "";
@@ -91,7 +95,7 @@ export default function ProgramExportButton(props: Props) {
       a.remove();
       URL.revokeObjectURL(href);
     } catch {
-      toast(t("export.failed"));
+      toast.error(t("export.failed"));
     } finally {
       setPending(false);
     }

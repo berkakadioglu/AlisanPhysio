@@ -1,10 +1,10 @@
 # AlisanPhysio
 
 A private client portal for Alişan — physiotherapist & personal trainer. Staff
-(Alişan) create client accounts and author **weekly programs** (therapeutic and
-fitness alike, organised Week → Day → Exercise); clients log in to view their
-program for the week, browse past/upcoming weeks, watch demo videos, track body
-measurements, and file a short weekly review. There is **no public sign-up** —
+(Alişan) create client accounts and author **monthly programmes** (therapeutic and
+fitness alike, organised Month → Day → Exercise); clients log in to view their
+programme for the month, browse past/upcoming months, watch demo videos, track body
+measurements, and file a short monthly review. There is **no public sign-up** —
 accounts are created by staff.
 
 ## Tech stack
@@ -70,7 +70,7 @@ bottom:
 | `0006_membership.sql`            | membership tier on `profiles`                                |
 | `0007_membership_end_date.sql`   | membership expiry date                                       |
 | `0008_roles_manager.sql`         | `is_admin()` / `is_staff()` helpers; the `manager` role      |
-| `0009_notifications_reviews.sql` | `notifications` + `weekly_reviews`                           |
+| `0009_notifications_reviews.sql` | notifications + the original review table                           |
 | `0010_exercise_categories.sql`   | `exercise_categories` + `exercise_category_map` (m2m)        |
 | `0011_day_templates.sql`         | `day_templates` + `day_template_exercises`                   |
 
@@ -116,15 +116,15 @@ and are re-checked in every page/action (defense in depth):
 
 - This-week hero + Past / Upcoming program lists.
 - Program detail: Day → Exercise with YouTube demo embeds (click-to-load).
-- Profile: personal info, weekly body measurements + a dependency-free SVG
+- Profile: personal info, body measurements + a dependency-free SVG
   weight/BMI chart, complaints/notes.
-- Weekly review form + an inline "Add review" affordance on reviewable weeks.
+- Monthly review form + an inline "Add review" affordance on reviewable months.
 
 **Admin side** (`src/app/admin`)
 
 - Users list (Clients / Admins tabs), create client, per-client detail with
   Manage (name/login/role/membership), reset password, send notification.
-- **Program editor** — Week → Day → Exercise authoring with a category-grouped
+- **Program editor** — Month → Day → Exercise authoring with a category-grouped
   library combobox, copy-from-previous-week, and **day templates** (fill a day
   from a template, or add a template as a new day; deep-copied, editable).
 - **Exercise library** (`/admin/library`) — category sidebar + card grid,
@@ -151,7 +151,7 @@ src/
   app/
     login/                   # /login — email + password (no sign-up)
     dashboard/               # client area: this week, past/upcoming, program
-                             #   detail, profile, weekly review, notifications
+                             #   detail, profile, monthly review, notifications
     admin/                   # staff area: users, client detail, program editor,
                              #   library, templates, actions (server actions)
     membership-inactive/     # blocked screen for inactive clients

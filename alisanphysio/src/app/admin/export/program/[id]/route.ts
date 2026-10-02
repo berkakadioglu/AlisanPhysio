@@ -2,9 +2,9 @@ import type { NextRequest } from "next/server";
 import { requireStaff } from "@/lib/admin-auth";
 import { isLang, type Lang } from "@/lib/i18n";
 import type { Program } from "@/lib/types";
-import { renderProgramPdf, type ProgramDoc } from "@/lib/pdf/program-pdf";
+import type { ProgramDoc } from "@/lib/pdf/program-pdf";
 import {
-  attachThumbnails,
+  exportProgramPdf,
   groupIntoDays,
   pdfFilename,
   pdfResponse,
@@ -14,6 +14,8 @@ import {
 // react-pdf + fs font reads need the Node.js runtime (not Edge).
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// Measured 1–4 s for a 38-exercise programme; the cap stops a runaway render.
+export const maxDuration = 60;
 
 type ExRow = RawExercise & {
   day_id: string | null;
@@ -75,7 +77,11 @@ export async function GET(
     days: groupIntoDays(dayRows ?? [], exercises),
   };
 
-  const withThumbs = await attachThumbnails(doc);
-  const buf = await renderProgramPdf(withThumbs, lang);
-  return pdfResponse(buf, pdfFilename(program.title, lang), inline);
+  try {
+    const buf = await exportProgramPdf(doc, lang);
+    return pdfResponse(buf, pdfFilename(program.title, lang), inline);
+  } catch (err) {
+    console.error(`[pdf-export] program ${id} (${lang}) failed`, err);
+    return new Response("PDF export failed", { status: 500 });
+  }
 }

@@ -7,6 +7,7 @@ import { formatMonth, t } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n-server";
 import { thisMonthISO, isReviewDue, daysInMonth } from "@/lib/month";
 import { reviewContext } from "@/lib/reviews";
+import DashboardSectionIntro from "@/components/dashboard-section-intro";
 import ReviewForm, { type ReviewProgram } from "./review-form";
 
 export const metadata: Metadata = {
@@ -87,14 +88,7 @@ export default async function ProgramReviewPage({
           <span aria-hidden>←</span> {t(lang, "prog.back")}
         </Link>
 
-        <h1 className="mt-5 font-display text-3xl font-extrabold leading-tight tracking-tight text-foreground">
-          {t(lang, "review.heading")}
-        </h1>
-        <p className="mt-2 text-base text-muted-foreground">
-          {t(lang, "review.subtitle", {
-            range: formatMonth(month, lang),
-          })}
-        </p>
+        <div className="mt-5"><DashboardSectionIntro eyebrow={formatMonth(month, lang)} title={t(lang, "review.heading")} /></div>
 
         <div className="mt-8">
           {!selected || (!due && !existing) ? (

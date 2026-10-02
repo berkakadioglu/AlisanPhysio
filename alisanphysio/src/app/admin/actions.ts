@@ -24,6 +24,8 @@ interface ExerciseInput {
 
 interface DayInput {
   title: string; // "" for an untitled/flat day
+  /** Name of the saved day this day was copied from (origin line only). */
+  sourceTemplateLabel?: string | null;
   exercises: ExerciseInput[];
 }
 
@@ -103,8 +105,11 @@ export async function saveProgram(input: SaveProgramInput): Promise<ActionResult
     return { ok: false, error: t(lang, "err.pickDate") };
   if (input.kind === "catalog" && (input.clientId !== null || input.monthStartDate !== null))
     return { ok: false, error: t(lang, "err.programShape") };
+  // `source_template_label` is informational text (0021 stores it; older RPCs
+  // ignore unknown keys), so it is trimmed and capped, never trusted as a link.
   const days = input.days.map((day) => ({
     title: day.title.trim(),
+    source_template_label: day.sourceTemplateLabel?.trim().slice(0, 200) || null,
     exercises: day.exercises.filter((ex) => ex.name.trim()).map((ex) => ({ ...ex, name: ex.name.trim() })),
   })).filter((day) => day.title || day.exercises.length);
   if (days.some((day) => day.exercises.some((ex) => ex.sets !== null && (!Number.isInteger(ex.sets) || ex.sets < 0))))

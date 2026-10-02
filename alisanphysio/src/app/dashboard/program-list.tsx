@@ -36,6 +36,7 @@ export default function ProgramList({
             notes={program.notes}
             exerciseCount={program.exercises[0]?.count ?? 0}
             dayTitles={dayTitlesOf(program)}
+            dayChips
           />
           {review && (
             <div className="px-1">

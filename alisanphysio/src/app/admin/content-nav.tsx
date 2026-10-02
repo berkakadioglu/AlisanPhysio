@@ -3,12 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Apple, BookOpen, ChevronDown, Dumbbell, LayoutTemplate } from "lucide-react";
+import { Apple, BookOpen, ChevronDown, Dumbbell } from "lucide-react";
 import { useI18n } from "@/app/i18n-provider";
 
 /**
  * The "Content" dropdown in the admin nav — groups the content-authoring areas
- * (Programmes, Exercise Library, Food Library, Day Templates) so the top bar stays tidy as
+ * (Programmes + Saved days, Exercise Library, Food Library) so the top bar stays tidy as
  * it grows. Click to open, closes on outside click, Escape, or picking an item.
  * The trigger highlights when the current route is one of its items.
  */
@@ -22,7 +22,6 @@ export default function ContentNav() {
     { href: "/admin/programs", label: t("catalog.heading"), Icon: BookOpen },
     { href: "/admin/library", label: t("nav.exerciseLibrary"), Icon: Dumbbell },
     { href: "/admin/food-library", label: t("nav.foodLibrary"), Icon: Apple },
-    { href: "/admin/templates", label: t("nav.dayTemplates"), Icon: LayoutTemplate },
   ];
 
   const active = items.some(

@@ -45,7 +45,6 @@ export default async function ProgrammePage() {
       <DashboardSectionIntro
         eyebrow={t(lang, "dash.programmeEyebrow")}
         title={t(lang, "dash.programmeTitle")}
-        body={t(lang, "dash.programmeBody")}
       />
 
       <div className="mt-7 space-y-8">

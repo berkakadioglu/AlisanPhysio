@@ -100,7 +100,6 @@ export default async function AvailabilityPage({
       <DashboardSectionIntro
         eyebrow={t(lang, "schedule.eyebrow")}
         title={t(lang, "schedule.clientTitle")}
-        body={t(lang, "schedule.clientBody")}
       />
       <div className="mt-7">
         <ClientScheduleView

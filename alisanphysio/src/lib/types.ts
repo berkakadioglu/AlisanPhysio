@@ -89,6 +89,8 @@ export interface ProgramDay {
   title: string | null;
   order_index: number;
   created_at: string;
+  /** Saved day this day was copied from (0021) — informational, never a link. */
+  source_template_label?: string | null;
 }
 
 /** A program with its ordered exercises attached. */
@@ -127,6 +129,12 @@ export interface DayTemplate {
   id: string;
   title: string;
   created_at: string;
+  /** Last name/content change (0021). Equals created_at before the migration. */
+  updated_at: string;
+  /** Soft delete (0021): in "Recently deleted" since then; purged after 30 days. */
+  deleted_at: string | null;
+  /** Where it was saved from ("Test Sevim · Oct 2026"); null = created here. */
+  source_label: string | null;
 }
 
 /** An exercise inside a day template, with its default prescription. */

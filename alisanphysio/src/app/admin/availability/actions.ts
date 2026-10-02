@@ -5,7 +5,7 @@ import { requireStaff } from "@/lib/admin-auth";
 import { t } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n-server";
 import {
-  generateWeeklyOccurrences,
+  generateRecurringOccurrences,
   isValidMeetingUrl,
   isValidTimeZone,
   resolveZonedDateTime,
@@ -131,7 +131,7 @@ export async function publishAvailability(input: {
   let occurrences;
   try {
     occurrences = input.patterns.flatMap((pattern) =>
-      generateWeeklyOccurrences({
+      generateRecurringOccurrences({
         firstDate: input.firstDate,
         localTime: pattern.localTime,
         timeZone: input.timezone,

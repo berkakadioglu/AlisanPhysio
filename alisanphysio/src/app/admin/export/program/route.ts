@@ -1,44 +1,48 @@
 import type { NextRequest } from "next/server";
 import { requireStaff } from "@/lib/admin-auth";
 import { isLang, type Lang } from "@/lib/i18n";
-import {
-  renderProgramPdf,
-  type PdfDay,
-  type ProgramDoc,
-} from "@/lib/pdf/program-pdf";
-import {
-  attachThumbnails,
-  pdfFilename,
-  pdfResponse,
-  resolveVideoId,
-} from "@/lib/pdf/build";
+import { isMonthStart } from "@/lib/month";
+import type { PdfDay, ProgramDoc } from "@/lib/pdf/program-pdf";
+import { exportProgramPdf, pdfFilename, pdfResponse } from "@/lib/pdf/build";
+import { PDF_CLIENT_NAME_MAX, PDF_TITLE_MAX, clampText } from "@/lib/pdf/pdf-text";
+import { effectiveVideoId } from "@/lib/youtube";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// Measured 1–4 s for a 38-exercise programme; the cap stops a runaway render.
+export const maxDuration = 60;
 
+// The body comes from the editor, but is still untrusted: fields are read as
+// `unknown` and coerced.
 interface InExercise {
-  name?: string;
-  sets?: number | string | null;
-  reps?: string | null;
-  instructions?: string | null;
-  media_url?: string | null;
-  library_id?: string | null;
+  name?: unknown;
+  sets?: unknown;
+  reps?: unknown;
+  instructions?: unknown;
+  media_url?: unknown;
+  library_id?: unknown;
 }
 interface InDay {
-  title?: string | null;
-  exercises?: InExercise[];
+  title?: unknown;
+  exercises?: unknown;
 }
 interface InBody {
-  lang?: string;
-  title?: string;
-  notes?: string | null;
-  monthStart?: string | null;
-  clientName?: string | null;
-  days?: InDay[];
+  lang?: unknown;
+  title?: unknown;
+  notes?: unknown;
+  monthStart?: unknown;
+  clientName?: unknown;
+  days?: unknown;
 }
 
-function coerceSets(v: number | string | null | undefined): number | null {
-  if (v == null || v === "") return null;
+/** A trimmed string, or "" for anything that isn't one. */
+function str(v: unknown): string {
+  return typeof v === "string" ? v.trim() : "";
+}
+
+function coerceSets(v: unknown): number | null {
+  if (typeof v !== "number" && typeof v !== "string") return null;
+  if (v === "") return null;
   const n = Number(v);
   return Number.isFinite(n) ? n : null;
 }
@@ -46,7 +50,8 @@ function coerceSets(v: number | string | null | undefined): number | null {
 /**
  * Export the program/template currently being AUTHORED (the editor's live
  * state, including unsaved edits and brand-new programs). Staff-gated. Video
- * ids are resolved server-side from the linked library entries.
+ * ids are resolved server-side: the exercise's own override, else the linked
+ * library entry's video.
  */
 export async function POST(req: NextRequest) {
   const { supabase } = await requireStaff();
@@ -57,16 +62,21 @@ export async function POST(req: NextRequest) {
   } catch {
     return new Response("Bad request", { status: 400 });
   }
+  if (!body || typeof body !== "object" || (body.days != null && !Array.isArray(body.days)))
+    return new Response("Bad request", { status: 400 });
 
   const lang: Lang = isLang(body.lang) ? body.lang : "en";
-  const title = (body.title ?? "").trim() || "Program";
+  // Same limits as the database (titles ≤ 300 characters), so a direct POST
+  // can't push the cover onto extra pages.
+  const title = clampText(str(body.title), PDF_TITLE_MAX) || "Program";
 
   // Keep only exercises with a name, and days that still have exercises.
-  const rawDays = (body.days ?? [])
+  const rawDays = ((body.days ?? []) as InDay[])
+    .filter((d): d is InDay => !!d && typeof d === "object")
     .map((d) => ({
-      title: (d.title ?? "").trim() || null,
-      exercises: (d.exercises ?? []).filter(
-        (e) => (e.name ?? "").trim() !== "",
+      title: str(d.title) || null,
+      exercises: (Array.isArray(d.exercises) ? (d.exercises as InExercise[]) : []).filter(
+        (e) => !!e && typeof e === "object" && str(e.name) !== "",
       ),
     }))
     .filter((d) => d.exercises.length > 0);
@@ -75,7 +85,7 @@ export async function POST(req: NextRequest) {
   const libIds = [
     ...new Set(
       rawDays.flatMap((d) =>
-        d.exercises.map((e) => e.library_id).filter((x): x is string => !!x),
+        d.exercises.map((e) => str(e.library_id)).filter(Boolean),
       ),
     ),
   ];
@@ -92,13 +102,14 @@ export async function POST(req: NextRequest) {
   const days: PdfDay[] = rawDays.map((d) => ({
     title: d.title,
     exercises: d.exercises.map((e) => ({
-      name: (e.name ?? "").trim(),
+      name: str(e.name),
       sets: coerceSets(e.sets),
-      reps: (e.reps ?? "").trim() || null,
-      instructions: (e.instructions ?? "").trim() || null,
-      videoId: resolveVideoId(
-        e.library_id ? ytById.get(e.library_id) ?? null : null,
-        e.media_url ?? null,
+      reps: str(e.reps) || null,
+      instructions: str(e.instructions) || null,
+      // The exercise's own video override wins over the library video.
+      videoId: effectiveVideoId(
+        str(e.media_url) || null,
+        ytById.get(str(e.library_id)) ?? null,
       ),
       thumb: null,
     })),
@@ -106,13 +117,18 @@ export async function POST(req: NextRequest) {
 
   const doc: ProgramDoc = {
     title,
-    notes: (body.notes ?? "").trim() || null,
-    monthStart: body.monthStart ?? null,
-    clientName: (body.clientName ?? "").trim() || null,
+    notes: str(body.notes) || null,
+    // Only a real month start reaches the cover's month formatter.
+    monthStart: isMonthStart(body.monthStart) ? body.monthStart : null,
+    clientName: clampText(str(body.clientName), PDF_CLIENT_NAME_MAX) || null,
     days,
   };
 
-  const withThumbs = await attachThumbnails(doc);
-  const buf = await renderProgramPdf(withThumbs, lang);
-  return pdfResponse(buf, pdfFilename(title, lang), false);
+  try {
+    const buf = await exportProgramPdf(doc, lang);
+    return pdfResponse(buf, pdfFilename(title, lang), false);
+  } catch (err) {
+    console.error(`[pdf-export] editor export (${lang}) failed`, err);
+    return new Response("PDF export failed", { status: 500 });
+  }
 }

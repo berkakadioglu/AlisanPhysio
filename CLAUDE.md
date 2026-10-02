@@ -14,8 +14,8 @@ programs, nutrition plans, and reusable content. The app lives in the
 - **Next.js 16** (App Router, TypeScript) + **Supabase** (auth + Postgres with
   RLS) + **Tailwind**. Deploy target Vercel (not deployed yet).
 - Key dirs (under `alisanphysio/src`):
-  - `app/dashboard` — client-facing (this-week program hero, past/upcoming,
-    program detail, profile, weekly review, nutrition).
+  - `app/dashboard` — client-facing (this-month program hero, past/upcoming,
+    program detail, profile, monthly review, nutrition).
   - `app/admin` — staff area (header/nav, clients list, client detail, exercise
     library, day templates, food library, nutrition editor).
   - `lib` — Supabase clients (incl. a **server-only service-role** admin client),
@@ -39,9 +39,9 @@ programs, nutrition plans, and reusable content. The app lives in the
   re-surface it.
 - **RLS everywhere**, isolating client data: a client reads only their own rows;
   staff get broad access via `is_staff()`. This is the security core.
-- **Client side:** dashboard (this-week hero + past/upcoming), program detail with
+- **Client side:** dashboard (this-month hero + past/upcoming), program detail with
   embedded youtube-nocookie players, a profile module (personal info, weight/BMI
-  chart + circumference measurements, complaints log), a weekly-review flow, a
+  chart + circumference measurements, complaints log), a monthly-review flow, a
   notification bell, a small nutrition card + full nutrition view, and a
   client-only membership access gate.
 - **Staff side:** create/manage/delete clients (name, email, height, language,
@@ -49,8 +49,8 @@ programs, nutrition plans, and reusable content. The app lives in the
   (`programs.client_id` can be any profile — staff have "Personal Exercises" for
   themselves), an exercise library with multi-category support, reusable day
   templates, a food library, a per-client nutrition plan editor, and a program
-  editor (Week → Day → Exercise, category-grouped searchable combobox,
-  copy-from-previous-week, week dropdown).
+  editor (Month → Day → Exercise, category-grouped searchable combobox,
+  copy-from-previous-month, month dropdown).
 - **Membership tiers** (platinum/gold/silver/bronze + end date), **notifications**,
   full **TR/EN i18n** (default EN, header toggle, `profiles.language`), and full
   **dark mode** (token-driven, system-preference default + header toggle).

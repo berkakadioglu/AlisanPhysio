@@ -77,7 +77,6 @@ export function ClientNutritionView({
       <DashboardSectionIntro
         eyebrow={t(lang, "nutriClient.eyebrow")}
         title={t(lang, "nutriClient.heading")}
-        body={t(lang, "nutriClient.subtitle")}
       />
 
       {plan?.notes && (

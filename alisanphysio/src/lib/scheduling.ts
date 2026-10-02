@@ -45,7 +45,7 @@ export type ZonedDateTimeResolution =
 
 export type ZonedDateTimeDisambiguation = "earlier" | "later" | "reject";
 
-export interface WeeklyOccurrence extends LocalDateTime {
+export interface RecurringOccurrence extends LocalDateTime {
   startsAt: string;
   durationMin: number;
 }
@@ -291,18 +291,18 @@ export function addLocalDays(date: string, days: number): string {
 }
 
 /**
- * Build a weekly pattern by advancing the LOCAL date, then resolving each wall
+ * Build a seven-day pattern by advancing the LOCAL date, then resolving each wall
  * clock occurrence independently. UTC differences may be 167/169 hours at a
  * DST boundary; the intended local hour never drifts.
  */
-export function generateWeeklyOccurrences(input: {
+export function generateRecurringOccurrences(input: {
   firstDate: string;
   localTime: string;
   timeZone: string;
   weeks: number;
   durationMin: number;
   disambiguation?: ZonedDateTimeDisambiguation;
-}): WeeklyOccurrence[] {
+}): RecurringOccurrence[] {
   if (!Number.isInteger(input.weeks) || input.weeks < 1 || input.weeks > 104) {
     throw new RangeError("weeks must be an integer between 1 and 104");
   }

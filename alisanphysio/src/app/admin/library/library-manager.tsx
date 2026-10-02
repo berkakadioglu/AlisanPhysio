@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import { Check, ChevronDown, Pencil, Play, Plus, Trash2, X } from "lucide-react";
 import type { CategoryWithCount, LibraryExercise } from "@/lib/types";
 import { parseYouTubeId } from "@/lib/youtube";
+import { richTextExcerpt } from "@/lib/rich-text";
 import { categoryLabel, type Lang } from "@/lib/i18n";
 import { useI18n } from "@/app/i18n-provider";
 import { useToast } from "@/app/toast";
 import YouTubeEmbed from "@/components/youtube-embed";
+import RichTextEditor from "@/components/rich-text-editor";
 import {
   createCategory,
   createLibraryExercise,
@@ -26,14 +28,41 @@ type Editing = LibraryExercise | "new" | null;
 export default function LibraryManager({
   exercises,
   categories,
+  initialQuery = "",
+  initialEditId = null,
 }: {
   exercises: LibraryExercise[];
   categories: CategoryWithCount[];
+  /** Deep link `?q=`: pre-fills the search. */
+  initialQuery?: string;
+  /** Deep link `?edit=<id>` (e.g. "Open in library" in the programme editor):
+   *  opens that entry's edit dialog on arrival. */
+  initialEditId?: string | null;
 }) {
   const { t, lang } = useI18n();
   const [activeCat, setActiveCat] = useState<string | null>(null);
-  const [query, setQuery] = useState("");
-  const [editing, setEditing] = useState<Editing>(null);
+  const [query, setQuery] = useState(initialQuery);
+  const [editing, setEditing] = useState<Editing>(() =>
+    initialEditId ? (exercises.find((e) => e.id === initialEditId) ?? null) : null,
+  );
+
+  function closeEditor() {
+    setEditing(null);
+    // Drop a deep-linked ?edit= so a reload doesn't reopen the dialog (the
+    // search text stays, keeping the list narrowed to that entry).
+    // State must be `null` (not window.history.state, which carries Next's
+    // `__NA` flag): only then does Next's patched replaceState sync its
+    // canonical URL, so a later router.refresh() doesn't write ?edit= back.
+    try {
+      const url = new URL(window.location.href);
+      if (url.searchParams.has("edit")) {
+        url.searchParams.delete("edit");
+        window.history.replaceState(null, "", url);
+      }
+    } catch {
+      /* the dialog still closes */
+    }
+  }
   const [preview, setPreview] = useState<LibraryExercise | null>(null);
 
   const catById = useMemo(
@@ -120,7 +149,7 @@ export default function LibraryManager({
         <ExerciseModal
           editing={editing}
           categories={categories}
-          onClose={() => setEditing(null)}
+          onClose={closeEditor}
         />
       )}
       {preview && <PreviewModal item={preview} onClose={() => setPreview(null)} />}
@@ -162,7 +191,7 @@ function CategorySidebar({
       setDraft("");
       router.refresh();
     } else {
-      toast(res.error);
+      toast.error(res.error);
     }
   }
 
@@ -178,7 +207,7 @@ function CategorySidebar({
       setDraft("");
       router.refresh();
     } else {
-      toast(res.error);
+      toast.error(res.error);
     }
   }
 
@@ -190,7 +219,7 @@ function CategorySidebar({
       if (activeCat === c.id) onSelect(null);
       router.refresh();
     } else {
-      toast(res.error);
+      toast.error(res.error);
     }
   }
 
@@ -450,7 +479,8 @@ function ExerciseCard({
       )}
 
       <div className="mb-4 mt-2.5 h-[4.5rem] text-sm leading-6 text-muted-foreground">
-        <p className="line-clamp-3 break-words">{item.default_instructions || t("lib.noInstructions")}</p>
+        {/* One plain line of the formatted instructions — never raw Markdown markers. */}
+        <p className="line-clamp-3 [overflow-wrap:anywhere]">{richTextExcerpt(item.default_instructions) || t("lib.noInstructions")}</p>
       </div>
 
       <div className="mt-auto flex items-center gap-2 border-t border-border pt-3">
@@ -512,7 +542,7 @@ function PreviewModal({
         </div>
         {videoId ? (
           <div className="overflow-hidden rounded-xl">
-            <YouTubeEmbed id={videoId} title={item.name} />
+            <YouTubeEmbed id={videoId} title={item.name} playLabel={t("prog.playVideo", { name: item.name })} />
           </div>
         ) : (
           <p className="py-6 text-center text-sm text-subtle-foreground">
@@ -578,8 +608,10 @@ function ExerciseModal({
         });
     if (res.ok) {
       toast(isNew ? t("toast.exerciseAdded") : t("toast.exerciseSaved"));
-      router.refresh();
+      // Close first: dropping ?edit= dispatches a router RESTORE, which would
+      // discard a refresh that is already pending (the list wouldn't update).
       onClose();
+      router.refresh();
     } else {
       setError(res.error);
       setPending(false);
@@ -593,8 +625,8 @@ function ExerciseModal({
     const res = await deleteLibraryExercise({ id: existing.id });
     if (res.ok) {
       toast(t("toast.exerciseDeleted"));
+      onClose(); // before refresh — see save()
       router.refresh();
-      onClose();
     } else {
       setError(res.error);
       setPending(false);
@@ -644,7 +676,11 @@ function ExerciseModal({
 
           {previewId ? (
             <div className="overflow-hidden rounded-xl shadow-soft">
-              <YouTubeEmbed id={previewId} title={name.trim() || "Preview"} />
+              <YouTubeEmbed
+                id={previewId}
+                title={name.trim() || t("lib.preview")}
+                playLabel={t("prog.playVideo", { name: name.trim() || t("lib.preview") })}
+              />
             </div>
           ) : (
             youtubeUrl.trim() !== "" && (
@@ -686,19 +722,20 @@ function ExerciseModal({
             )}
           </div>
 
-          <label className="block space-y-1.5">
+          {/* Not a <label>: the editor's toolbar buttons would capture label clicks. */}
+          <div className="space-y-1.5">
             <span className="block text-sm font-medium text-foreground">
               {t("lib.defaultInstructions")}{" "}
               <span className="text-subtle-foreground">{t("common.optional")}</span>
             </span>
-            <textarea
+            <RichTextEditor
               value={defaultInstructions}
-              onChange={(e) => setDefaultInstructions(e.target.value)}
-              rows={3}
-              className={`${inputClass} resize-y`}
+              onChange={setDefaultInstructions}
+              ariaLabel={t("lib.defaultInstructions")}
               placeholder={t("lib.defaultInstructionsPlaceholder")}
+              minRows={4}
             />
-          </label>
+          </div>
 
           {error && (
             <p

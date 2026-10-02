@@ -42,7 +42,6 @@ export default async function ProgressPage() {
       <DashboardSectionIntro
         eyebrow={t(lang, "progress.eyebrow")}
         title={t(lang, "progress.title")}
-        body={t(lang, "progress.body")}
       />
       <div className="mt-7">
         <ProgressMeasurements

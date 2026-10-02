@@ -366,7 +366,7 @@ function ChangePasswordSection() {
 }
 
 // ---------------------------------------------------------------------------
-// 3) Weekly measurements — form + table + chart
+// 3) Measurements — form + table + chart
 // ---------------------------------------------------------------------------
 function localToday(): string {
   const d = new Date();
@@ -441,12 +441,20 @@ export function ProgressMeasurements({
   async function remove(id: string) {
     if (!window.confirm(t("profile.confirmDeleteMeasurement"))) return;
     setDeletingId(id);
-    const res = await deleteMeasurement({ id });
-    if (res.ok) {
-      toast(t("toast.measurementDeleted"));
-      router.refresh();
+    try {
+      const res = await deleteMeasurement({ id });
+      if (res.ok) {
+        toast(t("toast.measurementDeleted"));
+        router.refresh();
+      } else {
+        toast.error(res.error);
+      }
+    } catch {
+      // Network failure or an expired session: never fail silently.
+      toast.error(t("err.measurementDelete"));
+    } finally {
+      setDeletingId(null);
     }
-    setDeletingId(null);
   }
 
   // Chart points: chronological, weighted rows only.
@@ -835,12 +843,19 @@ function ComplaintsSection({
   async function remove(id: string) {
     if (!window.confirm(t("profile.confirmDeleteComplaint"))) return;
     setDeletingId(id);
-    const res = await deleteComplaint({ id });
-    if (res.ok) {
-      toast(t("toast.noteDeleted"));
-      router.refresh();
+    try {
+      const res = await deleteComplaint({ id });
+      if (res.ok) {
+        toast(t("toast.noteDeleted"));
+        router.refresh();
+      } else {
+        toast.error(res.error);
+      }
+    } catch {
+      toast.error(t("err.noteDelete"));
+    } finally {
+      setDeletingId(null);
     }
-    setDeletingId(null);
   }
 
   const fmtStamp = (iso: string) =>

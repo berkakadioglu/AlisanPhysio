@@ -62,11 +62,11 @@ export default function CatalogList({ programs, clientId, timeZone }: {
           <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
             <h2 className="min-w-0 break-words font-display text-xl font-bold text-foreground [overflow-wrap:anywhere]">{program.title}</h2>
             <p className="text-xs leading-relaxed text-muted-foreground">{t("catalog.updated")}{" "}
-              <time dateTime={program.updated_at}>{new Intl.DateTimeFormat(lang === "tr" ? "tr-TR" : "en-CA", { dateStyle: "medium", timeStyle: "short", timeZone }).format(new Date(program.updated_at))}</time>
+              {program.updated_at ? <time dateTime={program.updated_at}>{new Intl.DateTimeFormat(lang === "tr" ? "tr-TR" : "en-CA", { dateStyle: "medium", timeStyle: "short", timeZone }).format(new Date(program.updated_at))}</time> : t("catalog.notRecorded")}
             </p>
           </div>
           <dl className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
-            {[[t("catalog.days"), program.dayCount], [t("catalog.exercises"), program.exerciseCount], [t("catalog.clients"), program.clientCount], [t("catalog.assignments"), program.assignmentCount]].map(([label, value]) => <div key={label}><dt className="text-xs text-muted-foreground">{label}</dt><dd className="mt-1 font-semibold tabular-nums text-foreground">{value}</dd></div>)}
+            {[[t("catalog.days"), program.dayCount], [t("catalog.exercises"), program.exerciseCount], [t("catalog.clients"), program.clientCount], [t("catalog.assignments"), program.assignmentCount]].map(([label, value]) => <div key={label}><dt className="text-xs text-muted-foreground">{label}</dt><dd className="mt-1 font-semibold tabular-nums text-foreground">{value ?? t("catalog.notRecorded")}</dd></div>)}
           </dl>
           <div className="mt-5 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
             <Link href={`/admin/programs/${program.id}/edit`} className={actionClass}><Pencil className="h-3.5 w-3.5 flex-none" aria-hidden />{t("common.edit")}</Link>

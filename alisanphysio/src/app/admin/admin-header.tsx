@@ -87,7 +87,6 @@ export default async function AdminHeader({
       { href: "/admin/programs", label: t(lang, "catalog.heading") },
       { href: "/admin/library", label: t(lang, "nav.exerciseLibrary") },
       { href: "/admin/food-library", label: t(lang, "nav.foodLibrary") },
-      { href: "/admin/templates", label: t(lang, "nav.dayTemplates") },
     ],
   };
   const meGroup: MobileNavGroup = {
