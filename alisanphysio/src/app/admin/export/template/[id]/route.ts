@@ -4,13 +4,8 @@ import { requireStaff } from "@/lib/admin-auth";
 import { isProgramId } from "@/lib/catalog-programs";
 import { isLang, type Lang } from "@/lib/i18n";
 import type { ProgramDoc } from "@/lib/pdf/program-pdf";
-import {
-  exportProgramPdf,
-  pdfFilename,
-  pdfResponse,
-  singleDay,
-  type RawExercise,
-} from "@/lib/pdf/build";
+import { exportProgramPdf, pdfFilename, singleDay, type RawExercise } from "@/lib/pdf/build";
+import { deliverPdf, deliveryFailure, pdfDelivery } from "@/lib/pdf/delivery";
 import { missingSavedDayColumn } from "@/lib/templates";
 
 export const runtime = "nodejs";
@@ -50,7 +45,8 @@ async function loadLiveSavedDay(
 }
 
 /** Export a day template as a standalone program document (PDF). Staff-gated.
- *  This is the sales path — a custom program built from a template. */
+ *  This is the sales path — a custom program built from a template. Inline
+ *  when opened directly; the button asks for `download=1&token=…`. */
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -60,11 +56,11 @@ export async function GET(
   const url = new URL(req.url);
   const langParam = url.searchParams.get("lang");
   const lang: Lang = isLang(langParam) ? langParam : "en";
-  const inline = url.searchParams.get("inline") === "1";
+  const delivery = pdfDelivery(url);
 
-  if (!isProgramId(id)) return new Response("Not found", { status: 404 });
+  if (!isProgramId(id)) return deliveryFailure(delivery, 404, "Not found");
   const template = await loadLiveSavedDay(supabase, id);
-  if (!template) return new Response("Not found", { status: 404 });
+  if (!template) return deliveryFailure(delivery, 404, "Not found");
 
   const { data: exRows } = await supabase
     .from("day_template_exercises")
@@ -90,9 +86,9 @@ export async function GET(
 
   try {
     const buf = await exportProgramPdf(doc, lang);
-    return pdfResponse(buf, pdfFilename(template.title, lang), inline);
+    return deliverPdf(buf, pdfFilename(template.title, lang), delivery);
   } catch (err) {
     console.error(`[pdf-export] template ${id} (${lang}) failed`, err);
-    return new Response("PDF export failed", { status: 500 });
+    return deliveryFailure(delivery, 500, "PDF export failed");
   }
 }

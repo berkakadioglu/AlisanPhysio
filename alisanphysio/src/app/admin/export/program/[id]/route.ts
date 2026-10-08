@@ -3,13 +3,8 @@ import { requireStaff } from "@/lib/admin-auth";
 import { isLang, type Lang } from "@/lib/i18n";
 import type { Program } from "@/lib/types";
 import type { ProgramDoc } from "@/lib/pdf/program-pdf";
-import {
-  exportProgramPdf,
-  groupIntoDays,
-  pdfFilename,
-  pdfResponse,
-  type RawExercise,
-} from "@/lib/pdf/build";
+import { exportProgramPdf, groupIntoDays, pdfFilename, type RawExercise } from "@/lib/pdf/build";
+import { deliverPdf, deliveryFailure, pdfDelivery } from "@/lib/pdf/delivery";
 
 // react-pdf + fs font reads need the Node.js runtime (not Edge).
 export const runtime = "nodejs";
@@ -22,7 +17,11 @@ type ExRow = RawExercise & {
   exercise_library: { youtube_url: string | null } | null;
 };
 
-/** Export a saved program (by id) as a standalone PDF. Staff-gated. */
+/**
+ * Export a saved program (by id) as a standalone PDF. Staff-gated. Opened
+ * directly it is shown inline (Safari's PDF viewer); the "Save as PDF" button
+ * navigates here with `download=1&token=…` — see src/lib/pdf/delivery.ts.
+ */
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -32,14 +31,14 @@ export async function GET(
   const url = new URL(req.url);
   const langParam = url.searchParams.get("lang");
   const lang: Lang = isLang(langParam) ? langParam : "en";
-  const inline = url.searchParams.get("inline") === "1";
+  const delivery = pdfDelivery(url);
 
   const { data: program } = await supabase
     .from("programs")
     .select("id, kind, client_id, title, month_start_date, notes")
     .eq("id", id)
     .maybeSingle<Program>();
-  if (!program) return new Response("Not found", { status: 404 });
+  if (!program) return deliveryFailure(delivery, 404, "Not found");
 
   const [{ data: exRows }, { data: dayRows }, { data: profile }] =
     await Promise.all([
@@ -79,9 +78,9 @@ export async function GET(
 
   try {
     const buf = await exportProgramPdf(doc, lang);
-    return pdfResponse(buf, pdfFilename(program.title, lang), inline);
+    return deliverPdf(buf, pdfFilename(program.title, lang), delivery);
   } catch (err) {
     console.error(`[pdf-export] program ${id} (${lang}) failed`, err);
-    return new Response("PDF export failed", { status: 500 });
+    return deliveryFailure(delivery, 500, "PDF export failed");
   }
 }

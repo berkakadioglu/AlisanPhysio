@@ -1001,6 +1001,10 @@ const en: Dict = {
   "export.chooseLanguage": "PDF language",
   "export.generating": "Generating…",
   "export.failed": "Could not generate the PDF. Please try again.",
+  "export.sessionExpired": "Your session has expired. Please sign in again, then save the PDF.",
+  "export.preparing": "Preparing your PDF…",
+  "export.ready": "Your PDF is ready.",
+  "export.open": "Open",
   "pdf.program": "Training Program",
   "pdf.tagline": "Personal training & physiotherapy",
 
@@ -2222,6 +2226,10 @@ const tr: Dict = {
   "export.chooseLanguage": "PDF dili",
   "export.generating": "Oluşturuluyor…",
   "export.failed": "PDF oluşturulamadı. Lütfen tekrar deneyin.",
+  "export.sessionExpired": "Oturumunuzun süresi doldu. Lütfen yeniden giriş yapıp PDF’i tekrar kaydedin.",
+  "export.preparing": "PDF’iniz hazırlanıyor…",
+  "export.ready": "PDF’iniz hazır.",
+  "export.open": "Aç",
   "pdf.program": "Antrenman Programı",
   "pdf.tagline": "Kişisel antrenman & fizyoterapi",
 

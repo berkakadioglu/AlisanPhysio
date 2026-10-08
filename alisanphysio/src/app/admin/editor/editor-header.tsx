@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AlertTriangle, Check, CircleDot, Loader2 } from "lucide-react";
 import { useI18n } from "@/app/i18n-provider";
 import ProgramExportButton, { type ExportDoc } from "@/components/program-export-button";
+import type { SavedExportMode } from "@/lib/pdf-export-protocol";
 import OverflowMenu, { type OverflowMenuItem } from "./overflow-menu";
 import TitleField from "./title-field";
 
@@ -37,6 +38,7 @@ export default function EditorHeader({
   month,
   status,
   getExportDoc,
+  savedExport = null,
   onSave,
   saving,
   locked = false,
@@ -54,6 +56,8 @@ export default function EditorHeader({
   month?: MonthControl | null;
   status: SaveStatus;
   getExportDoc: () => ExportDoc;
+  /** Set when nothing is unsaved: the PDF then comes from the saved record. */
+  savedExport?: { mode: SavedExportMode; id: string } | null;
   onSave: () => void;
   saving: boolean;
   /** Read-only title / month (while the first save moves to the edit URL). */
@@ -155,6 +159,7 @@ export default function EditorHeader({
             mode="inline"
             align="left"
             getDoc={getExportDoc}
+            saved={savedExport}
             className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-border bg-surface px-4 py-2 text-sm font-medium text-muted-foreground shadow-sm transition hover:border-brand/40 hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 disabled:cursor-not-allowed disabled:opacity-60"
           />
           <button

@@ -1,4 +1,5 @@
 import { effectiveVideoId, youtubeThumb } from "@/lib/youtube";
+import { deliverPdf } from "./delivery";
 import type { Lang } from "@/lib/i18n";
 import {
   renderProgramPdf,
@@ -72,12 +73,10 @@ export function pdfResponse(
   filename: string,
   inline = false,
 ): Response {
-  return new Response(new Uint8Array(buf), {
-    headers: {
-      "Content-Type": "application/pdf",
-      "Content-Disposition": `${inline ? "inline" : "attachment"}; filename="${filename}"`,
-      "Cache-Control": "no-store",
-    },
+  return deliverPdf(buf, filename, {
+    disposition: inline ? "inline" : "attachment",
+    token: null,
+    secure: false,
   });
 }
 

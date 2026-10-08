@@ -491,6 +491,7 @@ export default function ProgramEditor({
   const header = (
     <EditorHeader
       backHref={backHref}
+      savedExport={!dirty && currentId ? { mode: isTemplate ? "template" : "program", id: currentId } : null}
       backLabel={backLabel}
       title={title}
       onTitleChange={setTitle}
