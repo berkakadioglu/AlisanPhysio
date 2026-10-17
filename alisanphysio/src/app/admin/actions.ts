@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin, requireStaff } from "@/lib/admin-auth";
+import { isProgramId } from "@/lib/catalog-programs";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isLang, t, type Lang } from "@/lib/i18n";
 import { isMembership, type Membership } from "@/lib/membership";
@@ -26,6 +27,8 @@ interface DayInput {
   title: string; // "" for an untitled/flat day
   /** Name of the saved day this day was copied from (origin line only). */
   sourceTemplateLabel?: string | null;
+  /** The saved day this day was inserted from or saved as (for "Update saved day" only). */
+  sourceTemplateId?: string | null;
   exercises: ExerciseInput[];
 }
 
@@ -107,9 +110,12 @@ export async function saveProgram(input: SaveProgramInput): Promise<ActionResult
     return { ok: false, error: t(lang, "err.programShape") };
   // `source_template_label` is informational text (0021 stores it; older RPCs
   // ignore unknown keys), so it is trimmed and capped, never trusted as a link.
+  // `source_template_id` is only ever used to offer "Update saved day": a value
+  // that is not a uuid is dropped here, and save_program drops an unknown one.
   const days = input.days.map((day) => ({
     title: day.title.trim(),
     source_template_label: day.sourceTemplateLabel?.trim().slice(0, 200) || null,
+    source_template_id: isProgramId(day.sourceTemplateId) ? day.sourceTemplateId : null,
     exercises: day.exercises.filter((ex) => ex.name.trim()).map((ex) => ({ ...ex, name: ex.name.trim() })),
   })).filter((day) => day.title || day.exercises.length);
   if (days.some((day) => day.exercises.some((ex) => ex.sets !== null && (!Number.isInteger(ex.sets) || ex.sets < 0))))

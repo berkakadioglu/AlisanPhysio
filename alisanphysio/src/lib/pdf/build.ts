@@ -70,7 +70,7 @@ export function singleDay(exercises: RawExercise[]): PdfDay[] {
 /** Build the standard PDF Response (download by default; inline for previewing). */
 export function pdfResponse(
   buf: Buffer,
-  filename: string,
+  filename: string | PdfFileName,
   inline = false,
 ): Response {
   return deliverPdf(buf, filename, {
@@ -317,4 +317,33 @@ export function slugify(s: string): string {
 
 export function pdfFilename(title: string, lang: Lang): string {
   return `alisanphysio-${slugify(title)}-${lang}.pdf`;
+}
+
+/**
+ * A readable slug that keeps the letters of every script (ş, ğ, ı, ç, …), for the
+ * RFC 5987 `filename*`. Turkish lower-casing follows tr-TR, so "İ" becomes "i".
+ */
+export function slugifyUnicode(s: string, lang: Lang): string {
+  const out = (s || "")
+    .normalize("NFC")
+    .toLocaleLowerCase(lang === "tr" ? "tr-TR" : "en-US")
+    .replace(/[^\p{L}\p{N}\s-]/gu, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+  const capped = [...out].slice(0, 60).join("").replace(/^-|-$/g, "");
+  return capped || "program";
+}
+
+/** The two names a PDF download carries: ASCII for `filename=`, the real title for `filename*=`. */
+export interface PdfFileName {
+  ascii: string;
+  unicode: string;
+}
+
+export function pdfFileName(title: string, lang: Lang): PdfFileName {
+  return {
+    ascii: pdfFilename(title, lang),
+    unicode: `alisanphysio-${slugifyUnicode(title, lang)}-${lang}.pdf`,
+  };
 }

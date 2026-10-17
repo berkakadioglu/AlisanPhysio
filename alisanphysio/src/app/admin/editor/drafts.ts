@@ -16,6 +16,8 @@ export interface DayDraft {
   key: string;
   title: string;
   sourceTemplateLabel: string | null;
+  /** The saved day this day was inserted from or saved as (see EditorDay). */
+  sourceTemplateId: string | null;
   exercises: ExerciseDraft[];
 }
 
@@ -40,6 +42,7 @@ export function toDayDraft(d: EditorDay): DayDraft {
     key: newDraftKey("day"),
     title: d.title,
     sourceTemplateLabel: d.sourceTemplateLabel,
+    sourceTemplateId: d.sourceTemplateId,
     exercises: d.exercises.map(toExerciseDraft),
   };
 }
@@ -61,6 +64,7 @@ export function fromDayDraft(d: DayDraft): EditorDay {
   return {
     title: d.title,
     sourceTemplateLabel: d.sourceTemplateLabel,
+    sourceTemplateId: d.sourceTemplateId,
     exercises: d.exercises.map(fromExerciseDraft),
   };
 }

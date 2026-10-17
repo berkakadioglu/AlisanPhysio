@@ -1,7 +1,7 @@
 "use client";
 
 import { useId } from "react";
-import { ArrowDown, ArrowUp, BookmarkPlus, CopyPlus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, BookmarkPlus, CopyPlus, RefreshCw, Trash2 } from "lucide-react";
 import { useI18n } from "@/app/i18n-provider";
 import type { DayDraft } from "./drafts";
 import OverflowMenu from "./overflow-menu";
@@ -9,8 +9,9 @@ import TitleField from "./title-field";
 
 /**
  * The selected day's header: a large inline-editable (wrapping) title, the day actions
- * (save as template, duplicate, ⋯ move / delete) and — for a day inserted from
- * a saved day — a quiet origin line explaining that edits stay local.
+ * (save as template, update the saved day it came from, duplicate, ⋯ move / delete)
+ * and — for a day inserted from a saved day — a quiet origin line explaining that
+ * edits stay local.
  */
 export default function DayHeader({
   day,
@@ -18,6 +19,8 @@ export default function DayHeader({
   dayCount,
   onTitleChange,
   onSaveAsTemplate,
+  updateTargetName,
+  onUpdateSavedDay,
   onDuplicate,
   onMove,
   onDelete,
@@ -27,6 +30,9 @@ export default function DayHeader({
   dayCount: number;
   onTitleChange: (title: string) => void;
   onSaveAsTemplate: () => void;
+  /** Name of the live saved day this day came from; with `onUpdateSavedDay`, offers the update. */
+  updateTargetName?: string | null;
+  onUpdateSavedDay?: () => void;
   onDuplicate: () => void;
   onMove: (dir: -1 | 1) => void;
   onDelete: () => void;
@@ -69,11 +75,24 @@ export default function DayHeader({
         </p>
       )}
 
-      <div className="order-4 grid w-full grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 pt-1 sm:order-2 sm:ml-auto sm:flex sm:w-auto sm:flex-wrap sm:justify-end sm:pt-0">
+      {/* grid-flow-dense: the update button takes its own full row on narrow
+          screens, and Duplicate and ⋯ move back up beside Save. */}
+      <div className="order-4 grid w-full grid-flow-dense grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 pt-1 sm:order-2 sm:ml-auto sm:flex sm:w-auto sm:flex-wrap sm:justify-end sm:pt-0">
         <button type="button" onClick={onSaveAsTemplate} className={`${actionClass} text-left`}>
           <BookmarkPlus className="h-4 w-4 flex-none" aria-hidden />
           {t("ed.day.saveAsTemplate")}
         </button>
+        {updateTargetName && onUpdateSavedDay && (
+          <button
+            type="button"
+            onClick={onUpdateSavedDay}
+            aria-label={t("sd.updateLabel", { name: updateTargetName })}
+            className={`${actionClass} col-span-3 justify-center sm:col-span-1`}
+          >
+            <RefreshCw className="h-4 w-4 flex-none" aria-hidden />
+            {t("sd.update")}
+          </button>
+        )}
         <button type="button" onClick={onDuplicate} className={actionClass}>
           <CopyPlus className="h-4 w-4 flex-none" aria-hidden />
           {t("ed.day.duplicate")}

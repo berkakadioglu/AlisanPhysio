@@ -40,22 +40,32 @@ const TAB_ICONS: Record<DashboardTabId, LucideIcon> = {
   schedule: CalendarDays,
 };
 
-function activeTabFor(pathname: string): DashboardTabId | null {
-  if (pathname === "/dashboard") return "overview";
-  if (pathname.startsWith("/dashboard/nutrition")) return "nutrition";
-  if (pathname.startsWith("/dashboard/progress")) return "progress";
-  if (pathname.startsWith("/dashboard/availability")) return "schedule";
+/**
+ * Resolves the active tab for a path under `basePath`. A staff "view as client"
+ * mirror passes its own base and is mapped back onto the dashboard route names,
+ * so both trees share the same tab rules. Anything outside `basePath` has no tab.
+ */
+export function activeTabFor(pathname: string, basePath = "/dashboard"): DashboardTabId | null {
+  let path: string;
+  if (pathname === basePath) path = "/dashboard";
+  else if (pathname.startsWith(`${basePath}/`)) path = `/dashboard${pathname.slice(basePath.length)}`;
+  else return null;
+
+  if (path === "/dashboard") return "overview";
+  if (path.startsWith("/dashboard/nutrition")) return "nutrition";
+  if (path.startsWith("/dashboard/progress")) return "progress";
+  if (path.startsWith("/dashboard/availability")) return "schedule";
   if (
-    pathname.startsWith("/dashboard/programme") ||
-    pathname.startsWith("/dashboard/past") ||
-    pathname.startsWith("/dashboard/upcoming")
+    path.startsWith("/dashboard/programme") ||
+    path.startsWith("/dashboard/past") ||
+    path.startsWith("/dashboard/upcoming")
   ) {
     return "programme";
   }
 
   // Programme detail pages are the remaining direct dashboard children.
-  if (/^\/dashboard\/[^/]+$/.test(pathname)) {
-    if (pathname === "/dashboard/profile" || pathname === "/dashboard/review") {
+  if (/^\/dashboard\/[^/]+$/.test(path)) {
+    if (path === "/dashboard/profile" || path === "/dashboard/review") {
       return null;
     }
     return "programme";
@@ -68,20 +78,24 @@ function activeTabFor(pathname: string): DashboardTabId | null {
  * surface. Authentication and profile loading stay in the server layout.
  */
 export default function ClientDashboardShell({
+  basePath = "/dashboard",
   identity,
   tabs,
   navigationLabel,
   footer,
   children,
 }: {
+  /** Route root the tabs live under; the staff "view as client" tree passes its own. */
+  basePath?: string;
   identity: DashboardIdentity;
   tabs: DashboardTab[];
   navigationLabel: string;
-  footer: React.ReactNode;
+  /** Omitted where the surrounding layout already renders the credit (admin). */
+  footer?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const activeTab = activeTabFor(pathname);
+  const activeTab = activeTabFor(pathname, basePath);
 
   return (
     <div className="mx-auto w-full max-w-6xl min-w-0 px-3 py-5 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
@@ -137,7 +151,7 @@ export default function ClientDashboardShell({
 
         <div className="min-w-0 p-4 sm:p-6 lg:p-8">{children}</div>
       </div>
-      <footer className="studio-shell-footer">{footer}</footer>
+      {footer != null && <footer className="studio-shell-footer">{footer}</footer>}
     </div>
   );
 }

@@ -25,7 +25,7 @@ export default async function SavedDayPage({ params }: { params: Promise<{ id: s
   if (!template) notFound();
 
   const [day] = asEditorDays([
-    { title: "", sourceTemplateLabel: null, exercises: template.exercises },
+    { title: "", sourceTemplateLabel: null, sourceTemplateId: null, exercises: template.exercises },
   ]);
   return (
     <div className="min-h-screen">

@@ -3,7 +3,7 @@ import { requireStaff } from "@/lib/admin-auth";
 import { isLang, type Lang } from "@/lib/i18n";
 import type { Program } from "@/lib/types";
 import type { ProgramDoc } from "@/lib/pdf/program-pdf";
-import { exportProgramPdf, groupIntoDays, pdfFilename, type RawExercise } from "@/lib/pdf/build";
+import { exportProgramPdf, groupIntoDays, pdfFileName, type RawExercise } from "@/lib/pdf/build";
 import { deliverPdf, deliveryFailure, pdfDelivery } from "@/lib/pdf/delivery";
 
 // react-pdf + fs font reads need the Node.js runtime (not Edge).
@@ -78,7 +78,7 @@ export async function GET(
 
   try {
     const buf = await exportProgramPdf(doc, lang);
-    return deliverPdf(buf, pdfFilename(program.title, lang), delivery);
+    return deliverPdf(buf, pdfFileName(program.title, lang), delivery);
   } catch (err) {
     console.error(`[pdf-export] program ${id} (${lang}) failed`, err);
     return deliveryFailure(delivery, 500, "PDF export failed");

@@ -121,11 +121,15 @@ export function savableExercises(exercises: readonly EditorExercise[]): EditorEx
     .map((e) => ({ ...copyExercise(e), name: e.name.trim() }));
 }
 
-/** A saved day → a NEW editor day (deep copy; the origin is recorded). */
+/**
+ * A saved day → a NEW editor day (deep copy; the origin and the saved day's id
+ * are recorded, the id only for "Update saved day").
+ */
 export function savedDayToEditorDay(tpl: TemplateWithExercises): EditorDay {
   return {
     title: tpl.title,
     sourceTemplateLabel: tpl.title,
+    sourceTemplateId: tpl.id,
     exercises: [...tpl.exercises]
       .sort((a, b) => a.order_index - b.order_index)
       .map((e) =>
@@ -144,6 +148,79 @@ export function savedDayToEditorDay(tpl: TemplateWithExercises): EditorDay {
 /** An editor day → the exercises a saved day stores (deep copy). */
 export function editorDayToSavedExercises(day: EditorDay): EditorExercise[] {
   return savableExercises(day.exercises);
+}
+
+/** The fields "Update saved day" can report as changed for one exercise. */
+export type SavedDayChangeField = "name" | "dose" | "cues" | "video" | "link";
+
+/** What "Update saved day" would change in a saved day (see savedDayDiff). */
+export interface SavedDayDiff {
+  /** Names of the exercises the update adds, in day order. */
+  added: string[];
+  /** Names of the exercises the update removes, in saved order. */
+  removed: string[];
+  /** Paired exercises whose content changes, in day order. */
+  changed: { name: string; fields: SavedDayChangeField[] }[];
+  /** The paired exercises come in a different order than the saved day has. */
+  reordered: boolean;
+  /** Nothing is added, removed, changed or reordered. */
+  same: boolean;
+}
+
+/**
+ * The difference between a saved day's exercises (`saved`) and the exercises
+ * an update would give it (`next`, as the editor holds them). Exercises pair up
+ * by name (case-insensitive, like saved-day names); a name that repeats pairs
+ * in order. Blank rows are ignored and whitespace-only differences do not count.
+ */
+export function savedDayDiff(
+  saved: readonly {
+    name: string;
+    sets: number | null;
+    reps: string | null;
+    instructions: string | null;
+    media_url: string | null;
+    library_id: string | null;
+    order_index: number;
+  }[],
+  next: readonly EditorExercise[],
+): SavedDayDiff {
+  const text = (value: string | null) => (value ?? "").trim();
+  const old = [...saved].sort((a, b) => a.order_index - b.order_index);
+  const nw = savableExercises(next);
+  const used = new Set<number>();
+  const paired: number[] = []; // the old index each paired new exercise took, in day order
+  const added: string[] = [];
+  const changed: { name: string; fields: SavedDayChangeField[] }[] = [];
+
+  for (const e of nw) {
+    const key = savedDayNameKey(e.name);
+    const oldIndex = old.findIndex((o, i) => !used.has(i) && savedDayNameKey(o.name) === key);
+    if (oldIndex === -1) {
+      added.push(e.name);
+      continue;
+    }
+    used.add(oldIndex);
+    paired.push(oldIndex);
+    const o = old[oldIndex];
+    const fields: SavedDayChangeField[] = [];
+    if (o.name.trim() !== e.name.trim()) fields.push("name");
+    if ((o.sets ?? null) !== (e.sets ?? null) || text(o.reps) !== text(e.reps)) fields.push("dose");
+    if (text(o.instructions) !== text(e.instructions)) fields.push("cues");
+    if (text(o.media_url) !== text(e.media_url)) fields.push("video");
+    if ((o.library_id ?? null) !== (e.library_id ?? null)) fields.push("link");
+    if (fields.length) changed.push({ name: e.name, fields });
+  }
+
+  const removed = old.filter((_, i) => !used.has(i)).map((o) => o.name.trim());
+  const reordered = paired.some((oldIndex, i) => i > 0 && oldIndex <= paired[i - 1]);
+  return {
+    added,
+    removed,
+    changed,
+    reordered,
+    same: added.length === 0 && removed.length === 0 && changed.length === 0 && !reordered,
+  };
 }
 
 /** When a deleted saved day is removed for good. */

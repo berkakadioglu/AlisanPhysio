@@ -158,7 +158,7 @@ export default async function AdminClientDetailPage({
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Link
-              href={`/admin/clients/${id}/data`}
+              href={`/admin/clients/${id}/view`}
               className="rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-medium text-muted-foreground shadow-sm transition hover:border-brand/40 hover:text-brand"
             >
               {t(lang, "admin.viewData")}
@@ -226,7 +226,7 @@ export default async function AdminClientDetailPage({
                           align="left"
                         />
                         <Link
-                          href={`/dashboard/${program.id}`}
+                          href={`/admin/clients/${id}/view/${program.id}`}
                           className="text-xs font-medium text-muted-foreground transition hover:text-brand"
                         >
                           {t(lang, "admin.viewAsUser")} <span aria-hidden>↗</span>

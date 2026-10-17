@@ -16,7 +16,7 @@ import {
 
 /** A fresh, empty training day (no title, no exercises). */
 export function emptyDay(): DayDraft {
-  return { key: newDraftKey("day"), title: "", sourceTemplateLabel: null, exercises: [] };
+  return { key: newDraftKey("day"), title: "", sourceTemplateLabel: null, sourceTemplateId: null, exercises: [] };
 }
 
 /** Editor state from loaded days — always at least one day to work on. */
@@ -33,12 +33,14 @@ export function asEditorDays(
   days: readonly {
     title: string | null;
     sourceTemplateLabel?: string | null;
+    sourceTemplateId?: string | null;
     exercises: readonly EditorExercise[];
   }[],
 ): EditorDay[] {
   return days.map((d) => ({
     title: d.title ?? "",
     sourceTemplateLabel: d.sourceTemplateLabel ?? null,
+    sourceTemplateId: d.sourceTemplateId ?? null,
     exercises: d.exercises.map((e) => ({
       name: e.name,
       sets: e.sets,
@@ -134,6 +136,7 @@ export function editorSnapshot(state: {
     days: state.days.map((d) => ({
       title: d.title,
       sourceTemplateLabel: d.sourceTemplateLabel,
+      sourceTemplateId: d.sourceTemplateId,
       exercises: d.exercises.map((e) => ({
         name: e.name,
         sets: e.sets,
@@ -147,13 +150,17 @@ export function editorSnapshot(state: {
   });
 }
 
-/** Days as `saveProgram` takes them: origin label kept, unnamed rows dropped. */
+/**
+ * Days as `saveProgram` takes them: origin label and saved-day id kept, unnamed
+ * rows dropped.
+ */
 export function toSaveDays(days: readonly DayDraft[]) {
   return days.map((d) => {
     const day = fromDayDraft(d);
     return {
       title: day.title,
       sourceTemplateLabel: day.sourceTemplateLabel,
+      sourceTemplateId: day.sourceTemplateId,
       exercises: namedExercises(d.exercises).map(fromExerciseDraft),
     };
   });
@@ -213,6 +220,7 @@ export function duplicateDay(
     key: newDraftKey("day"),
     title: source.title,
     sourceTemplateLabel: source.sourceTemplateLabel,
+    sourceTemplateId: source.sourceTemplateId,
     exercises: source.exercises.map((e) => ({ ...e, key: newDraftKey("ex") })),
   };
   return {

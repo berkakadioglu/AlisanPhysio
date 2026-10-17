@@ -165,6 +165,25 @@ export function SavedDayModalHeader({
 
 const PREVIEW_COUNT = 5;
 
+type SaveDayProps = {
+  open: boolean;
+  onClose: () => void;
+  day: EditorDay;
+  dayNumber: number;
+  sourceLabel: string | null;
+  savedDays: TemplateWithExercises[];
+  /**
+   * The programme day this save comes from (its programme and position), when
+   * it can be linked: the programme is saved and has no unsaved edits. Null
+   * otherwise. The link is only used to offer "Update saved day".
+   */
+  link: { programId: string; dayIndex: number } | null;
+  /** The saved day was saved (or replaced one); `linked` = the day was linked to it. */
+  onSaved?: (result: { templateId: string; replacedId: string | null; linked: boolean }) => void;
+  /** The save was undone; `linked` = the programme day's link was changed back. */
+  onUndone?: (result: { templateId: string; previousTemplateId: string | null; linked: boolean }) => void;
+};
+
 /**
  * "Save day as template": saves a COPY of a programme day as a saved day.
  * Name prefilled from the day title, the exercises that will be saved, an
@@ -172,14 +191,7 @@ const PREVIEW_COUNT = 5;
  * — or replace, which moves the current version to Recently deleted). After
  * saving, a toast offers Undo for 10 seconds.
  */
-export default function SaveDayDialog(props: {
-  open: boolean;
-  onClose: () => void;
-  day: EditorDay;
-  dayNumber: number;
-  sourceLabel: string | null;
-  savedDays: TemplateWithExercises[];
-}) {
+export default function SaveDayDialog(props: SaveDayProps) {
   if (!props.open) return null;
   // Mounted per opening, so the form always starts from the current day.
   return <SaveDayPanel {...props} />;
@@ -191,13 +203,10 @@ function SaveDayPanel({
   dayNumber,
   sourceLabel,
   savedDays,
-}: {
-  onClose: () => void;
-  day: EditorDay;
-  dayNumber: number;
-  sourceLabel: string | null;
-  savedDays: TemplateWithExercises[];
-}) {
+  link,
+  onSaved,
+  onUndone,
+}: Omit<SaveDayProps, "open">) {
   const { t, lang } = useI18n();
   const router = useRouter();
   const toast = useToast();
@@ -228,11 +237,21 @@ function SaveDayPanel({
     : null;
   const canSave = !empty && trimmed !== "" && !busy;
 
-  async function undo(templateId: string, replacedId: string | null) {
+  async function undo(templateId: string, replacedId: string | null, linked: boolean) {
+    // The day's saved-day id before this save (the Undo puts it back).
+    const previousTemplateId = day.sourceTemplateId ?? null;
     try {
-      const res = await undoSaveDayAsTemplate({ templateId, restoreId: replacedId });
-      if (res.ok) toast(t("sd.saveUndone"));
-      else toast.error(res.error);
+      const res = await undoSaveDayAsTemplate({
+        templateId,
+        restoreId: replacedId,
+        link: linked && link ? { ...link, previousTemplateId } : null,
+      });
+      if (res.ok) {
+        toast(t("sd.saveUndone"));
+        onUndone?.({ templateId, previousTemplateId, linked });
+      } else {
+        toast.error(res.error);
+      }
     } catch {
       toast.error(t("sd.undoError"));
     }
@@ -250,6 +269,7 @@ function SaveDayPanel({
         exercises,
         sourceLabel,
         replaceId: conflict && choice === "replace" ? conflict.id : null,
+        link,
       });
       if (!res.ok) {
         setError(res.error);
@@ -257,8 +277,9 @@ function SaveDayPanel({
         return;
       }
       onClose();
+      onSaved?.({ templateId: res.templateId, replacedId: res.replacedId, linked: res.linked });
       toast(t("sd.savedToast", { title: res.title }), {
-        action: { label: t("sd.undo"), onClick: () => void undo(res.templateId, res.replacedId) },
+        action: { label: t("sd.undo"), onClick: () => void undo(res.templateId, res.replacedId, res.linked) },
       });
       router.refresh();
     } catch {

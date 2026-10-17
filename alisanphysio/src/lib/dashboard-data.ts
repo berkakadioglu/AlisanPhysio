@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import type { Profile, ClientProgram } from "@/lib/types";
 import { bucketForMonthStart, type Bucket } from "@/lib/month";
@@ -39,22 +40,34 @@ export async function loadDashboardData(): Promise<DashboardData> {
     redirect("/login");
   }
 
+  return loadClientDashboardData(supabase, user.id);
+}
+
+/**
+ * The dashboard data for one client id. The signed-in client passes their own id;
+ * the staff "view as client" pages pass the client being viewed. Every query is
+ * scoped to clientId explicitly, because staff can read every row via RLS.
+ */
+export async function loadClientDashboardData(
+  supabase: SupabaseClient,
+  clientId: string,
+): Promise<DashboardData> {
   const { data: profile } = await supabase
     .from("profiles")
     .select("id, full_name, role, created_at, timezone, nutrition_enabled")
-    .eq("id", user.id)
+    .eq("id", clientId)
     .single<Profile>();
 
-  // Scope to the signed-in user's OWN programs. Staff (admin/manager) can read
-  // every program via RLS, so the client-facing dashboard MUST filter explicitly
-  // — otherwise a staff member's own dashboard would show everyone's programs.
+  // Scope to the client's OWN programs. Staff (admin/manager) can read every
+  // program via RLS, so the dashboard MUST filter explicitly — otherwise a staff
+  // member's own dashboard would show everyone's programs.
   const { data: programs, error: programsError } = await supabase
     .from("programs")
     .select(
       "id, kind, client_id, title, month_start_date, notes, created_at, exercises(count), program_days(title, order_index)",
     )
     .eq("kind", "client")
-    .eq("client_id", user.id)
+    .eq("client_id", clientId)
     .order("month_start_date", { ascending: false })
     .returns<ProgramWithCount[]>();
 

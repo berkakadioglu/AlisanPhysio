@@ -4,7 +4,7 @@ import { requireStaff } from "@/lib/admin-auth";
 import { isProgramId } from "@/lib/catalog-programs";
 import { isLang, type Lang } from "@/lib/i18n";
 import type { ProgramDoc } from "@/lib/pdf/program-pdf";
-import { exportProgramPdf, pdfFilename, singleDay, type RawExercise } from "@/lib/pdf/build";
+import { exportProgramPdf, pdfFileName, singleDay, type RawExercise } from "@/lib/pdf/build";
 import { deliverPdf, deliveryFailure, pdfDelivery } from "@/lib/pdf/delivery";
 import { missingSavedDayColumn } from "@/lib/templates";
 
@@ -86,7 +86,7 @@ export async function GET(
 
   try {
     const buf = await exportProgramPdf(doc, lang);
-    return deliverPdf(buf, pdfFilename(template.title, lang), delivery);
+    return deliverPdf(buf, pdfFileName(template.title, lang), delivery);
   } catch (err) {
     console.error(`[pdf-export] template ${id} (${lang}) failed`, err);
     return deliveryFailure(delivery, 500, "PDF export failed");

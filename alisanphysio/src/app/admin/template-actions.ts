@@ -3,6 +3,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { requireStaff } from "@/lib/admin-auth";
+import { missingCatalogColumn } from "@/lib/catalog-compatibility";
 import { isProgramId } from "@/lib/catalog-programs";
 import { t, type Lang } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n-server";
@@ -141,6 +142,65 @@ function isNotFound(error: unknown): boolean {
   return (error as { code?: string } | null)?.code === "P0002";
 }
 
+/** A programme day, by its programme and 0-based position (order_index). */
+type ProgramDayLink = { programId: string; dayIndex: number };
+
+function isValidDayLink(link: ProgramDayLink): boolean {
+  return isProgramId(link.programId) && Number.isInteger(link.dayIndex) && link.dayIndex >= 0;
+}
+
+/**
+ * Points the programme day at the saved day it was saved as (0022). The id is
+ * only used to offer "Update saved day", so a failure never fails the save: the
+ * day just stays unlinked. True only when exactly one day was linked.
+ */
+async function linkProgramDay(
+  supabase: SupabaseClient,
+  link: ProgramDayLink,
+  templateId: string,
+): Promise<boolean> {
+  if (!isValidDayLink(link)) return false;
+  try {
+    const { data, error } = await supabase.from("program_days")
+      .update({ source_template_id: templateId })
+      .eq("program_id", link.programId).eq("order_index", link.dayIndex)
+      .select("id").returns<{ id: string }[]>();
+    if (error) {
+      if (!missingCatalogColumn(error, "source_template_id")) {
+        console.error("Saved day could not be linked to its programme day", error);
+      }
+      return false;
+    }
+    return data?.length === 1;
+  } catch (error) {
+    console.error("Saved day could not be linked to its programme day", error);
+    return false;
+  }
+}
+
+/**
+ * The Undo of a link: the programme day gets its previous saved day back. The
+ * FK cleared the link when the new saved day was deleted; the is-null guard
+ * keeps a link that was set again in the meantime. Errors are only logged.
+ */
+async function restoreProgramDayLink(
+  supabase: SupabaseClient,
+  link: ProgramDayLink & { previousTemplateId: string | null },
+): Promise<void> {
+  if (!isValidDayLink(link) || !isProgramId(link.previousTemplateId)) return;
+  try {
+    const { error } = await supabase.from("program_days")
+      .update({ source_template_id: link.previousTemplateId })
+      .eq("program_id", link.programId).eq("order_index", link.dayIndex)
+      .is("source_template_id", null);
+    if (error && !missingCatalogColumn(error, "source_template_id")) {
+      console.error("Saved day link could not be restored on its programme day", error);
+    }
+  } catch (error) {
+    console.error("Saved day link could not be restored on its programme day", error);
+  }
+}
+
 /**
  * Create or update a saved day from the saved-day editor. Exercises are
  * replaced wholesale (clean add / remove / reorder) in one transaction via
@@ -195,14 +255,16 @@ export async function saveTemplate(input: {
  * conflict on the server: without a replace choice a conflicting name is saved
  * as the next free copy name ("Push Day (2)"); `replaceId` moves that live
  * saved day to Recently deleted in the same transaction. Returns the final
- * name and what was replaced, for the toast and its Undo.
+ * name and what was replaced, for the toast and its Undo. With `link`, the
+ * programme day it came from is pointed at the new saved day (`linked`).
  */
 export async function saveDayAsTemplate(input: {
   title: string;
   exercises: ExerciseInput[];
   sourceLabel: string | null;
   replaceId?: string | null;
-}): Promise<Result<{ templateId: string; title: string; replacedId: string | null }>> {
+  link?: ProgramDayLink | null;
+}): Promise<Result<{ templateId: string; title: string; replacedId: string | null; linked: boolean }>> {
   const [{ supabase }, lang] = await Promise.all([requireStaff(), getLang()]);
   const checked = validate(lang, input.title, input.exercises);
   if (!checked.ok) return checked;
@@ -239,8 +301,9 @@ export async function saveDayAsTemplate(input: {
       if (!isNotFound(failure)) console.error("Day could not be saved as a template", failure);
       return fail(lang, isNotFound(failure) ? "sd.notFound" : "sd.saveError");
     }
+    const linked = input.link ? await linkProgramDay(supabase, input.link, templateId) : false;
     revalidateSavedDays();
-    return { ok: true, templateId, title, replacedId: replaceId };
+    return { ok: true, templateId, title, replacedId: replaceId, linked };
   } catch (error) {
     console.error("Day could not be saved as a template", error);
     return fail(lang, "sd.saveError");
@@ -250,10 +313,12 @@ export async function saveDayAsTemplate(input: {
 /**
  * Undo of "Save day as template": removes the new saved day and, if it
  * replaced one, restores that one — atomically via revert_day_template_save.
+ * With `link`, the programme day gets its previous saved day back afterwards.
  */
 export async function undoSaveDayAsTemplate(input: {
   templateId: string;
   restoreId: string | null;
+  link?: (ProgramDayLink & { previousTemplateId: string | null }) | null;
 }): Promise<Result> {
   const [{ supabase }, lang] = await Promise.all([requireStaff(), getLang()]);
   const restoreId = input.restoreId ?? null;
@@ -274,10 +339,73 @@ export async function undoSaveDayAsTemplate(input: {
       if (!isNotFound(failure)) console.error("Saved day could not be undone", failure);
       return fail(lang, "sd.undoError");
     }
+    if (input.link) await restoreProgramDayLink(supabase, input.link);
     revalidateSavedDays(input.templateId);
     return { ok: true };
   } catch (error) {
     console.error("Saved day could not be undone", error);
+    return fail(lang, "sd.undoError");
+  }
+}
+
+/**
+ * "Update saved day" from a programme day: the saved day keeps its id, name and
+ * origin and takes this day's exercises, in one transaction (update_day_template).
+ * Its previous version is kept under "Recently deleted" so Undo can restore it;
+ * returns that kept row's id. Programmes that used the saved day are not touched.
+ */
+export async function updateSavedDay(input: {
+  id: string;
+  exercises: ExerciseInput[];
+}): Promise<Result<{ archivedId: string }>> {
+  const [{ supabase }, lang] = await Promise.all([requireStaff(), getLang()]);
+  if (!isProgramId(input.id)) return fail(lang, "sd.notFound");
+  if (!Array.isArray(input.exercises)) return fail(lang, "sd.emptyDay");
+  const exercises = cleanExercises(input.exercises);
+  if (exercises.length === 0) return fail(lang, "sd.emptyDay");
+  if (exercises.length > MAX_EXERCISES) return fail(lang, "sd.tooManyExercises", { max: MAX_EXERCISES });
+
+  try {
+    const { data, error } = await supabase.rpc("update_day_template", {
+      p_id: input.id, p_exercises: exercises,
+    });
+    if (missingSavedDayFunction(error, "update_day_template")) return fail(lang, "sd.needsMigration22");
+    if (error || !isProgramId(data)) {
+      if (isNotFound(error)) return fail(lang, "sd.notFound");
+      console.error("Saved day could not be updated", error);
+      return fail(lang, "sd.updateError");
+    }
+    revalidateSavedDays(input.id);
+    return { ok: true, archivedId: data };
+  } catch (error) {
+    console.error("Saved day could not be updated", error);
+    return fail(lang, "sd.updateError");
+  }
+}
+
+/**
+ * Undo of "Update saved day": the kept version's exercises go back on the saved
+ * day and its kept row leaves "Recently deleted" (revert_day_template_update).
+ */
+export async function undoUpdateSavedDay(input: {
+  id: string;
+  archivedId: string;
+}): Promise<Result> {
+  const [{ supabase }, lang] = await Promise.all([requireStaff(), getLang()]);
+  if (!isProgramId(input.id) || !isProgramId(input.archivedId)) return fail(lang, "sd.undoError");
+  try {
+    const { error } = await supabase.rpc("revert_day_template_update", {
+      p_id: input.id, p_archive_id: input.archivedId,
+    });
+    if (missingSavedDayFunction(error, "revert_day_template_update")) return fail(lang, "sd.needsMigration22");
+    if (error) {
+      if (!isNotFound(error)) console.error("Saved day update could not be undone", error);
+      return fail(lang, "sd.undoError");
+    }
+    revalidateSavedDays(input.id);
+    return { ok: true };
+  } catch (error) {
+    console.error("Saved day update could not be undone", error);
     return fail(lang, "sd.undoError");
   }
 }

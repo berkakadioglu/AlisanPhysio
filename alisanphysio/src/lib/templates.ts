@@ -34,7 +34,7 @@ export function missingSavedDayColumn(error: CatalogDatabaseError | null): boole
 /** An RPC failed only because the function does not exist yet (before 0021). */
 export function missingSavedDayFunction(
   error: CatalogDatabaseError | null,
-  name: "save_day_template" | "revert_day_template_save",
+  name: "save_day_template" | "revert_day_template_save" | "update_day_template" | "revert_day_template_update",
 ): boolean {
   return !!error && (error.code === "PGRST202" || error.code === "42883")
     && (error.message ?? "").includes(name);

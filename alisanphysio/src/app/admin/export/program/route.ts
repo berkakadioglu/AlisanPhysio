@@ -1,9 +1,9 @@
 import type { NextRequest } from "next/server";
 import { requireStaff } from "@/lib/admin-auth";
-import { isLang, type Lang } from "@/lib/i18n";
+import { isLang, t, type Lang } from "@/lib/i18n";
 import { isMonthStart } from "@/lib/month";
 import type { PdfDay, ProgramDoc } from "@/lib/pdf/program-pdf";
-import { exportProgramPdf, pdfFilename, pdfResponse } from "@/lib/pdf/build";
+import { exportProgramPdf, pdfFileName, pdfResponse } from "@/lib/pdf/build";
 import { PDF_CLIENT_NAME_MAX, PDF_TITLE_MAX, clampText } from "@/lib/pdf/pdf-text";
 import { effectiveVideoId } from "@/lib/youtube";
 
@@ -29,6 +29,7 @@ interface InDay {
 interface InBody {
   lang?: unknown;
   title?: unknown;
+  kind?: unknown;
   notes?: unknown;
   monthStart?: unknown;
   clientName?: unknown;
@@ -67,8 +68,11 @@ export async function POST(req: NextRequest) {
 
   const lang: Lang = isLang(body.lang) ? body.lang : "en";
   // Same limits as the database (titles ≤ 300 characters), so a direct POST
-  // can't push the cover onto extra pages.
-  const title = clampText(str(body.title), PDF_TITLE_MAX) || "Program";
+  // can't push the cover onto extra pages. An untitled export falls back in the
+  // EXPORT language, not the viewer's.
+  const title =
+    clampText(str(body.title), PDF_TITLE_MAX) ||
+    t(lang, body.kind === "template" ? "ed.fallback.savedDay" : "ed.fallback.programme");
 
   // Keep only exercises with a name, and days that still have exercises.
   const rawDays = ((body.days ?? []) as InDay[])
@@ -126,7 +130,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const buf = await exportProgramPdf(doc, lang);
-    return pdfResponse(buf, pdfFilename(title, lang), false);
+    return pdfResponse(buf, pdfFileName(title, lang), false);
   } catch (err) {
     console.error(`[pdf-export] editor export (${lang}) failed`, err);
     return new Response("PDF export failed", { status: 500 });

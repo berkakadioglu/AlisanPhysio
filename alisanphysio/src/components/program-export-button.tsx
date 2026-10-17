@@ -32,6 +32,8 @@ export interface ExportExercise {
 }
 export interface ExportDoc {
   title: string;
+  /** Which fallback title the server uses when `title` is blank. */
+  kind?: "program" | "template";
   notes: string | null;
   monthStart: string | null;
   clientName: string | null;

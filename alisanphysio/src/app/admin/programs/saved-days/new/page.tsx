@@ -30,7 +30,7 @@ export default async function NewSavedDayPage() {
             title: "",
             monthStartDate: "",
             notes: "",
-            days: [{ title: "", sourceTemplateLabel: null, exercises: [] }],
+            days: [{ title: "", sourceTemplateLabel: null, sourceTemplateId: null, exercises: [] }],
           }}
           library={library}
           categories={categories}

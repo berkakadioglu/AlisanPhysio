@@ -11,16 +11,19 @@ import {
 import {
   ArrowDown,
   ArrowUp,
+  BookPlus,
   ChevronDown,
   ExternalLink,
   GripVertical,
   Link2,
   Play,
+  RefreshCw,
   Trash2,
   TriangleAlert,
 } from "lucide-react";
 import type { ExerciseCategory, LibraryExercise } from "@/lib/types";
 import { t as translate, type Lang } from "@/lib/i18n";
+import { hasLibraryDiff, libraryDiff } from "@/lib/library-sync";
 import { isRichTextEmpty, richTextExcerpt } from "@/lib/rich-text";
 import { effectiveVideoId, externalVideoUrl, parseYouTubeId, youtubeThumb } from "@/lib/youtube";
 import { useI18n } from "@/app/i18n-provider";
@@ -45,6 +48,10 @@ export const HATCH =
 
 const inputClass =
   "w-full rounded-lg border border-border bg-surface px-3 text-base text-foreground shadow-sm outline-none transition placeholder:text-subtle-foreground focus:border-brand/40 focus:ring-2 focus:ring-brand/15 sm:text-sm";
+
+/** The small text-link buttons under the name ("Update library exercise", "Add to library"). */
+const linkButton =
+  "inline-flex min-h-9 items-center gap-1 rounded-md px-1.5 font-semibold text-brand underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40";
 
 const sectionLabel =
   "text-[11px] font-semibold uppercase tracking-wider text-subtle-foreground";
@@ -158,6 +165,9 @@ export default function ExerciseRow({
   onPlay,
   onMove,
   onRemove,
+  onUpdateLibrary,
+  onAddToLibrary,
+  addingToLibrary = false,
 }: {
   exercise: ExerciseDraft;
   index: number;
@@ -185,6 +195,11 @@ export default function ExerciseRow({
   onPlay: () => void;
   onMove: (direction: -1 | 1) => void;
   onRemove: () => void;
+  /** Review and push this row's cues / video to its linked library entry. */
+  onUpdateLibrary?: () => void;
+  /** Save this unlinked row to the library as a new entry and link it. */
+  onAddToLibrary?: () => void;
+  addingToLibrary?: boolean;
 }) {
   const { t, lang } = useI18n();
   const uid = useId();
@@ -195,6 +210,7 @@ export default function ExerciseRow({
   const cuesLabelId = `${uid}-cues`;
   const overrideId = `${uid}-video`;
   const overrideHintId = `${uid}-video-hint`;
+  const addHintId = `${uid}-add-hint`;
 
   const open = playNonce !== undefined;
   const name = exercise.name.trim();
@@ -216,6 +232,8 @@ export default function ExerciseRow({
   const forClient = audience === "client";
   const atTop = index === 0;
   const atBottom = index === count - 1;
+  // What this row would change in its library entry (null when unlinked).
+  const diff = linked ? libraryDiff(exercise, linked) : null;
 
   function pick(item: LibraryExercise) {
     onPatch({
@@ -374,16 +392,35 @@ export default function ExerciseRow({
                     {t("ed.row.duplicateShort")}
                   </p>
                 )}
+                {linked && diff && hasLibraryDiff(diff) && (
+                  <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 px-0.5 text-xs">
+                    <span className="text-muted-foreground">
+                      {t(diff.cues && diff.video ? "lib.sync.diffBoth" : diff.cues ? "lib.sync.diffCues" : "lib.sync.diffVideo")}
+                    </span>
+                    <button type="button" onClick={onUpdateLibrary} className={linkButton}>
+                      <RefreshCw className="h-3.5 w-3.5" aria-hidden />
+                      {t("lib.sync.update")}
+                    </button>
+                  </div>
+                )}
                 {!exercise.library_id && name !== "" && (
-                  <label className="flex min-h-9 cursor-pointer items-center gap-2 px-0.5 text-xs text-muted-foreground">
-                    <input
-                      type="checkbox"
-                      checked={exercise.saveToLibrary}
-                      onChange={(e) => onPatch({ saveToLibrary: e.target.checked })}
-                      className="h-4 w-4 flex-none rounded border-border accent-[var(--brand-solid)]"
-                    />
-                    {t("ed.row.saveToLibrary")}
-                  </label>
+                  <div className="px-0.5 text-xs">
+                    <button
+                      type="button"
+                      onClick={onAddToLibrary}
+                      disabled={addingToLibrary}
+                      title={t("lib.sync.addHint")}
+                      aria-describedby={addHintId}
+                      className={`${linkButton} disabled:cursor-wait disabled:no-underline disabled:opacity-60`}
+                    >
+                      <BookPlus className="h-3.5 w-3.5" aria-hidden />
+                      {t(addingToLibrary ? "lib.sync.adding" : "lib.sync.add")}
+                    </button>
+                    {/* Outside the button, so it is the description, not part of the name. */}
+                    <span id={addHintId} className="sr-only">
+                      {t("lib.sync.addHint")}
+                    </span>
+                  </div>
                 )}
               </div>
 

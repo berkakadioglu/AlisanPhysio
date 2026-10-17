@@ -6,7 +6,7 @@ const ops = require("../src/app/admin/editor/day-ops.ts");
 const { toDayDraft } = require("../src/app/admin/editor/drafts.ts");
 
 const ex = (name, extra = {}) => ({ name, sets: 3, reps: "8-12", instructions: "Goal: Keep a neutral spine.", media_url: null, library_id: null, ...extra });
-const day = (title, exercises = [], sourceTemplateLabel = null) => ({ title, sourceTemplateLabel, exercises });
+const day = (title, exercises = [], sourceTemplateLabel = null) => ({ title, sourceTemplateLabel, sourceTemplateId: null, exercises });
 const titles = (days) => days.map((d) => d.title);
 
 test("initialDays starts with one empty day when nothing is loaded", () => {

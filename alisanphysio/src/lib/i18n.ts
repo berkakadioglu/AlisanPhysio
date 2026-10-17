@@ -217,6 +217,63 @@ const en: Dict = {
   "sd.restoreError": "The saved day couldn’t be restored. Please try again.",
   "sd.renameError": "The saved day couldn’t be renamed. Please try again.",
   "sd.needsMigration": "This needs a database update (migration 0021) that hasn’t been applied yet.",
+  // ---- Update saved day (0022) ----
+  "sd.update": "Update saved day",
+  "sd.updateLabel": "Update the saved day “{name}” with this day",
+  "sd.updateTitle": "Update saved day",
+  "sd.updateSubtitle": "“{name}” will get this day’s exercises. Its name stays the same.",
+  "sd.updateAdded": "Added",
+  "sd.updateRemoved": "Removed",
+  "sd.updateChanged": "Changed",
+  "sd.updateReordered": "The order of the exercises changes.",
+  "sd.updateNoChanges": "No changes: “{name}” already matches this day.",
+  "sd.change.dose": "sets / reps",
+  "sd.change.cues": "cues",
+  "sd.change.video": "video",
+  "sd.change.link": "library link",
+  "sd.change.name": "name",
+  "sd.updatePrevious": "The current version moves to Recently deleted, where you can restore it for {days} days.",
+  "sd.updateProgrammes": "Programmes that already used this saved day don’t change.",
+  "sd.updateButton": "Update saved day",
+  "sd.updating": "Updating…",
+  "sd.updatedToast": "Updated “{name}”",
+  "sd.updateUndone": "Update undone",
+  "sd.updateError": "The saved day couldn’t be updated. Please try again.",
+  "sd.updateGone": "“{name}” is no longer in Saved days, so it can’t be updated.",
+  "sd.needsMigration22": "This needs a database update (migration 0022) that hasn’t been applied yet.",
+  // ---- Library sync from the programme editor ----
+  "lib.sync.diffCues": "Your cues differ from the library.",
+  "lib.sync.diffVideo": "Your video differs from the library.",
+  "lib.sync.diffBoth": "Your cues and video differ from the library.",
+  "lib.sync.update": "Update library exercise",
+  "lib.sync.add": "Add to library",
+  "lib.sync.adding": "Adding…",
+  "lib.sync.addHint": "Saves the name, cues and YouTube video to your exercise library and links this row to it.",
+  "lib.sync.title": "Update library exercise",
+  "lib.sync.subtitle": "“{name}” in your exercise library",
+  "lib.sync.fieldCues": "Coaching cues",
+  "lib.sync.fieldVideo": "Video",
+  "lib.sync.before": "Library now",
+  "lib.sync.after": "After the update",
+  "lib.sync.noCues": "No cues",
+  "lib.sync.noVideo": "No video",
+  "lib.sync.cuesEffect": "Cues are copied into a programme when an exercise is added, so existing programmes and saved days keep their own text. Only exercises added from the library from now on start with these cues.",
+  "lib.sync.videoEffect": "Programmes show the library video live, so the new video will appear in every programme and saved day that uses this exercise without its own video: {programmes} and {savedDays}. Exercises with their own video keep it.",
+  "lib.sync.videoEffectNone": "No programme or saved day shows this exercise’s library video right now, so only exercises you add from now on will use the new one.",
+  "lib.sync.counting": "Checking which programmes use this exercise…",
+  "lib.sync.countFailed": "Couldn’t check which programmes use this exercise.",
+  "lib.sync.retry": "Try again",
+  "lib.sync.confirm": "Update library",
+  "lib.sync.updating": "Updating…",
+  "lib.sync.updatedToast": "Library exercise “{name}” updated",
+  "lib.sync.updateError": "The library exercise couldn’t be updated. Please try again.",
+  "lib.sync.restoredToast": "Library exercise “{name}” restored",
+  "lib.sync.undoError": "The library change couldn’t be undone.",
+  "lib.sync.addedToast": "“{name}” added to your exercise library",
+  "lib.sync.addError": "It couldn’t be added to the library. Please try again.",
+  "lib.sync.exists": "Your library already has “{name}”. Pick it from the list to link this row.",
+  "lib.sync.addUndone": "“{name}” removed from the library",
+  "lib.sync.gone": "This exercise is no longer in the library.",
   // ---- PDF export (cover, exercise blocks) ----
   // [i18n:pdf-v2:en]
   "pdf.forClient": "for {name}",
@@ -318,6 +375,12 @@ const en: Dict = {
   "dash.noThisMonthTitle": "No programme scheduled for this month yet",
   "dash.noThisMonthBody": "Alişan will add your next program soon.",
   "dash.clientFallback": "Client",
+  // ---- Staff "View as client" (read-only client dashboard) ----
+  "view.banner": "Viewing as {name} · read only",
+  "view.profile": "Profile",
+  "view.scheduleTitle": "Appointments",
+  "view.scheduleBody": "{name}’s sessions as they see them. Booking and cancelling stay with the client.",
+  "view.upcoming": "Upcoming",
   "dash.coachLine": "Coach: {name}",
   "dash.coachingSince": "Coaching since {date}",
   "dash.avatarLabel": "{name}'s initials",
@@ -684,7 +747,7 @@ const en: Dict = {
   "profile.confirmDeleteComplaint": "Delete this note?",
 
   // Admin — view client data
-  "admin.viewData": "View client data",
+  "admin.viewData": "View as client",
   "admin.backToClient": "Back to client",
 
   // Measurement optional-field hints
@@ -791,7 +854,7 @@ const en: Dict = {
   "review.nonePicked": "None",
 
   // View as user
-  "admin.viewAsUser": "View as user",
+  "admin.viewAsUser": "View as client",
 
   // Whatsapp
   "wa.aria": "Chat on WhatsApp",
@@ -1439,6 +1502,63 @@ const tr: Dict = {
   "sd.restoreError": "Kayıtlı gün geri yüklenemedi. Lütfen tekrar deneyin.",
   "sd.renameError": "Kayıtlı günün adı değiştirilemedi. Lütfen tekrar deneyin.",
   "sd.needsMigration": "Bu işlem henüz uygulanmamış bir veritabanı güncellemesi (0021) gerektiriyor.",
+  // ---- Kayıtlı günü güncelle (0022) ----
+  "sd.update": "Kayıtlı günü güncelle",
+  "sd.updateLabel": "“{name}” kayıtlı gününü bu günle güncelle",
+  "sd.updateTitle": "Kayıtlı günü güncelle",
+  "sd.updateSubtitle": "“{name}” bu günün egzersizlerini alacak. Adı aynı kalır.",
+  "sd.updateAdded": "Eklenenler",
+  "sd.updateRemoved": "Çıkarılanlar",
+  "sd.updateChanged": "Değişenler",
+  "sd.updateReordered": "Egzersizlerin sırası değişiyor.",
+  "sd.updateNoChanges": "Değişiklik yok: “{name}” zaten bu günle aynı.",
+  "sd.change.dose": "set / tekrar",
+  "sd.change.cues": "ipuçları",
+  "sd.change.video": "video",
+  "sd.change.link": "kütüphane bağlantısı",
+  "sd.change.name": "ad",
+  "sd.updatePrevious": "Mevcut sürüm Son silinenler’e taşınır; {days} gün boyunca oradan geri yükleyebilirsiniz.",
+  "sd.updateProgrammes": "Bu kayıtlı günü daha önce kullanan programlar değişmez.",
+  "sd.updateButton": "Kayıtlı günü güncelle",
+  "sd.updating": "Güncelleniyor…",
+  "sd.updatedToast": "“{name}” güncellendi",
+  "sd.updateUndone": "Güncelleme geri alındı",
+  "sd.updateError": "Kayıtlı gün güncellenemedi. Lütfen tekrar deneyin.",
+  "sd.updateGone": "“{name}” artık Kayıtlı günler’de değil, bu yüzden güncellenemiyor.",
+  "sd.needsMigration22": "Bu işlem henüz uygulanmamış bir veritabanı güncellemesi (0022) gerektiriyor.",
+  // ---- Program düzenleyicisinden kütüphane güncelleme ----
+  "lib.sync.diffCues": "İpuçlarınız kütüphanedekinden farklı.",
+  "lib.sync.diffVideo": "Videonuz kütüphanedekinden farklı.",
+  "lib.sync.diffBoth": "İpuçlarınız ve videonuz kütüphanedekinden farklı.",
+  "lib.sync.update": "Kütüphanedeki egzersizi güncelle",
+  "lib.sync.add": "Kütüphaneye ekle",
+  "lib.sync.adding": "Ekleniyor…",
+  "lib.sync.addHint": "Adı, ipuçlarını ve YouTube videosunu egzersiz kütüphanenize kaydeder ve bu satırı ona bağlar.",
+  "lib.sync.title": "Kütüphanedeki egzersizi güncelle",
+  "lib.sync.subtitle": "Egzersiz kütüphanenizdeki “{name}”",
+  "lib.sync.fieldCues": "Uygulama ipuçları",
+  "lib.sync.fieldVideo": "Video",
+  "lib.sync.before": "Şu an kütüphanede",
+  "lib.sync.after": "Güncellemeden sonra",
+  "lib.sync.noCues": "İpucu yok",
+  "lib.sync.noVideo": "Video yok",
+  "lib.sync.cuesEffect": "İpuçları, egzersiz bir programa eklendiğinde programa kopyalanır; bu yüzden mevcut programlar ve kayıtlı günler kendi metinlerini korur. Yalnızca bundan sonra kütüphaneden eklenen egzersizler bu ipuçlarıyla başlar.",
+  "lib.sync.videoEffect": "Programlar kütüphane videosunu canlı olarak gösterir; bu yüzden yeni video, bu egzersizi kendi videosu olmadan kullanan her programda ve kayıtlı günde görünecek: {programmes} ve {savedDays}. Kendi videosu olan egzersizler onu korur.",
+  "lib.sync.videoEffectNone": "Şu anda hiçbir program veya kayıtlı gün bu egzersizin kütüphane videosunu göstermiyor; yeni videoyu yalnızca bundan sonra ekleyeceğiniz egzersizler kullanır.",
+  "lib.sync.counting": "Bu egzersizi kullanan programlar kontrol ediliyor…",
+  "lib.sync.countFailed": "Bu egzersizi kullanan programlar kontrol edilemedi.",
+  "lib.sync.retry": "Tekrar dene",
+  "lib.sync.confirm": "Kütüphaneyi güncelle",
+  "lib.sync.updating": "Güncelleniyor…",
+  "lib.sync.updatedToast": "Kütüphanedeki “{name}” güncellendi",
+  "lib.sync.updateError": "Kütüphanedeki egzersiz güncellenemedi. Lütfen tekrar deneyin.",
+  "lib.sync.restoredToast": "Kütüphanedeki “{name}” geri yüklendi",
+  "lib.sync.undoError": "Kütüphanedeki değişiklik geri alınamadı.",
+  "lib.sync.addedToast": "“{name}” egzersiz kütüphanenize eklendi",
+  "lib.sync.addError": "Kütüphaneye eklenemedi. Lütfen tekrar deneyin.",
+  "lib.sync.exists": "Kütüphanenizde zaten “{name}” var. Bu satırı bağlamak için listeden seçin.",
+  "lib.sync.addUndone": "“{name}” kütüphaneden kaldırıldı",
+  "lib.sync.gone": "Bu egzersiz artık kütüphanede değil.",
   // ---- PDF export (cover, exercise blocks) ----
   // [i18n:pdf-v2:tr]
   "pdf.forClient": "{name} için",
@@ -1540,6 +1660,12 @@ const tr: Dict = {
   "dash.noThisMonthTitle": "Bu ay için henüz bir program yok",
   "dash.noThisMonthBody": "Alişan yakında bir sonraki programınızı ekleyecek.",
   "dash.clientFallback": "Danışan",
+  // ---- Personel "Danışan gözüyle gör" (salt okunur danışan paneli) ----
+  "view.banner": "{name} olarak görüntüleniyor · salt okunur",
+  "view.profile": "Profil",
+  "view.scheduleTitle": "Randevular",
+  "view.scheduleBody": "{name} adlı danışanın gördüğü haliyle seanslar. Randevu alma ve iptal etme danışana bırakılır.",
+  "view.upcoming": "Yaklaşan",
   "dash.coachLine": "Koç: {name}",
   "dash.coachingSince": "{date} tarihinden beri koçluk alıyor",
   "dash.avatarLabel": "{name} için baş harfler",
@@ -1907,7 +2033,7 @@ const tr: Dict = {
   "profile.confirmDeleteComplaint": "Bu not silinsin mi?",
 
   // Admin — view client data
-  "admin.viewData": "Danışan verilerini görüntüle",
+  "admin.viewData": "Danışan gözüyle gör",
   "admin.backToClient": "Danışana dön",
 
   // Measurement optional-field hints
@@ -2014,7 +2140,7 @@ const tr: Dict = {
   "review.nonePicked": "Yok",
 
   // View as user
-  "admin.viewAsUser": "Kullanıcı gibi görüntüle",
+  "admin.viewAsUser": "Danışan gözüyle gör",
 
   // Whatsapp
   "wa.aria": "WhatsApp'tan yaz",
@@ -2552,6 +2678,17 @@ export function programsCount(lang: Lang, n: number): string {
   return lang === "tr"
     ? `${n} program`
     : `${n} ${n === 1 ? "program" : "programs"}`;
+}
+/** "3 programmes" — the UI's spelling (programsCount keeps its older wording). */
+export function programmesCount(lang: Lang, n: number): string {
+  return lang === "tr"
+    ? `${n} program`
+    : `${n} ${n === 1 ? "programme" : "programmes"}`;
+}
+export function savedDaysCount(lang: Lang, n: number): string {
+  return lang === "tr"
+    ? `${n} kayıtlı gün`
+    : `${n} ${n === 1 ? "saved day" : "saved days"}`;
 }
 export function reviewsCount(lang: Lang, n: number): string {
   return lang === "tr"

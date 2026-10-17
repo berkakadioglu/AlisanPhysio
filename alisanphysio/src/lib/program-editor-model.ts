@@ -22,6 +22,11 @@ export interface EditorDay {
    * line. Informational only — never used to link content.
    */
   sourceTemplateLabel: string | null;
+  /**
+   * The saved day this day was inserted from or saved as. Used only to offer
+   * "Update saved day"; never links content.
+   */
+  sourceTemplateId: string | null;
   exercises: EditorExercise[];
 }
 

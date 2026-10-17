@@ -20,6 +20,7 @@ import { deleteCatalogProgram } from "./programs/actions";
 import { deleteSavedDay, restoreSavedDay, saveTemplate } from "./template-actions";
 import SaveDayDialog from "./save-day-dialog";
 import InsertSavedDayDialog from "./insert-saved-day-dialog";
+import UpdateSavedDayDialog from "./update-saved-day-dialog";
 import ExerciseList from "./editor/exercise-list";
 import { fromDayDraft, toDayDraft, type DayDraft, type ExerciseDraft } from "./editor/drafts";
 import {
@@ -151,16 +152,34 @@ export default function ProgramEditor({
   );
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [saveDayKey, setSaveDayKey] = useState<string | null>(null);
+  const [updateDayKey, setUpdateDayKey] = useState<string | null>(null);
   const [insertOpen, setInsertOpen] = useState(false);
 
   const selectedIndex = Math.max(0, days.findIndex((d) => d.key === selectedKey));
   const selectedDay = days[selectedIndex];
+
+  // "Update saved day": the live saved day a day came from (deleted ones and
+  // ones that no longer exist are not offered). The day whose update dialog is
+  // open keeps its key while the dialog is open.
+  const savedDayById = (id: string | null) =>
+    id ? savedDays.find((d) => d.id === id && !d.deleted_at) : undefined;
+  const updateTarget = savedDayById(selectedDay.sourceTemplateId);
+  const updateDay = updateDayKey ? days.find((d) => d.key === updateDayKey) : undefined;
+  const updateDayTarget = savedDayById(updateDay?.sourceTemplateId ?? null);
+  const updateDayCopy = useMemo(() => (updateDay ? fromDayDraft(updateDay) : null), [updateDay]);
+  const updateOpen = Boolean(updateDayCopy && updateDayTarget);
 
   const snapshot = useMemo(
     () => editorSnapshot({ title, monthStartDate, notes, days }),
     [title, monthStartDate, notes, days],
   );
   const dirty = snapshot !== savedSnapshot;
+  // The latest state for the save dialog's callbacks (they can run after the
+  // render that created them, e.g. an Undo toast).
+  const latest = useRef({ days, title, monthStartDate, notes, snapshot, savedSnapshot });
+  useEffect(() => {
+    latest.current = { days, title, monthStartDate, notes, snapshot, savedSnapshot };
+  });
   // Covers tab close / reload, every same-origin link (header nav, back link…)
   // and the browser Back button. `releaseGuard()` before navigating ourselves.
   // Suspended during the first save: nothing may push a guard entry at the
@@ -168,7 +187,7 @@ export default function ProgramEditor({
   const releaseGuard = useLeaveGuard(dirty, t("ed.leaveConfirm"), firstSaveLock);
   // Not while a dialog is open (Ctrl+S there must not save the whole editor).
   useSaveShortcut(() => {
-    if (!saveDayKey && !insertOpen) void onSave();
+    if (!saveDayKey && !insertOpen && !updateOpen) void onSave();
   });
 
   /** Guard for programmatic navigation (router.push) away from unsaved changes. */
@@ -466,6 +485,15 @@ export default function ProgramEditor({
   // The day handed to the save dialog — a stable copy while the dialog is open.
   const saveDay = saveDayKey ? days.find((d) => d.key === saveDayKey) : undefined;
   const saveDayCopy = useMemo(() => (saveDay ? fromDayDraft(saveDay) : null), [saveDay]);
+  // The save dialog's day, captured per render: its callbacks outlive the dialog.
+  const saveKey = saveDay?.key ?? null;
+  // The programme day the save links to: only when the programme is saved and
+  // has no unsaved edits, so its position in the database is the editor's.
+  const saveDayPosition = saveDay ? days.indexOf(saveDay) : -1;
+  const saveLink =
+    currentId && !isTemplate && !dirty && saveDay
+      ? { programId: currentId, dayIndex: savedDayIndex(days, saveDayPosition) }
+      : null;
 
   const nameConflict = isTemplate ? findSavedDayNameChangeConflict(title, savedDays, currentId) : null;
 
@@ -474,14 +502,16 @@ export default function ProgramEditor({
   const getExportDoc = (): ExportDoc =>
     isTemplate
       ? {
-          title: title.trim() || t("ed.fallback.savedDay"),
+          title: title.trim(),
+          kind: "template",
           notes: null,
           monthStart: null,
           clientName: null,
           days: [{ title: "", exercises: toExportDays([{ ...days[0], title: "" }])[0]?.exercises ?? [] }],
         }
       : {
-          title: title.trim() || t("ed.fallback.programme"),
+          title: title.trim(),
+          kind: "program",
           notes: notes.trim() || null,
           monthStart: mode === "client" ? monthStartDate || null : null,
           clientName: mode === "client" ? clientName?.trim() || null : null,
@@ -622,6 +652,8 @@ export default function ProgramEditor({
             dayCount={days.length}
             onTitleChange={(value) => setDays((ds) => patchDay(ds, selectedDay.key, { title: value }))}
             onSaveAsTemplate={() => setSaveDayKey(selectedDay.key)}
+            updateTargetName={updateTarget?.title ?? null}
+            onUpdateSavedDay={updateTarget ? () => setUpdateDayKey(selectedDay.key) : undefined}
             onDuplicate={onDuplicateDay}
             onMove={(dir) => setDays((ds) => moveDay(ds, selectedDay.key, dir))}
             onDelete={onDeleteDay}
@@ -635,7 +667,7 @@ export default function ProgramEditor({
           open
           onClose={() => setSaveDayKey(null)}
           day={saveDayCopy}
-          dayNumber={days.indexOf(saveDay) + 1}
+          dayNumber={saveDayPosition + 1}
           sourceLabel={savedDaySourceLabel({
             clientName: mode === "client" ? clientName : null,
             monthStart: mode === "client" ? monthStartDate : null,
@@ -643,6 +675,42 @@ export default function ProgramEditor({
             lang,
           })}
           savedDays={savedDays}
+          link={saveLink}
+          onSaved={({ templateId, linked }) => {
+            if (!saveKey) return;
+            const cur = latest.current;
+            const next = patchDay(cur.days, saveKey, { sourceTemplateId: templateId });
+            setDays(next);
+            // Linked: the saved programme now holds the id, so the editor is clean.
+            if (linked) {
+              setSavedSnapshot(
+                editorSnapshot({ title: cur.title, monthStartDate: cur.monthStartDate, notes: cur.notes, days: next }),
+              );
+            }
+          }}
+          onUndone={({ templateId, previousTemplateId, linked }) => {
+            if (!mounted.current || !saveKey) return;
+            const cur = latest.current;
+            const wasClean = cur.snapshot === cur.savedSnapshot;
+            const next = cur.days.map((d) =>
+              d.key === saveKey && d.sourceTemplateId === templateId
+                ? { ...d, sourceTemplateId: previousTemplateId }
+                : d,
+            );
+            setDays(next);
+            if (linked && wasClean) {
+              setSavedSnapshot(
+                editorSnapshot({ title: cur.title, monthStartDate: cur.monthStartDate, notes: cur.notes, days: next }),
+              );
+            }
+          }}
+        />
+      )}
+      {updateDayCopy && updateDayTarget && (
+        <UpdateSavedDayDialog
+          savedDay={updateDayTarget}
+          day={updateDayCopy}
+          onClose={() => setUpdateDayKey(null)}
         />
       )}
       {insertOpen && (

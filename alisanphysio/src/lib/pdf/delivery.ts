@@ -5,6 +5,7 @@ import {
   isExportToken,
   type ExportResult,
 } from "@/lib/pdf-export-protocol";
+import type { PdfFileName } from "./build";
 
 /**
  * How a GET export answers. Opened directly (a new tab, a bookmark) the PDF is
@@ -30,16 +31,32 @@ export function pdfDelivery(url: URL): PdfDelivery {
 }
 
 /**
- * Content-Disposition with both the plain and the RFC 5987 filename. Our
- * filenames are ASCII slugs (pdfFilename), but quotes / control characters are
- * stripped defensively so a header can never be broken by a title.
+ * RFC 5987 value encoding. encodeURIComponent leaves ' ( ) * alone, and those
+ * are not attr-chars, so they are percent-encoded here as well.
+ */
+export function encodeRfc5987(value: string): string {
+  return encodeURIComponent(value).replace(
+    /['()*]/g,
+    (c) => "%" + c.charCodeAt(0).toString(16).toUpperCase(),
+  );
+}
+
+/**
+ * Content-Disposition with both filenames. `filename` is the ASCII fallback
+ * (quotes, control characters and non-ASCII are replaced, so a title can never
+ * break the header), and `filename*` carries the real UTF-8 name, RFC 5987
+ * encoded, so a Turkish title reaches the file name intact. A plain string is
+ * used for both; a plain ASCII slug gives the same header as before.
  */
 export function contentDisposition(
   disposition: PdfDelivery["disposition"],
-  filename: string,
+  name: string | PdfFileName,
 ): string {
-  const safe = filename.replace(/["\\\r\n]/g, "").replace(/[^\x20-\x7e]/g, "_") || "document.pdf";
-  return `${disposition}; filename="${safe}"; filename*=UTF-8''${encodeURIComponent(safe)}`;
+  const ascii = typeof name === "string" ? name : name.ascii;
+  const unicode = typeof name === "string" ? name : name.unicode;
+  const safe = ascii.replace(/["\\\r\n]/g, "").replace(/[^\x20-\x7e]/g, "_") || "document.pdf";
+  const full = unicode.replace(/[\u0000-\u001f\u007f"\\/]/g, "").trim() || safe;
+  return `${disposition}; filename="${safe}"; filename*=UTF-8''${encodeRfc5987(full)}`;
 }
 
 function resultCookie(delivery: PdfDelivery, result: ExportResult): string | null {
@@ -54,10 +71,10 @@ function resultCookie(delivery: PdfDelivery, result: ExportResult): string | nul
 }
 
 /** The PDF itself, with its filename and (for the button) the "ok" cookie. */
-export function deliverPdf(buf: Buffer, filename: string, delivery: PdfDelivery): Response {
+export function deliverPdf(buf: Buffer, name: string | PdfFileName, delivery: PdfDelivery): Response {
   const headers = new Headers({
     "Content-Type": "application/pdf",
-    "Content-Disposition": contentDisposition(delivery.disposition, filename),
+    "Content-Disposition": contentDisposition(delivery.disposition, name),
     "Content-Length": String(buf.byteLength),
     "Cache-Control": "no-store",
     "X-Content-Type-Options": "nosniff",
