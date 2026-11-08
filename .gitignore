@@ -1,0 +1,7 @@
+# The app lives in alisanphysio/ and has its own .gitignore.
+
+# JetBrains IDE project files
+/.idea/
+
+# Local Claude Code settings (launch configs, permissions)
+/.claude/

@@ -30,8 +30,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files: only the placeholder example is committed
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -39,3 +40,23 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# stray nested install (not part of the app)
+/alisanphysio/
+
+# local Claude Code launch config
+/.claude/
+
+# coach's source document; the seed SQL holds what the app needs
+/Alisan_Exercise_Master_Library.pdf
+
+# local screenshots (anything in public/ is served by the live site)
+/public/work/
+
+# unused create-next-app assets and an unused avatar, kept locally only
+/public/file.svg
+/public/globe.svg
+/public/next.svg
+/public/vercel.svg
+/public/window.svg
+/public/media/client-avatar.svg

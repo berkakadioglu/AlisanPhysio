@@ -1,180 +1,169 @@
-# AlisanPhysio
+# Train with Alisan
 
-A private client portal for Alişan — physiotherapist & personal trainer. Staff
-(Alişan) create client accounts and author **monthly programmes** (therapeutic and
-fitness alike, organised Month → Day → Exercise); clients log in to view their
-programme for the month, browse past/upcoming months, watch demo videos, track body
-measurements, and file a short monthly review. There is **no public sign-up** —
-accounts are created by staff.
+A coaching platform for an independent physiotherapist and personal trainer
+whose clients are mainly in Canada. It combines a public bilingual website, a
+client dashboard and an admin area where the coach writes programmes, manages
+nutrition and runs scheduling.
 
-## Tech stack
+- Live: https://alisanphysio.vercel.app
+- Public demo with sample data (no login): https://alisanphysio.vercel.app/demo
 
-- **Next.js 16** (App Router, TypeScript). Note: this version renames the
-  `middleware` convention to **`proxy`** — the route guard lives at
-  [`src/proxy.ts`](src/proxy.ts) (it must sit alongside `src/app`, not at the
-  repo root, or it is silently ignored).
-- **React 19**
-- **Supabase** — auth + Postgres with **Row Level Security (RLS)**
-- **Tailwind CSS v4** (design tokens + dark mode in `src/app/globals.css`)
-- **lucide-react** for icons
-- Deploy target: **Vercel**
+There is no public sign-up. Client accounts are created by the coach.
 
-## Running locally
+## Features
 
-Requires **Node 20+**.
+**Public site**
 
-```bash
-npm install        # install dependencies
-npm run dev        # start the dev server → http://localhost:3000
-```
+- English and Turkish, switchable from the header.
+- Pricing page.
+- Assessment request form for prospective clients.
+- Free Functional Movement Screen (FMS) booking, no account needed; slots are
+  shown in the visitor's time zone.
+- Demo dashboard rendered from static sample data, with no database access.
 
-Other scripts: `npm run build`, `npm run start`, `npm run lint`.
+**Client dashboard**
 
-Visiting the app unauthenticated redirects to `/login` (email + password).
+- Monthly programmes (Month, Day, Exercise) with embedded YouTube videos
+  (youtube-nocookie, click to load) and formatted coaching cues.
+- Past and upcoming months.
+- Optional nutrition plan, switched on per client, with meals, quantities and
+  calculated calories and macros.
+- Progress: weight and circumference measurements (waist, hip, arm, chest)
+  with a weight/BMI chart.
+- Profile with personal details and a complaints log for the coach.
+- Appointments: book a slot the coach published or propose times, depending
+  on the coach's booking mode. Times are shown in the client's own time zone.
+- Monthly review form, notifications, and a membership gate for clients whose
+  membership has lapsed.
 
-## Environment variables
+**Admin**
 
-Copy the example and fill in your own Supabase keys (never commit real values):
+- Client management: create clients, membership tier and end date, language,
+  password reset, notifications.
+- Programme editor with drag-and-drop ordering, copy from a previous month,
+  unsaved-changes guard, and optional sync of edited cues or videos back to
+  the exercise library.
+- Exercise library (multi-category) and food library.
+- Saved days: reusable days that can be inserted into any programme and
+  updated from a programme day.
+- Catalogue programmes: client-independent programmes that are copied into a
+  client's month.
+- PDF export of programmes and saved days.
+- Assessment request and FMS booking management (status, notes, FMS
+  settings).
+- Scheduling: booking mode, published availability (weekly repeats keep the
+  same local time across DST), direct appointments, client proposals.
+- View as client: a read-only preview of any client's dashboard.
 
-```bash
-cp .env.local.example .env.local
-```
+## Screenshots
 
-Find these in the Supabase dashboard under **Project Settings → API**. Only the
-**names** are listed here — never put actual keys/URLs in the repo:
+Not added yet. Screens to capture:
 
-| Variable                        | Where to find it                                     | Notes                                    |
-| ------------------------------- | ---------------------------------------------------- | ---------------------------------------- |
-| `NEXT_PUBLIC_SUPABASE_URL`      | Settings → API → **Project URL**                     | Public                                   |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Settings → API → Project API keys → **anon**         | Public; all access gated by RLS          |
-| `SUPABASE_SERVICE_ROLE_KEY`     | Settings → API → Project API keys → **service_role** | **Secret** — server-only, bypasses RLS   |
+- [ ] Public home page (EN) and the same page in TR
+- [ ] Pricing page
+- [ ] Demo dashboard (`/demo`)
+- [ ] Client dashboard: current month programme with an exercise video open
+- [ ] Client progress / measurements chart
+- [ ] Client nutrition view with macros
+- [ ] Admin programme editor
+- [ ] Admin scheduling page
+- [ ] A page of an exported programme PDF
+- [ ] Dark mode example
 
-`SUPABASE_SERVICE_ROLE_KEY` must **not** carry the `NEXT_PUBLIC_` prefix so it
-never reaches the browser. It's only used in server-side admin operations (see
-`src/lib/supabase/admin.ts`).
+Use sample data only (the demo or throwaway accounts), not real client names
+or emails.
 
-## Database & migrations
+## Tech stack and architecture
 
-SQL migrations live in [`supabase/migrations/`](supabase/migrations) and are
-**run by hand in the Supabase SQL Editor, in order** (`0001` → `0011`). They are
-written to be idempotent/re-runnable. Apply them to a fresh project top to
-bottom:
+- **Next.js 16, App Router, TypeScript, React 19.** Next 16 renames
+  `middleware` to `proxy`: the route guard is [`src/proxy.ts`](src/proxy.ts).
+  It must sit next to `src/app`; a `proxy.ts` at the project root is silently
+  ignored. It refreshes the Supabase session and enforces the admin area and
+  the client membership gate; pages and actions re-check access.
+- **Supabase** (Auth and Postgres). Row-level security is enabled on every
+  table. Clients can read only their own rows; staff access goes through the
+  `is_staff()` / `is_admin()` helpers. Roles are `admin`, `manager` and
+  `client`; the `manager` role exists in the database but is not exposed in
+  the UI.
+- **Service-role client** ([`src/lib/supabase/admin.ts`](src/lib/supabase/admin.ts))
+  is used only in server code: admin-gated actions (creating users, changing
+  emails, password resets, deletes) and the public assessment and FMS booking
+  actions, which validate input before inserting. The key is never sent to
+  the browser.
+- **Transactional saves.** Programmes and saved days are saved through
+  Postgres functions (`save_program`, `save_day_template`,
+  `update_day_template`) so a whole programme or day is written in one
+  transaction. They run as `security invoker`, so RLS still applies.
+- **Time zones.** Appointment times are stored as `timestamptz` (UTC
+  instants). Profiles and coach settings store IANA zone names, validated in
+  the database, and times are converted for display with `Intl`.
+- **PDF export** with `@react-pdf/renderer` in Node.js route handlers under
+  `src/app/admin/export`, using bundled Inter and Archivo TTF fonts
+  (`src/lib/pdf/fonts`) so Turkish characters render correctly.
+- **i18n.** English and Turkish catalogs in [`src/lib/i18n.ts`](src/lib/i18n.ts)
+  with a `t()` helper. The language is the signed-in user's profile setting,
+  falling back to a cookie. A test checks that both catalogs have the same
+  keys and placeholders.
+- **Styling.** Tailwind CSS v4 with design tokens in `src/app/globals.css`
+  driving light and dark mode.
 
-| File                             | Adds                                                          |
-| -------------------------------- | ------------------------------------------------------------ |
-| `0001_init.sql`                  | `profiles`, `programs`, `exercises` + RLS + new-user trigger |
-| `0002_exercise_library.sql`      | `exercise_library` (reusable exercises w/ demo videos)       |
-| `0003_program_days.sql`          | `program_days` (Day grouping within a program)               |
-| `0004_profile_language.sql`      | `profiles.language` (per-user UI language)                   |
-| `0005_profile_measurements.sql`  | `measurements` + `complaints` (client-tracked data)          |
-| `0006_membership.sql`            | membership tier on `profiles`                                |
-| `0007_membership_end_date.sql`   | membership expiry date                                       |
-| `0008_roles_manager.sql`         | `is_admin()` / `is_staff()` helpers; the `manager` role      |
-| `0009_notifications_reviews.sql` | notifications + the original review table                           |
-| `0010_exercise_categories.sql`   | `exercise_categories` + `exercise_category_map` (m2m)        |
-| `0011_day_templates.sql`         | `day_templates` + `day_template_exercises`                   |
+## Database
 
-**First admin:** create a user in Supabase **Authentication → Users** (the
-trigger seeds a `client` profile), then promote:
+Migrations are numbered SQL files in [`supabase/migrations`](supabase/migrations)
+(`0001` to `0022`). They are applied manually, in order, in the Supabase SQL
+editor; nothing runs them automatically. Each file says which migration it
+must follow.
+
+Seeds, run manually after the migrations:
+
+- [`supabase/seed_exercise_master_library.sql`](supabase/seed_exercise_master_library.sql):
+  the coach's exercise library (105 exercises in 14 categories).
+- [`supabase/seed_sports_nutrition.sql`](supabase/seed_sports_nutrition.sql):
+  a food library with nutrition values (needs `0016` or later).
+
+First admin: create a user in Supabase under Authentication, Users (a trigger
+creates a `client` profile), then promote it in the SQL editor:
 
 ```sql
 update public.profiles set role = 'admin' where id = '<user-id>';
 ```
 
-## Roles & the RLS model
+## Running locally
 
-`profiles.role` is one of `admin` | `manager` | `client`.
+Prerequisites: Node.js 22 or later (Next.js 16 needs 20.9+, and the test
+command's glob pattern needs 21+), and a Supabase project with the migrations
+applied.
 
-- **client** — can read/write **only their own** rows (programs, measurements,
-  reviews, notifications), enforced by RLS via `auth.uid()`.
-- **staff** = `is_staff()` = `admin` OR `manager` — may read/manage all users'
-  content (authoring programs, the library, templates, etc.).
-- **admin** = `is_admin()` — privileged actions a manager must never do (change
-  roles, delete clients).
-
-Because staff can read every row, client-facing queries **must filter by the
-signed-in user explicitly** rather than relying on RLS alone. The service-role
-key bypasses RLS entirely and is used **server-side only** for the few
-operations that need it (creating auth users, setting passwords, reading emails
-from the auth schema).
-
-> **Note on the `manager` role:** the manager feature is postponed, so it is
-> **hidden from the UI** (not offered in the role selector, no Managers tab).
-> The role, `is_staff()`, and all RLS policies remain in the database intact for
-> a future task — this is purely a UI hide.
-
-Two gates run in the proxy ([`src/lib/supabase/middleware.ts`](src/lib/supabase/middleware.ts))
-and are re-checked in every page/action (defense in depth):
-
-1. **Admin area** (`/admin`) — staff only.
-2. **Membership gate** — a `client` without an active membership is sent to
-   `/membership-inactive` (staff are never gated).
-
-## Feature / architecture overview
-
-**Client side** (`src/app/dashboard`)
-
-- This-week hero + Past / Upcoming program lists.
-- Program detail: Day → Exercise with YouTube demo embeds (click-to-load).
-- Profile: personal info, body measurements + a dependency-free SVG
-  weight/BMI chart, complaints/notes.
-- Monthly review form + an inline "Add review" affordance on reviewable months.
-
-**Admin side** (`src/app/admin`)
-
-- Users list (Clients / Admins tabs), create client, per-client detail with
-  Manage (name/login/role/membership), reset password, send notification.
-- **Program editor** — Month → Day → Exercise authoring with a category-grouped
-  library combobox, copy-from-previous-week, and **day templates** (fill a day
-  from a template, or add a template as a new day; deep-copied, editable).
-- **Exercise library** (`/admin/library`) — category sidebar + card grid,
-  many-to-many categories, per-exercise video + default instructions.
-- **Day templates** (`/admin/templates`) — reusable day blueprints.
-- **Personal Exercises** — staff can view programs authored for themselves,
-  reusing the client dashboard.
-
-**Cross-cutting**
-
-- **Membership** tiers + expiry, with a client access gate.
-- **Notifications** — a bell with system-generated (measurement / feedback
-  nudges) and manual (staff-authored) notices, categorised for display.
-- **i18n** — Turkish / English, cookie-based, switched via the header
-  `LanguageToggle`; strings + helpers in [`src/lib/i18n.ts`](src/lib/i18n.ts).
-- **Dark mode** — token-driven (`globals.css`), header `ThemeToggle`, defaults
-  to the OS preference, persisted in a cookie, no flash on load.
-
-## Project layout
-
-```
-src/
-  proxy.ts                   # Session refresh + route guards (Next 16 "proxy")
-  app/
-    login/                   # /login — email + password (no sign-up)
-    dashboard/               # client area: this week, past/upcoming, program
-                             #   detail, profile, monthly review, notifications
-    admin/                   # staff area: users, client detail, program editor,
-                             #   library, templates, actions (server actions)
-    membership-inactive/     # blocked screen for inactive clients
-    globals.css              # design tokens + light/dark themes
-    layout.tsx  i18n-provider.tsx  theme-toggle.tsx  language-toggle.tsx
-  lib/
-    types.ts                 # Row types mirroring the SQL schema
-    i18n.ts / i18n-server.ts # translations + helpers (EN/TR)
-    theme.ts / theme-server.ts
-    admin-auth.ts            # requireStaff() / requireAdmin() gates
-    membership.ts  categories.ts  templates.ts  ...helpers
-    supabase/
-      client.ts              # browser client
-      server.ts              # Server Component / Action client
-      admin.ts               # service-role client (server-only)
-      middleware.ts          # updateSession() used by proxy.ts
-  components/                # shared UI (badges, notification bell, embeds)
-supabase/
-  migrations/                # 0001 → 0011, run manually in order
+```bash
+npm install
+cp .env.example .env.local   # then fill in your Supabase values
+npm run dev
 ```
 
-## Deploy (Vercel)
+Open http://localhost:3000. Use `localhost`, not the machine's LAN IP:
+`next.config.ts` does not set `allowedDevOrigins`, so Next.js blocks
+dev-only requests from other origins.
 
-Import the repo, set the three environment variables above in the project
-settings (keep `SUPABASE_SERVICE_ROLE_KEY` un-prefixed so it stays server-only),
-and ensure the Supabase migrations have been applied to the target project.
+Other commands:
+
+```bash
+npm run lint
+npm run build
+node --test "tests/*.test.cjs"
+```
+
+The tests use Node's built-in test runner and need no database or network.
+
+## How it was built
+
+Designed and specified by me, Berka Kadıoğlu. Implemented with AI coding
+agents (Claude Code and Codex) working from my specifications; I reviewed and
+tested every change. [`CLAUDE.md`](../CLAUDE.md) and [`AGENTS.md`](AGENTS.md)
+hold the agent instructions.
+
+Built by [Kurgu Studio](https://kurgu.studio).
+
+## License
+
+All rights reserved. The code is public for viewing only; no licence to use,
+copy or distribute it is granted.
